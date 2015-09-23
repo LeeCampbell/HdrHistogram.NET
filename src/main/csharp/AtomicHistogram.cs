@@ -8,7 +8,6 @@
  * https://github.com/HdrHistogram/HdrHistogram
  */
 
-using System;
 using CSharp.Atomic;
 using HdrHistogram.NET.Utilities;
 

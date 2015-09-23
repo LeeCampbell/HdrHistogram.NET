@@ -8,7 +8,6 @@
  * https://github.com/HdrHistogram/HdrHistogram
  */
 
-using System;
 using System.IO;
 
 namespace HdrHistogram.NET.Utilities

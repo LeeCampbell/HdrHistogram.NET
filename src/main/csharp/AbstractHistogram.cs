@@ -17,7 +17,6 @@ using HdrHistogram.NET.Iteration;
 using HdrHistogram.NET.Utilities;
 using System.IO.Compression;
 using System.Reflection;
-using System.Text;
 
 namespace HdrHistogram.NET
 {

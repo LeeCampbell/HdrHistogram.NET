@@ -11,7 +11,6 @@
 using HdrHistogram.NET.Utilities;
 using NUnit.Framework;
 using System;
-using System.Text;
 using Assert = HdrHistogram.NET.Test.AssertEx;
 
 namespace HdrHistogram.NET.Test

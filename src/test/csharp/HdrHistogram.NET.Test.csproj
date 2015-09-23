@@ -49,17 +49,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssertEx.cs" />
-    <Compile Include="Utilities\ByteBufferTests.cs" />
     <Compile Include="HistogramDataAccessTest.cs" />
     <Compile Include="HistogramEncodingTest.cs" />
     <Compile Include="HistogramPerfTest.cs" />
     <Compile Include="HistogramTest.cs" />
     <Compile Include="Utilities\MiscUtilitiesTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utilities\WrappedBufferTests.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
