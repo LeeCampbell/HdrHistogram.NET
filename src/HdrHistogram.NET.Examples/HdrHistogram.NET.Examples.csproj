@@ -49,7 +49,7 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\main\csharp\HdrHistogram.NET.csproj">
+    <ProjectReference Include="..\HdrHistogram.NET\HdrHistogram.NET.csproj">
       <Project>{655d9c4c-5bbd-4494-9828-ae427a1ddd01}</Project>
       <Name>HdrHistogram.NET</Name>
     </ProjectReference>
