@@ -8,7 +8,7 @@
  * https://github.com/HdrHistogram/HdrHistogram
  */
 
-using CSharp.Atomic;
+using System.Threading;
 using HdrHistogram.NET.Iteration;
 using HdrHistogram.NET.Utilities;
 
@@ -16,7 +16,11 @@ namespace HdrHistogram.NET
 {
     public abstract class AbstractHistogramBase
     {
-        internal static readonly AtomicLong constructionIdentityCount = new AtomicLong(0);
+        private static long nextIdentity = -1L;
+        internal static long GetNextIdentity()
+        {
+            return Interlocked.Increment(ref nextIdentity);
+        }
 
         // "Cold" accessed fields. Not used in the recording code path:
         internal long identity;

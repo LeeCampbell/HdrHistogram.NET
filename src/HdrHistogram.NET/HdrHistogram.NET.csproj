@@ -42,8 +42,6 @@
   <ItemGroup>
     <Compile Include="AbstractHistogram.cs" />
     <Compile Include="AbstractHistogramBase.cs" />
-    <Compile Include="Utilities\AtomicLong.cs" />
-    <Compile Include="Utilities\AtomicLongArray.cs" />
     <Compile Include="Utilities\CountingMemoryStream.cs" />
     <Compile Include="IntHistogram.cs" />
     <Compile Include="Iteration\AbstractHistogramIterator.cs" />

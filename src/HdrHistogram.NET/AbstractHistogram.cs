@@ -117,7 +117,7 @@ namespace HdrHistogram.NET
             {
                 throw new ArgumentException("numberOfSignificantValueDigits must be between 0 and 6");
             }
-            identity = constructionIdentityCount.GetAndAdd(1);
+            identity = GetNextIdentity();
 
             init(lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits, 0);
         }
