@@ -20,25 +20,25 @@ using System.Reflection;
 
 namespace HdrHistogram.NET
 {
-    /**
-     * <h3>A High Dynamic Range (HDR) Histogram</h3>
-     * <p>
-     * AbstractHistogram supports the recording and analyzing sampled data value counts across a configurable integer value
-     * range with configurable value precision within the range. Value precision is expressed as the number of significant
-     * digits in the value recording, and provides control over value quantization behavior across the value range and the
-     * subsequent value resolution at any given level.
-     * <p>
-     * For example, a Histogram could be configured to track the counts of observed integer values between 0 and
-     * 3,600,000,000 while maintaining a value precision of 3 significant digits across that range. Value quantization
-     * within the range will thus be no larger than 1/1,000th (or 0.1%) of any value. This example Histogram could
-     * be used to track and analyze the counts of observed response times ranging between 1 microsecond and 1 hour
-     * in magnitude, while maintaining a value resolution of 1 microsecond up to 1 millisecond, a resolution of
-     * 1 millisecond (or better) up to one second, and a resolution of 1 second (or better) up to 1,000 seconds. At it's
-     * maximum tracked value (1 hour), it would still maintain a resolution of 3.6 seconds (or better).
-     * <p>
-     * See package description for {@link org.HdrHistogram} for details.
-     *
-     */
+    /// <summary>
+    /// Base class for High Dynamic Range (HDR) Histograms
+    /// </summary>
+    /// <remarks>
+    /// <see cref="AbstractHistogram"/> supports the recording and analyzing sampled data value counts across a configurable
+    /// integer value range with configurable value precision within the range.
+    /// Value precision is expressed as the number of significant digits in the value recording, and provides control over 
+    /// value quantization behavior across the value range and the subsequent value resolution at any given level.
+    /// <para>
+    /// For example, a Histogram could be configured to track the counts of observed integer values between 0 and
+    /// 3,600,000,000 while maintaining a value precision of 3 significant digits across that range.
+    /// Value quantization within the range will thus be no larger than 1/1,000th(or 0.1%) of any value.
+    /// This example Histogram could be used to track and analyze the counts of observed response times ranging between 
+    /// 1 microsecond and 1 hour in magnitude, while maintaining a value resolution of 1 microsecond up to 1 millisecond, 
+    /// a resolution of 1 millisecond(or better) up to one second, and a resolution of 1 second(or better) up to 1,000 
+    /// seconds.
+    /// At it's maximum tracked value(1 hour), it would still maintain a resolution of 3.6 seconds(or better).
+    /// </para>
+    /// </remarks>
     public abstract class AbstractHistogram : AbstractHistogramBase //, ISerializable 
     {
         // "Hot" accessed fields (used in the the value recording code path) are bunched here, such
@@ -50,8 +50,7 @@ namespace HdrHistogram.NET
         internal int subBucketHalfCount;
         
 
-        // Sub-classes will typically add a totalCount field and a counts array field, which will likely be laid out
-        // right around here due to the subclass layout rules in most practical JVM implementations.
+        // Sub-classes will typically add a totalCount field and a counts array field.
 
         //
         //
@@ -87,24 +86,25 @@ namespace HdrHistogram.NET
         //
         //
 
-        /**
-         * Construct a histogram given the Lowest and Highest values to be tracked and a number of significant
-         * decimal digits. Providing a lowestTrackableValue is useful is situations where the units used
-         * for the histogram's values are much smaller that the minimal accuracy required. E.g. when tracking
-         * time values stated in nanosecond units, where the minimal accuracy required is a microsecond, the
-         * proper value for lowestTrackableValue would be 1000.
-         *
-         * @param lowestTrackableValue The lowest value that can be tracked (distinguished from 0) by the histogram.
-         *                             Must be a positive integer that is {@literal >=} 1. May be internally rounded down to nearest
-         *                             power of 2.
-         * @param highestTrackableValue The highest value to be tracked by the histogram. Must be a positive
-         *                              integer that is {@literal >=} (2 * lowestTrackableValue).
-         * @param numberOfSignificantValueDigits The number of significant decimal digits to which the histogram will
-         *                                       maintain value resolution and separation. Must be a non-negative
-         *                                       integer between 0 and 5.
-         */
-
-        protected AbstractHistogram(/*final*/ long lowestTrackableValue, /*final*/ long highestTrackableValue, /*final*/ int numberOfSignificantValueDigits)
+        /// <summary>
+        /// Construct a histogram given the Lowest and Highest values to be tracked and a number of significant decimal digits.
+        /// </summary>
+        /// <param name="lowestTrackableValue">The lowest value that can be tracked (distinguished from 0) by the histogram.
+        /// Must be a positive integer that is &gt;= 1.
+        /// May be internally rounded down to nearest power of 2.
+        /// </param>
+        /// <param name="highestTrackableValue">The highest value to be tracked by the histogram.
+        /// Must be a positive integer that is &gt;= (2 * lowestTrackableValue).
+        /// </param>
+        /// <param name="numberOfSignificantValueDigits">The number of significant decimal digits to which the histogram will maintain value resolution and separation. 
+        /// Must be a non-negative integer between 0 and 5.
+        /// </param>
+        /// <remarks>
+        /// Providing a lowestTrackableValue is useful is situations where the units used for the histogram's values are much 
+        /// smaller that the minimal accuracy required. E.g. when tracking time values stated in nanosecond units, where the 
+        /// minimal accuracy required is a microsecond, the proper value for lowestTrackableValue would be 1000.
+        /// </remarks>
+        protected AbstractHistogram(long lowestTrackableValue, long highestTrackableValue, int numberOfSignificantValueDigits)
         {
             // Verify argument validity
             if (lowestTrackableValue < 1)
@@ -122,18 +122,6 @@ namespace HdrHistogram.NET
             identity = GetNextIdentity();
 
             init(lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits, 0);
-        }
-
-        /**
-         * Construct a histogram with the same range settings as a given source histogram,
-         * duplicating the source's start/end timestamps (but NOT it's contents)
-         * @param source The source histogram to duplicate
-         */
-        AbstractHistogram(/*final*/ AbstractHistogram source)
-            : this(source.getLowestTrackableValue(), source.getHighestTrackableValue(), source.getNumberOfSignificantValueDigits())
-        {
-            this.setStartTimeStamp(source.getStartTimeStamp());
-            this.setEndTimeStamp(source.getEndTimeStamp());
         }
 
         private void init(/*final*/ long lowestTrackableValue, /*final*/ long highestTrackableValue, /*final*/ int numberOfSignificantValueDigits, long totalCount)
@@ -176,72 +164,49 @@ namespace HdrHistogram.NET
         //
         //
 
-        /**
-         * Record a value in the histogram
-         *
-         * @param value The value to be recorded
-         * @throws ArrayIndexOutOfBoundsException (may throw) if value is exceeds highestTrackableValue
-         */
+        /// <summary>
+        /// Records a value in the histogram
+        /// </summary>
+        /// <param name="value">The value to be recorded</param>
+        /// <exception cref="System.IndexOutOfRangeException">if value is exceeds highestTrackableValue</exception>
         public void recordValue(/*final*/ long value) //throws ArrayIndexOutOfBoundsException 
         {
             recordSingleValue(value);
         }
 
-        /**
-         * Record a value in the histogram (adding to the value's current count)
-         *
-         * @param value The value to be recorded
-         * @param count The number of occurrences of this value to record
-         * @throws ArrayIndexOutOfBoundsException (may throw) if value is exceeds highestTrackableValue
-         */
+        /// <summary>
+        /// Record a value in the histogram (adding to the value's current count)
+        /// </summary>
+        /// <param name="value">The value to be recorded</param>
+        /// <param name="count">The number of occurrences of this value to record</param>
+        /// <exception cref="System.IndexOutOfRangeException">if value is exceeds highestTrackableValue</exception>
         public void recordValueWithCount(/*final*/ long value, /*final*/ long count) //throws ArrayIndexOutOfBoundsException 
         {
             recordCountAtValue(count, value);
         }
 
-        /**
-         * Record a value in the histogram.
-         * <p>
-         * To compensate for the loss of sampled values when a recorded value is larger than the expected
-         * interval between value samples, Histogram will auto-generate an additional series of decreasingly-smaller
-         * (down to the expectedIntervalBetweenValueSamples) value records.
-         * <p>
-         * Note: This is a at-recording correction method, as opposed to the post-recording correction method provided
-         * by {@link #copyCorrectedForCoordinatedOmission(long) getHistogramCorrectedForCoordinatedOmission}.
-         * The two methods are mutually exclusive, and only one of the two should be be used on a given data set to correct
-         * for the same coordinated omission issue.
-         * <p>
-         * See notes in the description of the Histogram calls for an illustration of why this corrective behavior is
-         * important.
-         *
-         * @param value The value to record
-         * @param expectedIntervalBetweenValueSamples If expectedIntervalBetweenValueSamples is larger than 0, add
-         *                                           auto-generated value records as appropriate if value is larger
-         *                                           than expectedIntervalBetweenValueSamples
-         * @throws ArrayIndexOutOfBoundsException (may throw) if value is exceeds highestTrackableValue
-         */
+        /// <summary>
+        /// Record a value in the histogram.
+        /// </summary>
+        /// <param name="value">The value to record</param>
+        /// <param name="expectedIntervalBetweenValueSamples">If <param name="expectedIntervalBetweenValueSamples"/> is larger than 0, add auto-generated value records as appropriate if <param name="value"/> is larger than <param name="expectedIntervalBetweenValueSamples"/></param>
+        /// <remarks></remarks>
+        /// <exception cref="System.IndexOutOfRangeException">if value is exceeds highestTrackableValue</exception>
+        /// <remarks>
+        /// To compensate for the loss of sampled values when a recorded value is larger than the expected interval between value samples, 
+        /// Histogram will auto-generate an additional series of decreasingly-smaller (down to the expectedIntervalBetweenValueSamples) value records.
+        /// <para>
+        /// Note: This is a at-recording correction method, as opposed to the post-recording correction method provided by <see cref="copyCorrectedForCoordinatedOmission"/>.
+        /// The two methods are mutually exclusive, and only one of the two should be be used on a given data set to correct for the same coordinated omission issue.
+        /// </para>
+        /// See notes in the description of the Histogram calls for an illustration of why this corrective behavior is important.
+        /// </remarks>
         public void recordValueWithExpectedInterval(/*final*/ long value, /*final*/ long expectedIntervalBetweenValueSamples) //throws ArrayIndexOutOfBoundsException 
         {
             recordValueWithCountAndExpectedInterval(value, 1, expectedIntervalBetweenValueSamples);
         }
 
-        /**
-         * @deprecated
-         *
-         * Record a value in the histogram. This deprecated method has identical behavior to
-         * <b><code>recordValueWithExpectedInterval()</code></b>. It was renamed to avoid ambiguity.
-         *
-         * @param value The value to record
-         * @param expectedIntervalBetweenValueSamples If expectedIntervalBetweenValueSamples is larger than 0, add
-         *                                           auto-generated value records as appropriate if value is larger
-         *                                           than expectedIntervalBetweenValueSamples
-         * @throws ArrayIndexOutOfBoundsException (may throw) if value is exceeds highestTrackableValue
-         */
-        public void recordValue(/*final*/ long value, /*final*/ long expectedIntervalBetweenValueSamples) //throws ArrayIndexOutOfBoundsException 
-        {
-            recordValueWithExpectedInterval(value, expectedIntervalBetweenValueSamples);
-        }
-
+        
         private void recordCountAtValue(/*final*/ long count, /*final*/ long value) //throws ArrayIndexOutOfBoundsException 
         {
             // Dissect the value into bucket and sub-bucket parts, and derive index into counts array:
@@ -285,9 +250,9 @@ namespace HdrHistogram.NET
         //
         //
 
-        /**
-         * Reset the contents and stats of this histogram
-         */
+        /// <summary>
+        /// Reset the contents and stats of this histogram
+        /// </summary>
         public void reset()
         {
             clearCounts();
@@ -300,43 +265,34 @@ namespace HdrHistogram.NET
         //
         //
         //
+        
+        /// <summary>
+        /// Create a copy of this histogram, complete with data and everything.
+        /// </summary>
+        /// <returns>A distinct copy of this histogram.</returns>
+        public abstract AbstractHistogram copy();
 
-        /**
-         * Create a copy of this histogram, complete with data and everything.
-         *
-         * @return A distinct copy of this histogram.
-         */
-        abstract public AbstractHistogram copy();
+        /// <summary>
+        /// Get a copy of this histogram, corrected for coordinated omission.
+        /// </summary>
+        /// <param name="expectedIntervalBetweenValueSamples">If <param name="expectedIntervalBetweenValueSamples"/> is larger than 0, add auto-generated value records as appropriate if value is larger than <param name="expectedIntervalBetweenValueSamples"/></param>
+        /// <returns>a copy of this histogram, corrected for coordinated omission.</returns>
+        /// <remarks>
+        /// To compensate for the loss of sampled values when a recorded value is larger than the expected interval between value samples, 
+        /// the new histogram will include an auto-generated additional series of decreasingly-smaller(down to the <param name="expectedIntervalBetweenValueSamples"/>) 
+        /// value records for each count found in the current histogram that is larger than the expectedIntervalBetweenValueSamples.
+        /// <para>
+        /// Note: This is a post-correction method, as opposed to the at-recording correction method provided by <seealso cref="recordValueWithExpectedInterval(long, long)"/>. 
+        /// The two methods are mutually exclusive, and only one of the two should be be used on a given data set to correct for the same coordinated omission issue.
+        /// </para>
+        /// See notes in the description of the Histogram calls for an illustration of why this corrective behavior is important.
+        /// </remarks>
+        public abstract AbstractHistogram copyCorrectedForCoordinatedOmission(/*final*/ long expectedIntervalBetweenValueSamples);
 
-        /**
-         * Get a copy of this histogram, corrected for coordinated omission.
-         * <p>
-         * To compensate for the loss of sampled values when a recorded value is larger than the expected
-         * interval between value samples, the new histogram will include an auto-generated additional series of
-         * decreasingly-smaller (down to the expectedIntervalBetweenValueSamples) value records for each count found
-         * in the current histogram that is larger than the expectedIntervalBetweenValueSamples.
-         *
-         * Note: This is a post-correction method, as opposed to the at-recording correction method provided
-         * by {@link #recordValueWithExpectedInterval(long, long) recordValueWithExpectedInterval}. The two
-         * methods are mutually exclusive, and only one of the two should be be used on a given data set to correct
-         * for the same coordinated omission issue.
-         * by
-         * <p>
-         * See notes in the description of the Histogram calls for an illustration of why this corrective behavior is
-         * important.
-         *
-         * @param expectedIntervalBetweenValueSamples If expectedIntervalBetweenValueSamples is larger than 0, add
-         *                                           auto-generated value records as appropriate if value is larger
-         *                                           than expectedIntervalBetweenValueSamples
-         * @return a copy of this histogram, corrected for coordinated omission.
-         */
-        abstract public AbstractHistogram copyCorrectedForCoordinatedOmission(/*final*/ long expectedIntervalBetweenValueSamples);
-
-        /**
-         * Copy this histogram into the target histogram, overwriting it's contents.
-         *
-         * @param targetHistogram the histogram to copy into
-         */
+        /// <summary>
+        /// Copy this histogram into the target histogram, overwriting it's contents.
+        /// </summary>
+        /// <param name="targetHistogram">the histogram to copy into</param>
         public void copyInto(AbstractHistogram targetHistogram)
         {
             targetHistogram.reset();
@@ -345,15 +301,14 @@ namespace HdrHistogram.NET
             targetHistogram.setEndTimeStamp(this.endTimeStampMsec);
         }
 
-        /**
-         * Copy this histogram, corrected for coordinated omission, into the target histogram, overwriting it's contents.
-         * (see {@link #copyCorrectedForCoordinatedOmission} for more detailed explanation about how correction is applied)
-         *
-         * @param targetHistogram the histogram to copy into
-         * @param expectedIntervalBetweenValueSamples If expectedIntervalBetweenValueSamples is larger than 0, add
-         *                                           auto-generated value records as appropriate if value is larger
-         *                                           than expectedIntervalBetweenValueSamples
-         */
+        /// <summary>
+        /// Copy this histogram, corrected for coordinated omission, into the target histogram, overwriting it's contents.
+        /// </summary>
+        /// <param name="targetHistogram">the histogram to copy into</param>
+        /// <param name="expectedIntervalBetweenValueSamples">If <param name="expectedIntervalBetweenValueSamples"/> is larger than 0, add auto-generated value records as appropriate if value is larger than <param name="expectedIntervalBetweenValueSamples"/></param>
+        /// <remarks>
+        /// See <see cref="copyCorrectedForCoordinatedOmission"/> for more detailed explanation about how correction is applied
+        /// </remarks>
         public void copyIntoCorrectedForCoordinatedOmission(AbstractHistogram targetHistogram, /*final*/ long expectedIntervalBetweenValueSamples)
         {
             targetHistogram.reset();
@@ -370,12 +325,11 @@ namespace HdrHistogram.NET
         //
         //
 
-        /**
-         * Add the contents of another histogram to this one.
-         *
-         * @param fromHistogram The other histogram.
-         * @throws ArrayIndexOutOfBoundsException (may throw) if values in fromHistogram's are higher than highestTrackableValue.
-         */
+        /// <summary>
+        /// Add the contents of another histogram to this one.
+        /// </summary>
+        /// <param name="fromHistogram">The other histogram.</param>
+        /// <exception cref="System.IndexOutOfRangeException">if values in fromHistogram's are higher than highestTrackableValue.</exception>
         public void add(/*final*/ AbstractHistogram fromHistogram) //throws ArrayIndexOutOfBoundsException 
         {
             if (this.highestTrackableValue < fromHistogram.highestTrackableValue)
@@ -405,29 +359,19 @@ namespace HdrHistogram.NET
             }
         }
 
-        /**
-         * Add the contents of another histogram to this one, while correcting the incoming data for coordinated omission.
-         * <p>
-         * To compensate for the loss of sampled values when a recorded value is larger than the expected
-         * interval between value samples, the values added will include an auto-generated additional series of
-         * decreasingly-smaller (down to the expectedIntervalBetweenValueSamples) value records for each count found
-         * in the current histogram that is larger than the expectedIntervalBetweenValueSamples.
-         *
-         * Note: This is a post-recording correction method, as opposed to the at-recording correction method provided
-         * by {@link #recordValueWithExpectedInterval(long, long) recordValueWithExpectedInterval}. The two
-         * methods are mutually exclusive, and only one of the two should be be used on a given data set to correct
-         * for the same coordinated omission issue.
-         * by
-         * <p>
-         * See notes in the description of the Histogram calls for an illustration of why this corrective behavior is
-         * important.
-         *
-         * @param fromHistogram The other histogram. highestTrackableValue and largestValueWithSingleUnitResolution must match.
-         * @param expectedIntervalBetweenValueSamples If expectedIntervalBetweenValueSamples is larger than 0, add
-         *                                           auto-generated value records as appropriate if value is larger
-         *                                           than expectedIntervalBetweenValueSamples
-         * @throws ArrayIndexOutOfBoundsException (may throw) if values exceed highestTrackableValue
-         */
+        /// <summary>
+        /// Add the contents of another histogram to this one, while correcting the incoming data for coordinated omission.
+        /// </summary>
+        /// <param name="fromHistogram">The other histogram. highestTrackableValue and largestValueWithSingleUnitResolution must match.</param>
+        /// <param name="expectedIntervalBetweenValueSamples">If <param name="expectedIntervalBetweenValueSamples"/> is larger than 0, add auto-generated value records as appropriate if value is larger than <param name="expectedIntervalBetweenValueSamples"/></param>
+        /// <remarks>
+        /// To compensate for the loss of sampled values when a recorded value is larger than the expected interval between value samples, the values added will include an auto-generated additional series of decreasingly-smaller(down to the expectedIntervalBetweenValueSamples) value records for each count found in the current histogram that is larger than the expectedIntervalBetweenValueSamples.
+        /// 
+        /// Note: This is a post-recording correction method, as opposed to the at-recording correction method provided by {@link #recordValueWithExpectedInterval(long, long) recordValueWithExpectedInterval}. 
+        /// The two methods are mutually exclusive, and only one of the two should be be used on a given data set to correct for the same coordinated omission issue.
+        /// See notes in the description of the Histogram calls for an illustration of why this corrective behavior is important.
+        /// </remarks>
+        /// <exception cref="System.IndexOutOfRangeException">if values exceed highestTrackableValue.</exception>
         public void addWhileCorrectingForCoordinatedOmission(/*final*/ AbstractHistogram fromHistogram, /*final*/ long expectedIntervalBetweenValueSamples)
         {
             /*final*/
