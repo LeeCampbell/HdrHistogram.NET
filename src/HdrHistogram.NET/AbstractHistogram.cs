@@ -393,13 +393,14 @@ namespace HdrHistogram.NET
         //
         //
 
-        /**
-         * Determine if this histogram is equivalent to another.
-         *
-         * @param other the other histogram to compare to
-         * @return True if this histogram are equivalent with the other.
-         */
-        public override Boolean Equals(Object other)
+
+        //TODO: Implement IEquatable? -LC
+        /// <summary>
+        /// Determine if this histogram is equivalent to another.
+        /// </summary>
+        /// <param name="other">the other histogram to compare to</param>
+        /// <returns><c>true</c> if this histogram are equivalent with the other.</returns>
+        public override bool Equals(object other)
         {
             if (this == other)
             {
@@ -485,42 +486,42 @@ namespace HdrHistogram.NET
         //
         //
         //
-
-        /**
-         * get the configured lowestTrackableValue
-         * @return lowestTrackableValue
-         */
+        
+        //TODO: Make properties. -LC
+        
+        /// <summary>
+        /// Get the configured lowestTrackableValue
+        /// </summary>
+        /// <returns>lowestTrackableValue</returns>
         public long getLowestTrackableValue()
         {
             return lowestTrackableValue;
         }
-
-        /**
-         * get the configured highestTrackableValue
-         * @return highestTrackableValue
-         */
+        
+        /// <summary>
+        /// Get the configured highestTrackableValue
+        /// </summary>
+        /// <returns>highestTrackableValue</returns>
         public long getHighestTrackableValue()
         {
             return highestTrackableValue;
         }
 
-        /**
-         * get the configured numberOfSignificantValueDigits
-         * @return numberOfSignificantValueDigits
-         */
+        /// <summary>
+        /// Get the configured numberOfSignificantValueDigits
+        /// </summary>
+        /// <returns>numberOfSignificantValueDigits</returns>
         public int getNumberOfSignificantValueDigits()
         {
             return numberOfSignificantValueDigits;
         }
 
-        /**
-         * Get the size (in value units) of the range of values that are equivalent to the given value within the
-         * histogram's resolution. Where "equivalent" means that value samples recorded for any two
-         * equivalent values are counted in a common total count.
-         *
-         * @param value The given value
-         * @return The lowest value that is equivalent to the given value within the histogram's resolution.
-         */
+        /// <summary>
+        /// Get the size (in value units) of the range of values that are equivalent to the given value within the histogram's resolution. 
+        /// Where "equivalent" means that value samples recorded for any two equivalent values are counted in a common total count.
+        /// </summary>
+        /// <param name="value">The given value</param>
+        /// <returns>The lowest value that is equivalent to the given value within the histogram's resolution.</returns>
         public long sizeOfEquivalentValueRange(/*final*/ long value)
         {
             int bucketIndex = getBucketIndex(value);
@@ -530,14 +531,12 @@ namespace HdrHistogram.NET
             return distanceToNextValue;
         }
 
-        /**
-         * Get the lowest value that is equivalent to the given value within the histogram's resolution.
-         * Where "equivalent" means that value samples recorded for any two
-         * equivalent values are counted in a common total count.
-         *
-         * @param value The given value
-         * @return The lowest value that is equivalent to the given value within the histogram's resolution.
-         */
+        /// <summary>
+        /// Get the lowest value that is equivalent to the given value within the histogram's resolution.
+        /// Where "equivalent" means that value samples recorded for any two equivalent values are counted in a common total count.
+        /// </summary>
+        /// <param name="value">The given value</param>
+        /// <returns>The lowest value that is equivalent to the given value within the histogram's resolution.</returns>
         public long lowestEquivalentValue(/*final*/ long value)
         {
             int bucketIndex = getBucketIndex(value);
@@ -546,64 +545,55 @@ namespace HdrHistogram.NET
             return thisValueBaseLevel;
         }
 
-        /**
-         * Get the highest value that is equivalent to the given value within the histogram's resolution.
-         * Where "equivalent" means that value samples recorded for any two
-         * equivalent values are counted in a common total count.
-         *
-         * @param value The given value
-         * @return The highest value that is equivalent to the given value within the histogram's resolution.
-         */
+        /// <summary>
+        /// Get the highest value that is equivalent to the given value within the histogram's resolution.
+        /// Where "equivalent" means that value samples recorded for any two equivalent values are counted in a common total count.
+        /// </summary>
+        /// <param name="value">The given value</param>
+        /// <returns>The highest value that is equivalent to the given value within the histogram's resolution.</returns>
         public long highestEquivalentValue(/*final*/ long value)
         {
             return nextNonEquivalentValue(value) - 1;
         }
 
-        /**
-         * Get a value that lies in the middle (rounded up) of the range of values equivalent the given value.
-         * Where "equivalent" means that value samples recorded for any two
-         * equivalent values are counted in a common total count.
-         *
-         * @param value The given value
-         * @return The value lies in the middle (rounded up) of the range of values equivalent the given value.
-         */
+        /// <summary>
+        /// Get a value that lies in the middle (rounded up) of the range of values equivalent the given value.
+        /// Where "equivalent" means that value samples recorded for any two equivalent values are counted in a common total count.
+        /// </summary>
+        /// <param name="value">The given value</param>
+        /// <returns>The value lies in the middle (rounded up) of the range of values equivalent the given value.</returns>
         public long medianEquivalentValue(/*final*/ long value)
         {
             return (lowestEquivalentValue(value) + (sizeOfEquivalentValueRange(value) >> 1));
         }
 
-        /**
-         * Get the next value that is not equivalent to the given value within the histogram's resolution.
-         * Where "equivalent" means that value samples recorded for any two
-         * equivalent values are counted in a common total count.
-         *
-         * @param value The given value
-         * @return The next value that is not equivalent to the given value within the histogram's resolution.
-         */
+        /// <summary>
+        /// Get the next value that is not equivalent to the given value within the histogram's resolution.
+        /// Where "equivalent" means that value samples recorded for any two equivalent values are counted in a common total count.
+        /// </summary>
+        /// <param name="value">The given value</param>
+        /// <returns>The next value that is not equivalent to the given value within the histogram's resolution.</returns>
         public long nextNonEquivalentValue(/*final*/ long value)
         {
             return lowestEquivalentValue(value) + sizeOfEquivalentValueRange(value);
         }
 
-        /**
-         * Determine if two values are equivalent with the histogram's resolution.
-         * Where "equivalent" means that value samples recorded for any two
-         * equivalent values are counted in a common total count.
-         *
-         * @param value1 first value to compare
-         * @param value2 second value to compare
-         * @return True if values are equivalent with the histogram's resolution.
-         */
+        /// <summary>
+        /// Determine if two values are equivalent with the histogram's resolution.
+        /// Where "equivalent" means that value samples recorded for any two equivalent values are counted in a common total count.
+        /// </summary>
+        /// <param name="value1">first value to compare</param>
+        /// <param name="value2">second value to compare</param>
+        /// <returns><c>true</c> if values are equivalent with the histogram's resolution.</returns>
         public bool valuesAreEquivalent(/*final*/ long value1, /*final*/ long value2)
         {
             return (lowestEquivalentValue(value1) == lowestEquivalentValue(value2));
         }
 
-        /**
-         * Provide a (conservatively high) estimate of the Histogram's total footprint in bytes
-         *
-         * @return a (conservatively high) estimate of the Histogram's total footprint in bytes
-         */
+        /// <summary>
+        /// Provide a (conservatively high) estimate of the Histogram's total footprint in bytes
+        /// </summary>
+        /// <returns>a (conservatively high) estimate of the Histogram's total footprint in bytes</returns>
         public int getEstimatedFootprintInBytes()
         {
             return _getEstimatedFootprintInBytes();
