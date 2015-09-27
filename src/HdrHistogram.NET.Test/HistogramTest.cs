@@ -444,14 +444,6 @@ namespace HdrHistogram.NET.Test
             Console.WriteLine("Testing copy of ShortHistogram:");
             assertEqual(shortHistogram, shortHistogram.copy());
 
-            AtomicHistogram atomicHistogram = new AtomicHistogram(highestTrackableValue, numberOfSignificantValueDigits);
-            atomicHistogram.recordValue(testValueLevel);
-            atomicHistogram.recordValue(testValueLevel * 10);
-            atomicHistogram.recordValueWithExpectedInterval(atomicHistogram.getHighestTrackableValue() - 1, 31000);
-
-            Console.WriteLine("Testing copy of AtomicHistogram:");
-            assertEqual(atomicHistogram, atomicHistogram.copy());
-
             SynchronizedHistogram syncHistogram = new SynchronizedHistogram(highestTrackableValue, numberOfSignificantValueDigits);
             syncHistogram.recordValue(testValueLevel);
             syncHistogram.recordValue(testValueLevel * 10);
@@ -487,14 +479,6 @@ namespace HdrHistogram.NET.Test
 
             Console.WriteLine("Testing copy of scaled ShortHistogram:");
             assertEqual(shortHistogram, shortHistogram.copy());
-
-            AtomicHistogram atomicHistogram = new AtomicHistogram(1000, highestTrackableValue, numberOfSignificantValueDigits);
-            atomicHistogram.recordValue(testValueLevel);
-            atomicHistogram.recordValue(testValueLevel * 10);
-            atomicHistogram.recordValueWithExpectedInterval(atomicHistogram.getHighestTrackableValue() - 1, 31000);
-
-            Console.WriteLine("Testing copy of scaled AtomicHistogram:");
-            assertEqual(atomicHistogram, atomicHistogram.copy());
 
             SynchronizedHistogram syncHistogram = new SynchronizedHistogram(1000, highestTrackableValue, numberOfSignificantValueDigits);
             syncHistogram.recordValue(testValueLevel);
@@ -553,20 +537,7 @@ namespace HdrHistogram.NET.Test
             shortHistogram.copyInto(targetShortHistogram);
             assertEqual(shortHistogram, targetShortHistogram);
 
-            AtomicHistogram atomicHistogram = new AtomicHistogram(highestTrackableValue, numberOfSignificantValueDigits);
-            AtomicHistogram targetAtomicHistogram = new AtomicHistogram(highestTrackableValue, numberOfSignificantValueDigits);
-            atomicHistogram.recordValue(testValueLevel);
-            atomicHistogram.recordValue(testValueLevel * 10);
-            atomicHistogram.recordValueWithExpectedInterval(atomicHistogram.getHighestTrackableValue() - 1, 31000);
-
             Console.WriteLine("Testing copyInto for AtomicHistogram:");
-            atomicHistogram.copyInto(targetAtomicHistogram);
-            assertEqual(atomicHistogram, targetAtomicHistogram);
-
-            atomicHistogram.recordValue(testValueLevel * 20);
-
-            atomicHistogram.copyInto(targetAtomicHistogram);
-            assertEqual(atomicHistogram, targetAtomicHistogram);
 
             SynchronizedHistogram syncHistogram = new SynchronizedHistogram(highestTrackableValue, numberOfSignificantValueDigits);
             SynchronizedHistogram targetSyncHistogram = new SynchronizedHistogram(highestTrackableValue, numberOfSignificantValueDigits);
@@ -631,21 +602,6 @@ namespace HdrHistogram.NET.Test
 
             shortHistogram.copyInto(targetShortHistogram);
             assertEqual(shortHistogram, targetShortHistogram);
-
-            AtomicHistogram atomicHistogram = new AtomicHistogram(1000, highestTrackableValue, numberOfSignificantValueDigits);
-            AtomicHistogram targetAtomicHistogram = new AtomicHistogram(1000, highestTrackableValue, numberOfSignificantValueDigits);
-            atomicHistogram.recordValue(testValueLevel);
-            atomicHistogram.recordValue(testValueLevel * 10);
-            atomicHistogram.recordValueWithExpectedInterval(atomicHistogram.getHighestTrackableValue() - 1, 31000);
-
-            atomicHistogram.copyInto(targetAtomicHistogram);
-            assertEqual(atomicHistogram, targetAtomicHistogram);
-
-            atomicHistogram.recordValue(testValueLevel * 20);
-
-            Console.WriteLine("Testing copyInto for scaled AtomicHistogram:");
-            atomicHistogram.copyInto(targetAtomicHistogram);
-            assertEqual(atomicHistogram, targetAtomicHistogram);
 
             SynchronizedHistogram syncHistogram = new SynchronizedHistogram(1000, highestTrackableValue, numberOfSignificantValueDigits);
             SynchronizedHistogram targetSyncHistogram = new SynchronizedHistogram(1000, highestTrackableValue, numberOfSignificantValueDigits);

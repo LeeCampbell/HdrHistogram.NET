@@ -31,14 +31,12 @@ namespace HdrHistogram.NET.Test
             ShortHistogram shortHistogram = new ShortHistogram(highestTrackableValue, 3);
             IntHistogram intHistogram = new IntHistogram(highestTrackableValue, 3);
             Histogram histogram = new Histogram(highestTrackableValue, 3);
-            AtomicHistogram atomicHistogram = new AtomicHistogram(highestTrackableValue, 3);
             SynchronizedHistogram synchronizedHistogram = new SynchronizedHistogram(highestTrackableValue, 3);
 
             for (int i = 0; i < 10000; i++) {
                 shortHistogram.recordValueWithExpectedInterval(1000 /* 1 msec */, 10000 /* 10 msec expected interval */);
                 intHistogram.recordValueWithExpectedInterval(2000 /* 1 msec */, 10000 /* 10 msec expected interval */);
                 histogram.recordValueWithExpectedInterval(3000 /* 1 msec */, 10000 /* 10 msec expected interval */);
-                atomicHistogram.recordValueWithExpectedInterval(4000 /* 1 msec */, 10000 /* 10 msec expected interval */);
                 synchronizedHistogram.recordValueWithExpectedInterval(5000 /* 1 msec */, 10000 /* 10 msec expected interval */);
             }
 
@@ -93,22 +91,10 @@ namespace HdrHistogram.NET.Test
             Histogram histogram3 = Histogram.decodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
             Assert.assertEquals(histogram, histogram3);
 
-            Console.WriteLine("\n\nTesting encoding of a AtomicHistogram (long):");
-            targetBuffer = ByteBuffer.allocate(atomicHistogram.getNeededByteBufferCapacity());
-            atomicHistogram.encodeIntoByteBuffer(targetBuffer);
-            //Console.WriteLine("After ENCODING TargetBuffer length = {0} (position {1}), atomicHistogram size = {2}",
-            //                targetBuffer.capacity(), targetBuffer.position(), atomicHistogram.getTotalCount());
             targetBuffer.rewind();
 
-            AtomicHistogram atomicHistogram2 = AtomicHistogram.decodeFromByteBuffer(targetBuffer, 0);
-            Assert.assertEquals(atomicHistogram, atomicHistogram2);
 
-            targetCompressedBuffer = ByteBuffer.allocate(atomicHistogram.getNeededByteBufferCapacity());
-            atomicHistogram.encodeIntoCompressedByteBuffer(targetCompressedBuffer);
             targetCompressedBuffer.rewind();
-
-            AtomicHistogram atomicHistogram3 = AtomicHistogram.decodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
-            Assert.assertEquals(atomicHistogram, atomicHistogram3);
 
             Console.WriteLine("\n\nTesting encoding of a SynchronizedHistogram:");
             targetBuffer = ByteBuffer.allocate(synchronizedHistogram.getNeededByteBufferCapacity());

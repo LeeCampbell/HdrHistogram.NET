@@ -163,19 +163,7 @@ namespace HdrHistogram.NET.Test
         //    // Check that the histogram contains as many values are we wrote to it
         //    Assert.AreEqual(synchronizedTimingLoopCount * 3L, histogram.getTotalCount());
         //}
-
-        [Test]
-        public void testRawAtomicRecordingSpeed()
-        {
-            AbstractHistogram histogram;
-            histogram = new AtomicHistogram(highestTrackableValue, numberOfSignificantValueDigits);
-            Console.WriteLine("\n\nTiming AtomicHistogram:");
-            testRawRecordingSpeedAtExpectedInterval("AtomicHistogram: ", histogram, 1000000000, atomicTimingLoopCount);
-
-            // Check that the histogram contains as many values are we wrote to it
-            Assert.AreEqual(atomicTimingLoopCount, histogram.getTotalCount());
-        }
-
+        
         //[Test]
         //public void testRawAtomicRecordingSpeedMultithreaded()
         //{
@@ -271,8 +259,6 @@ namespace HdrHistogram.NET.Test
                 test.testRawRecordingSpeed();
                 Console.WriteLine("");
                 test.testRawSyncronizedRecordingSpeed();
-                Console.WriteLine("");
-                test.testRawAtomicRecordingSpeed();
                 Console.WriteLine("");
                 test.testLeadingZerosSpeed();
                 Console.WriteLine("");

@@ -1342,6 +1342,10 @@ namespace HdrHistogram.NET
             {
                 long maxValue = getMaxValue();
                 int relevantLength = getLengthForNumberOfBuckets(getBucketsNeededToCoverValue(maxValue));
+                Console.WriteLine($"buffer.capacity() < getNeededByteBufferCapacity(relevantLength))");
+                Console.WriteLine($"  buffer.capacity() = {buffer.capacity()}");
+                Console.WriteLine($"  relevantLength = {relevantLength}");
+                Console.WriteLine($"  getNeededByteBufferCapacity(relevantLength) = {getNeededByteBufferCapacity(relevantLength)}");
                 if (buffer.capacity() < getNeededByteBufferCapacity(relevantLength))
                 {
                     throw new ArgumentOutOfRangeException("buffer does not have capacity for" + getNeededByteBufferCapacity(relevantLength) + " bytes");
@@ -1355,6 +1359,7 @@ namespace HdrHistogram.NET
                 Debug.WriteLine("MaxValue = {0}, Buckets needed = {1}, relevantLength = {2}", maxValue, getBucketsNeededToCoverValue(maxValue), relevantLength);
                 Debug.WriteLine("MaxValue = {0}, Buckets needed = {1}, relevantLength = {2}", maxValue, getBucketsNeededToCoverValue(maxValue), relevantLength);
 
+                Console.WriteLine($"fillBufferFromCountsArray({buffer}, {relevantLength} * {wordSizeInBytes});");
                 fillBufferFromCountsArray(buffer, relevantLength * wordSizeInBytes);
 
                 return getNeededByteBufferCapacity(relevantLength);

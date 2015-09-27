@@ -42,9 +42,8 @@
   <ItemGroup>
     <Compile Include="AbstractHistogram.cs" />
     <Compile Include="AbstractHistogramBase.cs" />
-    <Compile Include="AtomicHistogram.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Utilities\AtomicLong.cs" />
+    <Compile Include="Utilities\AtomicLongArray.cs" />
     <Compile Include="Utilities\CountingMemoryStream.cs" />
     <Compile Include="IntHistogram.cs" />
     <Compile Include="Iteration\AbstractHistogramIterator.cs" />
@@ -52,14 +51,12 @@
     <Compile Include="Histogram.cs" />
     <Compile Include="ShortHistogram.cs" />
     <Compile Include="SynchronizedHistogram.cs" />
-    <Compile Include="Utilities\AtomicLongArray.cs" />
     <Compile Include="Utilities\ByteBuffer.cs" />
     <Compile Include="Iteration\LogarithmicIterator.cs" />
     <Compile Include="Iteration\HistogramIterationValue.cs" />
     <Compile Include="Iteration\LinearIterator.cs" />
     <Compile Include="Iteration\PercentileIterator.cs" />
     <Compile Include="Iteration\RecordedValuesIterator.cs" />
-    <Compile Include="Utilities\AtomicLong.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\MiscUtilities.cs" />
     <Compile Include="Utilities\WrappedBuffer.cs" />
