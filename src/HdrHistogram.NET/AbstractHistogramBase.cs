@@ -34,8 +34,7 @@ namespace HdrHistogram.NET
         internal int countsArrayLength;
         internal int wordSizeInBytes;
 
-        internal long startTimeStampMsec;
-        internal long endTimeStampMsec;
+        
 
         internal PercentileIterator percentileIterator;
         internal RecordedValuesIterator recordedValuesIterator;

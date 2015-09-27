@@ -47,8 +47,12 @@ namespace HdrHistogram.NET
         private int subBucketHalfCountMagnitude;
         private int unitMagnitude;
         private long subBucketMask;
+
+        private long startTimeStampMsec;
+        private long endTimeStampMsec;
+
         internal int subBucketHalfCount;
-        
+
 
         // Sub-classes will typically add a totalCount field and a counts array field.
 
@@ -297,8 +301,8 @@ namespace HdrHistogram.NET
         {
             targetHistogram.reset();
             targetHistogram.add(this);
-            targetHistogram.setStartTimeStamp(this.startTimeStampMsec);
-            targetHistogram.setEndTimeStamp(this.endTimeStampMsec);
+            targetHistogram.StartTimeStamp = this.StartTimeStamp;
+            targetHistogram.EndTimeStamp = this.EndTimeStamp;
         }
 
         /// <summary>
@@ -313,8 +317,8 @@ namespace HdrHistogram.NET
         {
             targetHistogram.reset();
             targetHistogram.addWhileCorrectingForCoordinatedOmission(this, expectedIntervalBetweenValueSamples);
-            targetHistogram.setStartTimeStamp(this.startTimeStampMsec);
-            targetHistogram.setEndTimeStamp(this.endTimeStampMsec);
+            targetHistogram.StartTimeStamp = this.StartTimeStamp;
+            targetHistogram.EndTimeStamp = this.EndTimeStamp;
         }
 
         //
@@ -607,41 +611,17 @@ namespace HdrHistogram.NET
         //
         //
 
-        /**
-         * get the start time stamp [optionally] stored with this histogram
-         * @return the start time stamp [optionally] stored with this histogram
-         */
-        public long getStartTimeStamp()
-        {
-            return startTimeStampMsec;
-        }
+        /// <summary>
+        /// Gets or Sets the start time stamp value associated with this histogram to a given value.
+        /// By convention in msec since the epoch.
+        /// </summary>
+        public long StartTimeStamp { get { return startTimeStampMsec; } set { startTimeStampMsec = value; } }
 
-        /**
-         * Set the start time stamp value associated with this histogram to a given value.
-         * @param timeStampMsec the value to set the time stamp to, [by convention] in msec since the epoch.
-         */
-        public void setStartTimeStamp(long timeStampMsec)
-        {
-            this.startTimeStampMsec = timeStampMsec;
-        }
-
-        /**
-         * get the end time stamp [optionally] stored with this histogram
-         * @return the end time stamp [optionally] stored with this histogram
-         */
-        public long getEndTimeStamp()
-        {
-            return endTimeStampMsec;
-        }
-
-        /**
-         * Set the end time stamp value associated with this histogram to a given value.
-         * @param timeStampMsec the value to set the time stamp to, [by convention] in msec since the epoch.
-         */
-        public void setEndTimeStamp(long timeStampMsec)
-        {
-            this.endTimeStampMsec = timeStampMsec;
-        }
+        /// <summary>
+        /// Gets or Sets the end time stamp value associated with this histogram to a given value.
+        /// By convention in msec since the epoch.
+        /// </summary>
+        public long EndTimeStamp { get { return endTimeStampMsec; } set { endTimeStampMsec = value; } }
 
         //
         //
