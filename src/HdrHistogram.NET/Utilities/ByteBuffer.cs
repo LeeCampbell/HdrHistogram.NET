@@ -9,6 +9,7 @@
  */
 
 using System;
+using System.Diagnostics;
 
 namespace HdrHistogram.NET.Utilities
 {
@@ -102,14 +103,14 @@ namespace HdrHistogram.NET.Utilities
 
         internal void blockCopy(Array src, int srcOffset, int dstOffset, int count)
         {
-            Console.WriteLine("  Buffer.BlockCopy - Copying {0} bytes INTO internalBuffer, scrOffset = {1}, dstOffset = {2}", count, srcOffset, dstOffset);
+            Debug.WriteLine("  Buffer.BlockCopy - Copying {0} bytes INTO internalBuffer, scrOffset = {1}, dstOffset = {2}", count, srcOffset, dstOffset);
             Buffer.BlockCopy(src: src, srcOffset: srcOffset, dst: _internalBuffer, dstOffset: dstOffset, count: count);
             _position += count;
         }
 
         internal void blockGet(Array dst, int dstOffset, int srcOffset, int count)
         {
-            Console.WriteLine("  Buffer.BlockCopy - Copying {0} bytes FROM internalBuffer, scrOffset = {1}, dstOffset = {2}", count, srcOffset, dstOffset);
+            Debug.WriteLine("  Buffer.BlockCopy - Copying {0} bytes FROM internalBuffer, scrOffset = {1}, dstOffset = {2}", count, srcOffset, dstOffset);
             Buffer.BlockCopy(src: _internalBuffer, srcOffset: srcOffset, dst: dst, dstOffset: dstOffset, count: count);
         }
 
