@@ -41,22 +41,22 @@ namespace HdrHistogram.NET
         long totalCount;
         readonly long[] counts;
 
-        public override long getCountAtIndex(/*final*/ int index) 
+        protected override long getCountAtIndex(/*final*/ int index) 
         {
             return counts[index];
         }
 
-        public override void incrementCountAtIndex(/*final*/ int index) 
+        protected override void incrementCountAtIndex(/*final*/ int index) 
         {
             counts[index]++;
         }
 
-        public override void addToCountAtIndex(/*final*/ int index, /*final*/ long value) 
+        protected override void addToCountAtIndex(/*final*/ int index, /*final*/ long value) 
         {
             counts[index] += value;
         }
 
-        public override void clearCounts()
+        protected override void clearCounts()
         {
             Array.Clear(counts, 0, counts.Length);
             totalCount = 0;
@@ -81,22 +81,22 @@ namespace HdrHistogram.NET
             return totalCount;
         }
 
-        public override void setTotalCount(/*final*/ long totalCount) 
+        protected override void setTotalCount(/*final*/ long totalCount) 
         {
             this.totalCount = totalCount;
         }
 
-        public override void incrementTotalCount() 
+        protected override void incrementTotalCount() 
         {
             totalCount++;
         }
 
-        public override void addToTotalCount(/*final*/ long value) 
+        protected override void addToTotalCount(/*final*/ long value) 
         {
             totalCount += value;
         }
 
-        public override int _getEstimatedFootprintInBytes() 
+        protected override int _getEstimatedFootprintInBytes() 
         {
             return (512 + (8 * counts.Length));
         }
@@ -170,7 +170,7 @@ namespace HdrHistogram.NET
         //    o.defaultReadObject();
         //}
 
-        public override void fillCountsArrayFromBuffer(/*final*/ ByteBuffer buffer, /*final*/ int length)
+        protected override void fillCountsArrayFromBuffer(/*final*/ ByteBuffer buffer, /*final*/ int length)
         {
             lock (updateLock)
             {
@@ -184,7 +184,7 @@ namespace HdrHistogram.NET
         private ByteBuffer cachedDstByteBuffer = null;
         private int cachedDstByteBufferPosition = 0;
 
-        public override void fillBufferFromCountsArray(/*final*/ ByteBuffer buffer, /*final*/ int length)
+        protected override void fillBufferFromCountsArray(/*final*/ ByteBuffer buffer, /*final*/ int length)
         {
             lock (updateLock)
             {

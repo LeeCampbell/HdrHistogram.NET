@@ -44,10 +44,11 @@ namespace HdrHistogram.NET
         // "Hot" accessed fields (used in the the value recording code path) are bunched here, such
         // that they will have a good chance of ending up in the same cache line as the totalCounts and
         // counts array reference fields that subclass implementations will typically add.
-        internal int subBucketHalfCountMagnitude;
-        internal int unitMagnitude;
+        private int subBucketHalfCountMagnitude;
+        private int unitMagnitude;
+        private long subBucketMask;
         internal int subBucketHalfCount;
-        internal long subBucketMask;
+        
 
         // Sub-classes will typically add a totalCount field and a counts array field, which will likely be laid out
         // right around here due to the subclass layout rules in most practical JVM implementations.
@@ -60,23 +61,23 @@ namespace HdrHistogram.NET
         //
         //
 
-        public abstract long getCountAtIndex(int index);
+        protected abstract long getCountAtIndex(int index);
 
-        public abstract void incrementCountAtIndex(int index);
+        protected abstract void incrementCountAtIndex(int index);
 
-        public abstract void addToCountAtIndex(int index, long value);
+        protected abstract void addToCountAtIndex(int index, long value);
+
+        protected abstract void setTotalCount(long totalCount);
+
+        protected abstract void incrementTotalCount();
+
+        protected abstract void addToTotalCount(long value);
+
+        protected abstract void clearCounts();
+
+        protected abstract int _getEstimatedFootprintInBytes();
 
         public abstract long getTotalCount();
-
-        public abstract void setTotalCount(long totalCount);
-
-        public abstract void incrementTotalCount();
-
-        public abstract void addToTotalCount(long value);
-
-        public abstract void clearCounts();
-
-        public abstract int _getEstimatedFootprintInBytes();
 
         //
         //
@@ -102,7 +103,8 @@ namespace HdrHistogram.NET
          *                                       maintain value resolution and separation. Must be a non-negative
          *                                       integer between 0 and 5.
          */
-        public AbstractHistogram(/*final*/ long lowestTrackableValue, /*final*/ long highestTrackableValue, /*final*/ int numberOfSignificantValueDigits)
+
+        protected AbstractHistogram(/*final*/ long lowestTrackableValue, /*final*/ long highestTrackableValue, /*final*/ int numberOfSignificantValueDigits)
         {
             // Verify argument validity
             if (lowestTrackableValue < 1)
@@ -648,7 +650,7 @@ namespace HdrHistogram.NET
          * @param value2 second value to compare
          * @return True if values are equivalent with the histogram's resolution.
          */
-        public Boolean valuesAreEquivalent(/*final*/ long value1, /*final*/ long value2)
+        public bool valuesAreEquivalent(/*final*/ long value1, /*final*/ long value2)
         {
             return (lowestEquivalentValue(value1) == lowestEquivalentValue(value2));
         }
@@ -1254,35 +1256,7 @@ namespace HdrHistogram.NET
         //
         //
 
-        // TODO work out if/where this should be used
-        //private static /*final*/ long serialVersionUID = 42L;
-
-        private void writeObject(/*final*/ BinaryWriter o /*ObjectOutputStream o*/)
-        //throws IOException
-        {
-            o.Write(lowestTrackableValue);
-            o.Write(highestTrackableValue);
-            o.Write(numberOfSignificantValueDigits);
-            o.Write(getTotalCount()); // Needed because overflow situations may lead this to differ from counts totals
-        }
-
-        private void readObject(/*final*/ BinaryReader o /*ObjectOutputStream o*/)
-        //throws IOException, ClassNotFoundException 
-        {
-            /*final*/
-            long lowestTrackableValue = o.ReadInt64();
-            /*final*/
-            long highestTrackableValue = o.ReadInt64();
-            /*final*/
-            int numberOfSignificantValueDigits = o.ReadInt32();
-            /*final*/
-            long totalCount = o.ReadInt64();
-            init(lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits, totalCount);
-            setTotalCount(totalCount);
-        }
-
-
-        //
+       //
         //
         //
         // Encoding/Decoding support:
@@ -1304,9 +1278,9 @@ namespace HdrHistogram.NET
             return (relevantLength * wordSizeInBytes) + 32;
         }
 
-        public abstract void fillCountsArrayFromBuffer(ByteBuffer buffer, int length);
+        protected abstract void fillCountsArrayFromBuffer(ByteBuffer buffer, int length);
 
-        public abstract void fillBufferFromCountsArray(ByteBuffer buffer, int length);
+        protected abstract void fillBufferFromCountsArray(ByteBuffer buffer, int length);
 
         private static /*final*/ int encodingCookieBase = 0x1c849308;
         private static /*final*/ int compressedEncodingCookieBase = 0x1c849309;
@@ -1538,7 +1512,7 @@ namespace HdrHistogram.NET
          *
          * @return True if this histogram has had a count value overflow.
          */
-        public Boolean hasOverflowed()
+        public bool hasOverflowed()
         {
             // On overflow, the totalCount accumulated counter will (always) not match the total of counts
             long totalCounted = 0;
@@ -1594,7 +1568,7 @@ namespace HdrHistogram.NET
         //
         //
 
-        int getBucketsNeededToCoverValue(long value)
+        private int getBucketsNeededToCoverValue(long value)
         {
             long trackableValue = (subBucketCount - 1) << unitMagnitude;
             int bucketsNeeded = 1;
@@ -1606,7 +1580,7 @@ namespace HdrHistogram.NET
             return bucketsNeeded;
         }
 
-        int getLengthForNumberOfBuckets(int numberOfBuckets)
+        private int getLengthForNumberOfBuckets(int numberOfBuckets)
         {
             int lengthNeeded = (numberOfBuckets + 1) * (subBucketCount / 2);
             return lengthNeeded;
@@ -1630,13 +1604,13 @@ namespace HdrHistogram.NET
             return getCountAtIndex(countsArrayIndex(bucketIndex, subBucketIndex));
         }
 
-        int getBucketIndex(/*final*/ long value)
+        private int getBucketIndex(/*final*/ long value)
         {
             int pow2ceiling = 64 - MiscUtilities.numberOfLeadingZeros(value | subBucketMask); // smallest power of 2 containing value
             return pow2ceiling - unitMagnitude - (subBucketHalfCountMagnitude + 1);
         }
 
-        int getSubBucketIndex(long value, int bucketIndex)
+        private int getSubBucketIndex(long value, int bucketIndex)
         {
             return (int)(value >> (bucketIndex + unitMagnitude));
         }
@@ -1648,7 +1622,8 @@ namespace HdrHistogram.NET
         }
 
         /*final*/
-        internal long valueFromIndex(/*final*/ int index)
+
+        private long valueFromIndex(/*final*/ int index)
         {
             int bucketIndex = (index >> subBucketHalfCountMagnitude) - 1;
             int subBucketIndex = (index & (subBucketHalfCount - 1)) + subBucketHalfCount;
