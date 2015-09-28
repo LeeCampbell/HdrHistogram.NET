@@ -999,23 +999,18 @@ namespace HdrHistogram.NET
         //
         //
         //
-
-        /**
-         * Produce textual representation of the value distribution of histogram data by percentile. The distribution is
-         * output with exponentially increasing resolution, with each exponentially decreasing half-distance containing
-         * <i>dumpTicksPerHalf</i> percentile reporting tick points.
-         *
-         * @param printStream    Stream into which the distribution will be output
-         * <p>
-         * @param percentileTicksPerHalfDistance  The number of reporting points per exponentially decreasing half-distance
-         * <p>
-         * @param outputValueUnitScalingRatio    The scaling factor by which to divide histogram recorded values units in
-         *                                       output
-         * @param useCsvFormat  Output in CSV format if true. Otherwise use plain text form.
-         */
-        public void outputPercentileDistribution(/*final*/ TextWriter /*PrintStream*/ printStream,
-                                                 /*final*/ int percentileTicksPerHalfDistance = 5,
-                                                 /*final*/ Double outputValueUnitScalingRatio = 1000.0,
+        
+        /// <summary>
+        /// Produce textual representation of the value distribution of histogram data by percentile. 
+        /// The distribution is output with exponentially increasing resolution, with each exponentially decreasing half-distance containing <i>dumpTicksPerHalf</i> percentile reporting tick points.
+        /// </summary>
+        /// <param name="printStream">Stream into which the distribution will be output</param>
+        /// <param name="percentileTicksPerHalfDistance">The number of reporting points per exponentially decreasing half-distance</param>
+        /// <param name="outputValueUnitScalingRatio">The scaling factor by which to divide histogram recorded values units in output</param>
+        /// <param name="useCsvFormat">Output in CSV format if <c>true</c>, else use plain text form.</param>
+        public void outputPercentileDistribution(TextWriter /*PrintStream*/ printStream,
+                                                 int percentileTicksPerHalfDistance = 5,
+                                                 Double outputValueUnitScalingRatio = 1000.0,
                                                  bool useCsvFormat = false)
         {
             if (useCsvFormat)
@@ -1120,10 +1115,10 @@ namespace HdrHistogram.NET
         //
         //
 
-        /**
-         * Get the capacity needed to encode this histogram into a ByteBuffer
-         * @return the capacity needed to encode this histogram into a ByteBuffer
-         */
+     /// <summary>
+        /// Get the capacity needed to encode this histogram into a <see cref="ByteBuffer"/>
+        /// </summary>
+        /// <returns>the capacity needed to encode this histogram into a <see cref="ByteBuffer"/></returns>
         public int getNeededByteBufferCapacity()
         {
             return getNeededByteBufferCapacity(countsArrayLength);
@@ -1160,12 +1155,12 @@ namespace HdrHistogram.NET
         {
             return (cookie & 0xf0) >> 4;
         }
-
-        /**
-         * Encode this histogram into a ByteBuffer
-         * @param buffer The buffer to encode into
-         * @return The number of bytes written to the buffer
-         */
+        
+        /// <summary>
+        /// Encode this histogram into a <see cref="ByteBuffer"/>
+        /// </summary>
+        /// <param name="buffer">The buffer to encode into</param>
+        /// <returns>The number of bytes written to the buffer</returns>
         public int encodeIntoByteBuffer(ByteBuffer buffer)
         {
             lock (updateLock)
@@ -1196,12 +1191,12 @@ namespace HdrHistogram.NET
             }
         }
 
-        /**
-         * Encode this histogram in compressed form into a byte array
-         * @param targetBuffer The buffer to encode into
-         * @param compressionLevel Compression level (for java.util.zip.Deflater).
-         * @return The number of bytes written to the buffer
-         */
+        /// <summary>
+        /// Encode this histogram in compressed form into a byte array
+        /// </summary>
+        /// <param name="targetBuffer">The buffer to encode into</param>
+        /// <param name="compressionLevel">Compression level.</param>
+        /// <returns>The number of bytes written to the buffer</returns>
         public long encodeIntoCompressedByteBuffer(/*final*/ ByteBuffer targetBuffer, CompressionLevel /*int*/ compressionLevel)
         {
             lock (updateLock)
@@ -1235,11 +1230,11 @@ namespace HdrHistogram.NET
             }
         }
 
-        /**
-         * Encode this histogram in compressed form into a byte array
-         * @param targetBuffer The buffer to encode into
-         * @return The number of bytes written to the array
-         */
+        /// <summary>
+        /// Encode this histogram in compressed form into a byte array
+        /// </summary>
+        /// <param name="targetBuffer">The buffer to encode into</param>
+        /// <returns>The number of bytes written to the array</returns>
         public long encodeIntoCompressedByteBuffer(/*final*/ ByteBuffer targetBuffer)
         {
             return encodeIntoCompressedByteBuffer(targetBuffer, /*Deflater.DEFAULT_COMPRESSION*/ CompressionLevel.Optimal);
