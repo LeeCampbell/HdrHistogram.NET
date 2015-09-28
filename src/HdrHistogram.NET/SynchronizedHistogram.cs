@@ -23,12 +23,12 @@ namespace HdrHistogram.NET
         long totalCount;
         readonly long[] counts;
 
-        protected override long getCountAtIndex(/*final*/ int index) 
+        protected override long getCountAtIndex(int index) 
         {
             return counts[index];
         }
 
-        protected override void incrementCountAtIndex(/*final*/ int index) 
+        protected override void incrementCountAtIndex(int index) 
         {
             lock (updateLock) 
             {
@@ -36,7 +36,7 @@ namespace HdrHistogram.NET
             }
         }
 
-        protected override void addToCountAtIndex(/*final*/ int index, /*final*/ long value) 
+        protected override void addToCountAtIndex(int index, long value) 
         {
             lock (updateLock) 
             {
@@ -53,7 +53,7 @@ namespace HdrHistogram.NET
             }
         }
 
-        public new void add(/*final*/ AbstractHistogram other) 
+        public new void add(AbstractHistogram other) 
         {
             // Synchronize add(). Avoid deadlocks by synchronizing in order of construction identity count.
             if (identity < other.identity) 
@@ -85,7 +85,7 @@ namespace HdrHistogram.NET
             return copy;
         }
 
-        public override /*SynchronizedHistogram*/ AbstractHistogram copyCorrectedForCoordinatedOmission(/*final*/ long expectedIntervalBetweenValueSamples) 
+        public override /*SynchronizedHistogram*/ AbstractHistogram copyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples) 
         {
             SynchronizedHistogram toHistogram = new SynchronizedHistogram(lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits);
             toHistogram.addWhileCorrectingForCoordinatedOmission(this, expectedIntervalBetweenValueSamples);
@@ -97,7 +97,7 @@ namespace HdrHistogram.NET
             return totalCount;
         }
 
-        protected override void setTotalCount(/*final*/ long totalCount) 
+        protected override void setTotalCount(long totalCount) 
         {
             lock (updateLock) 
             {
@@ -136,7 +136,7 @@ namespace HdrHistogram.NET
          *                                       maintain value resolution and separation. Must be a non-negative
          *                                       integer between 0 and 5.
          */
-        public SynchronizedHistogram(/*final*/ long highestTrackableValue, /*final*/ int numberOfSignificantValueDigits)
+        public SynchronizedHistogram(long highestTrackableValue, int numberOfSignificantValueDigits)
             : this(1, highestTrackableValue, numberOfSignificantValueDigits)
         {
         }
@@ -157,7 +157,7 @@ namespace HdrHistogram.NET
          *                                       maintain value resolution and separation. Must be a non-negative
          *                                       integer between 0 and 5.
          */
-        public SynchronizedHistogram(/*final*/ long lowestTrackableValue, /*final*/ long highestTrackableValue, /*final*/ int numberOfSignificantValueDigits)
+        public SynchronizedHistogram(long lowestTrackableValue, long highestTrackableValue, int numberOfSignificantValueDigits)
             : base(lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits)
         {
             counts = new long[countsArrayLength];
@@ -170,8 +170,8 @@ namespace HdrHistogram.NET
          * @param minBarForHighestTrackableValue Force highestTrackableValue to be set at least this high
          * @return The newly constructed histogram
          */
-        public static SynchronizedHistogram decodeFromByteBuffer(/*final*/ ByteBuffer buffer,
-                                                                 /*final*/ long minBarForHighestTrackableValue) 
+        public static SynchronizedHistogram decodeFromByteBuffer(ByteBuffer buffer,
+                                                                 long minBarForHighestTrackableValue) 
         {
             return (SynchronizedHistogram)decodeFromByteBuffer(buffer, typeof(SynchronizedHistogram), minBarForHighestTrackableValue);
         }
@@ -183,18 +183,18 @@ namespace HdrHistogram.NET
          * @return The newly constructed histogram
          * @throws DataFormatException on error parsing/decompressing the buffer
          */
-        public static SynchronizedHistogram decodeFromCompressedByteBuffer(/*final*/ ByteBuffer buffer,
-                                                                           /*final*/ long minBarForHighestTrackableValue) //throws DataFormatException 
+        public static SynchronizedHistogram decodeFromCompressedByteBuffer(ByteBuffer buffer,
+                                                                           long minBarForHighestTrackableValue) //throws DataFormatException 
         {
             return (SynchronizedHistogram)decodeFromCompressedByteBuffer(buffer, typeof(SynchronizedHistogram), minBarForHighestTrackableValue);
         }
 
-        //private void readObject(/*final*/ ObjectInputStream o)
+        //private void readObject(ObjectInputStream o)
         //        throws IOException, ClassNotFoundException {
         //    o.defaultReadObject();
         //}
 
-        protected override void fillCountsArrayFromBuffer(/*final*/ ByteBuffer buffer, /*final*/ int length) 
+        protected override void fillCountsArrayFromBuffer(ByteBuffer buffer, int length) 
         {
             lock (updateLock)
             {
@@ -208,7 +208,7 @@ namespace HdrHistogram.NET
         private ByteBuffer cachedDstByteBuffer = null;
         private int cachedDstByteBufferPosition = 0;
 
-        protected override void fillBufferFromCountsArray(/*final*/ ByteBuffer buffer, /*final*/ int length) 
+        protected override void fillBufferFromCountsArray(ByteBuffer buffer, int length) 
         {
             lock (updateLock)
             {

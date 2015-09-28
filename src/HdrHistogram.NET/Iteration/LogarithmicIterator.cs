@@ -28,12 +28,12 @@ namespace HdrHistogram.NET.Iteration
          * @param valueUnitsInFirstBucket the size (in value units) of the first value bucket step
          * @param logBase the multiplier by which the bucket size is expanded in each iteration step.
          */
-        public void reset(/*final*/ int valueUnitsInFirstBucket, /*final*/ double logBase) 
+        public void reset(int valueUnitsInFirstBucket, double logBase) 
         {
             this.reset(this.histogram, valueUnitsInFirstBucket, logBase);
         }
 
-        private void reset(/*final*/ AbstractHistogram histogram, /*final*/ int valueUnitsInFirstBucket, /*final*/ double logBase) 
+        private void reset(AbstractHistogram histogram, int valueUnitsInFirstBucket, double logBase) 
         {
             base.resetIterator(histogram);
             this.logBase = logBase;
@@ -47,7 +47,7 @@ namespace HdrHistogram.NET.Iteration
          * @param valueUnitsInFirstBucket the size (in value units) of the first value bucket step
          * @param logBase the multiplier by which the bucket size is expanded in each iteration step.
          */
-        public LogarithmicIterator(/*final*/ AbstractHistogram histogram, /*final*/ int valueUnitsInFirstBucket, /*final*/ double logBase) 
+        public LogarithmicIterator(AbstractHistogram histogram, int valueUnitsInFirstBucket, double logBase) 
         {
             this.reset(histogram, valueUnitsInFirstBucket, logBase);
         }

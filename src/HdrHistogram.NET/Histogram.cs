@@ -41,17 +41,17 @@ namespace HdrHistogram.NET
         long totalCount;
         readonly long[] counts;
 
-        protected override long getCountAtIndex(/*final*/ int index) 
+        protected override long getCountAtIndex(int index) 
         {
             return counts[index];
         }
 
-        protected override void incrementCountAtIndex(/*final*/ int index) 
+        protected override void incrementCountAtIndex(int index) 
         {
             counts[index]++;
         }
 
-        protected override void addToCountAtIndex(/*final*/ int index, /*final*/ long value) 
+        protected override void addToCountAtIndex(int index, long value) 
         {
             counts[index] += value;
         }
@@ -69,7 +69,7 @@ namespace HdrHistogram.NET
             return copy;
         }
 
-        public override /*Histogram*/ AbstractHistogram copyCorrectedForCoordinatedOmission(/*final*/ long expectedIntervalBetweenValueSamples) 
+        public override /*Histogram*/ AbstractHistogram copyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples) 
         {
             Histogram toHistogram = new Histogram(lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits);
             toHistogram.addWhileCorrectingForCoordinatedOmission(this, expectedIntervalBetweenValueSamples);
@@ -81,7 +81,7 @@ namespace HdrHistogram.NET
             return totalCount;
         }
 
-        protected override void setTotalCount(/*final*/ long totalCount) 
+        protected override void setTotalCount(long totalCount) 
         {
             this.totalCount = totalCount;
         }
@@ -91,7 +91,7 @@ namespace HdrHistogram.NET
             totalCount++;
         }
 
-        protected override void addToTotalCount(/*final*/ long value) 
+        protected override void addToTotalCount(long value) 
         {
             totalCount += value;
         }
@@ -111,7 +111,7 @@ namespace HdrHistogram.NET
          *                                       maintain value resolution and separation. Must be a non-negative
          *                                       integer between 0 and 5.
          */
-        public Histogram(/*final*/ long highestTrackableValue, /*final*/ int numberOfSignificantValueDigits) 
+        public Histogram(long highestTrackableValue, int numberOfSignificantValueDigits) 
             : this(1, highestTrackableValue, numberOfSignificantValueDigits)
         {
         }
@@ -132,8 +132,8 @@ namespace HdrHistogram.NET
          *                                       maintain value resolution and separation. Must be a non-negative
          *                                       integer between 0 and 5.
          */
-        public Histogram(/*final*/ long lowestTrackableValue, /*final*/ long highestTrackableValue,
-                         /*final*/ int numberOfSignificantValueDigits) 
+        public Histogram(long lowestTrackableValue, long highestTrackableValue,
+                         int numberOfSignificantValueDigits) 
             : base(lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits)
         {
             counts = new long[countsArrayLength];
@@ -146,8 +146,8 @@ namespace HdrHistogram.NET
          * @param minBarForHighestTrackableValue Force highestTrackableValue to be set at least this high
          * @return The newly constructed histogram
          */
-        public static Histogram decodeFromByteBuffer(/*final*/ ByteBuffer buffer,
-                                                     /*final*/ long minBarForHighestTrackableValue) 
+        public static Histogram decodeFromByteBuffer(ByteBuffer buffer,
+                                                     long minBarForHighestTrackableValue) 
         {
             return (Histogram)AbstractHistogram.decodeFromByteBuffer(buffer, typeof(Histogram), minBarForHighestTrackableValue);
         }
@@ -159,18 +159,18 @@ namespace HdrHistogram.NET
          * @return The newly constructed histogram
          * @throws DataFormatException on error parsing/decompressing the buffer
          */
-        public static Histogram decodeFromCompressedByteBuffer(/*final*/ ByteBuffer buffer,
-                                                               /*final*/ long minBarForHighestTrackableValue) //throws DataFormatException 
+        public static Histogram decodeFromCompressedByteBuffer(ByteBuffer buffer,
+                                                               long minBarForHighestTrackableValue) //throws DataFormatException 
         {
             return (Histogram)decodeFromCompressedByteBuffer(buffer, typeof(Histogram), minBarForHighestTrackableValue);
         }
 
-        //private void readObject(/*final*/ ObjectInputStream o) // throws IOException, ClassNotFoundException 
+        //private void readObject(ObjectInputStream o) // throws IOException, ClassNotFoundException 
         //{
         //    o.defaultReadObject();
         //}
 
-        protected override void fillCountsArrayFromBuffer(/*final*/ ByteBuffer buffer, /*final*/ int length)
+        protected override void fillCountsArrayFromBuffer(ByteBuffer buffer, int length)
         {
             lock (updateLock)
             {
@@ -184,7 +184,7 @@ namespace HdrHistogram.NET
         private ByteBuffer cachedDstByteBuffer = null;
         private int cachedDstByteBufferPosition = 0;
 
-        protected override void fillBufferFromCountsArray(/*final*/ ByteBuffer buffer, /*final*/ int length)
+        protected override void fillBufferFromCountsArray(ByteBuffer buffer, int length)
         {
             lock (updateLock)
             {

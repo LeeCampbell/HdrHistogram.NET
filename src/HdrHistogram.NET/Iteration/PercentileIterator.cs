@@ -30,12 +30,12 @@ namespace HdrHistogram.NET.Iteration
          *
          * @param percentileTicksPerHalfDistance The number of iteration steps per half-distance to 100%.
          */
-        public void reset(/*final*/ int percentileTicksPerHalfDistance) 
+        public void reset(int percentileTicksPerHalfDistance) 
         {
             this.reset(this.histogram, percentileTicksPerHalfDistance);
         }
 
-        private void reset(/*final*/ AbstractHistogram histogram, /*final*/ int percentileTicksPerHalfDistance) 
+        private void reset(AbstractHistogram histogram, int percentileTicksPerHalfDistance) 
         {
             base.resetIterator(histogram);
             this.percentileTicksPerHalfDistance = percentileTicksPerHalfDistance;
@@ -48,7 +48,7 @@ namespace HdrHistogram.NET.Iteration
          * @param histogram The histogram this iterator will operate on
          * @param percentileTicksPerHalfDistance The number of iteration steps per half-distance to 100%.
          */
-        public PercentileIterator(/*final*/ AbstractHistogram histogram, /*final*/ int percentileTicksPerHalfDistance) 
+        public PercentileIterator(AbstractHistogram histogram, int percentileTicksPerHalfDistance) 
         {
             this.reset(histogram, percentileTicksPerHalfDistance);
         }

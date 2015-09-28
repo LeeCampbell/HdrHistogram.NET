@@ -28,7 +28,7 @@ namespace HdrHistogram.NET.Iteration
             this.reset(this.histogram);
         }
 
-        private void reset(/*final*/ AbstractHistogram histogram) {
+        private void reset(AbstractHistogram histogram) {
             base.resetIterator(histogram);
             this.visitedSubBucketIndex = -1;
             this.visitedBucketIndex = -1;
@@ -37,7 +37,7 @@ namespace HdrHistogram.NET.Iteration
         /**
          * @param histogram The histogram this iterator will operate on
          */
-        public AllValuesIterator(/*final*/ AbstractHistogram histogram) {
+        public AllValuesIterator(AbstractHistogram histogram) {
             this.reset(histogram);
         }
 

@@ -136,7 +136,7 @@ namespace HdrHistogram.NET.Iteration
             throw new ArgumentOutOfRangeException();
         }
 
-        protected void resetIterator(/*final*/ AbstractHistogram histogram)
+        protected void resetIterator(AbstractHistogram histogram)
         {
             this.histogram = histogram;
             this.savedHistogramTotalRawCount = histogram.getTotalCount();

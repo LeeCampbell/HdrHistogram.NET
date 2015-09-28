@@ -26,11 +26,11 @@ namespace HdrHistogram.NET.Iteration
          * Reset iterator for re-use in a fresh iteration over the same histogram data set.
          * @param valueUnitsPerBucket The size (in value units) of each bucket iteration.
          */
-        public void reset(/*final*/ int valueUnitsPerBucket) {
+        public void reset(int valueUnitsPerBucket) {
             this.reset(this.histogram, valueUnitsPerBucket);
         }
 
-        private void reset(/*final*/ AbstractHistogram histogram, /*final*/ long valueUnitsPerBucket) {
+        private void reset(AbstractHistogram histogram, long valueUnitsPerBucket) {
             base.resetIterator(histogram);
             this.valueUnitsPerBucket = valueUnitsPerBucket;
             this.nextValueReportingLevel = valueUnitsPerBucket;
@@ -41,7 +41,7 @@ namespace HdrHistogram.NET.Iteration
          * @param histogram The histogram this iterator will operate on
          * @param valueUnitsPerBucket The size (in value units) of each bucket iteration.
          */
-        public LinearIterator(/*final*/ AbstractHistogram histogram, /*final*/ int valueUnitsPerBucket) {
+        public LinearIterator(AbstractHistogram histogram, int valueUnitsPerBucket) {
             this.reset(histogram, valueUnitsPerBucket);
         }
 

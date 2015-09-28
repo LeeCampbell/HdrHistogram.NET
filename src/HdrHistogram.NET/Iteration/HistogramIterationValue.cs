@@ -47,14 +47,14 @@ namespace HdrHistogram.NET.Iteration
         double percentileLevelIteratedTo;
 
         // Set is all-or-nothing to avoid the potential for accidental omission of some values...
-        internal void set(/*final*/ long valueIteratedTo, 
-                            /*final*/ long valueIteratedFrom, 
-                            /*final*/ long countAtValueIteratedTo,
-                            /*final*/ long countInThisIterationStep, 
-                            /*final*/ long totalCountToThisValue, 
-                            /*final*/ long totalValueToThisValue,
-                            /*final*/ double percentile, 
-                            /*final*/ double percentileLevelIteratedTo) 
+        internal void set(long valueIteratedTo, 
+                            long valueIteratedFrom, 
+                            long countAtValueIteratedTo,
+                            long countInThisIterationStep, 
+                            long totalCountToThisValue, 
+                            long totalValueToThisValue,
+                            double percentile, 
+                            double percentileLevelIteratedTo) 
         {
             this.valueIteratedTo = valueIteratedTo;
             this.valueIteratedFrom = valueIteratedFrom;
