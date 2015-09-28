@@ -142,21 +142,22 @@ namespace HdrHistogram.NET
             if (highestTrackableValue < 2 * lowestTrackableValue) throw new ArgumentException("highestTrackableValue must be >= 2 * lowestTrackableValue");
             if ((numberOfSignificantValueDigits < 0) || (numberOfSignificantValueDigits > 5)) throw new ArgumentException("numberOfSignificantValueDigits must be between 0 and 6");
 
+            _percentileIterator = new PercentileIterator(this, 1);
+            _recordedValuesIterator = new RecordedValuesIterator(this);
+
             Identity = GetNextIdentity();
             LowestTrackableValue = lowestTrackableValue;
             HighestTrackableValue = highestTrackableValue;
             NumberOfSignificantValueDigits = numberOfSignificantValueDigits;
-
-
-
-            long largestValueWithSingleUnitResolution = 2 * (long)Math.Pow(10, NumberOfSignificantValueDigits);
 
             _unitMagnitude = (int)Math.Floor(Math.Log(LowestTrackableValue) / Math.Log(2));
 
             // We need to maintain power-of-two subBucketCount (for clean direct indexing) that is large enough to
             // provide unit resolution to at least largestValueWithSingleUnitResolution. So figure out
             // largestValueWithSingleUnitResolution's nearest power-of-two (rounded up), and use that:
+            long largestValueWithSingleUnitResolution = 2 * (long)Math.Pow(10, NumberOfSignificantValueDigits);
             int subBucketCountMagnitude = (int)Math.Ceiling(Math.Log(largestValueWithSingleUnitResolution) / Math.Log(2));
+
             _subBucketHalfCountMagnitude = ((subBucketCountMagnitude > 1) ? subBucketCountMagnitude : 1) - 1;
             SubBucketCount = (int)Math.Pow(2, (_subBucketHalfCountMagnitude + 1));
             SubBucketHalfCount = SubBucketCount / 2;
@@ -166,18 +167,8 @@ namespace HdrHistogram.NET
             BucketCount = GetBucketsNeededToCoverValue(HighestTrackableValue);
 
             CountsArrayLength = GetLengthForNumberOfBuckets(BucketCount);
-            _percentileIterator = new PercentileIterator(this, 1);
-            _recordedValuesIterator = new RecordedValuesIterator(this);
 
-            Init(0);
-        }
-
-        private void Init(long totalCount)
-        {
-            SetTotalCount(totalCount);
-
-            
-            
+            SetTotalCount(0);
         }
 
         //
@@ -193,7 +184,7 @@ namespace HdrHistogram.NET
         /// </summary>
         /// <param name="value">The value to be recorded</param>
         /// <exception cref="System.IndexOutOfRangeException">if value is exceeds highestTrackableValue</exception>
-        public void RecordValue(long value) //throws ArrayIndexOutOfBoundsException 
+        public void RecordValue(long value)
         {
             RecordSingleValue(value);
         }
@@ -204,7 +195,7 @@ namespace HdrHistogram.NET
         /// <param name="value">The value to be recorded</param>
         /// <param name="count">The number of occurrences of this value to record</param>
         /// <exception cref="System.IndexOutOfRangeException">if value is exceeds highestTrackableValue</exception>
-        public void RecordValueWithCount(long value, long count) //throws ArrayIndexOutOfBoundsException 
+        public void RecordValueWithCount(long value, long count) 
         {
             RecordCountAtValue(count, value);
         }
@@ -225,13 +216,13 @@ namespace HdrHistogram.NET
         /// </para>
         /// See notes in the description of the Histogram calls for an illustration of why this corrective behavior is important.
         /// </remarks>
-        public void RecordValueWithExpectedInterval(long value, long expectedIntervalBetweenValueSamples) //throws ArrayIndexOutOfBoundsException 
+        public void RecordValueWithExpectedInterval(long value, long expectedIntervalBetweenValueSamples) 
         {
             RecordValueWithCountAndExpectedInterval(value, 1, expectedIntervalBetweenValueSamples);
         }
 
 
-        private void RecordCountAtValue(long count, long value) //throws ArrayIndexOutOfBoundsException 
+        private void RecordCountAtValue(long count, long value)
         {
             // Dissect the value into bucket and sub-bucket parts, and derive index into counts array:
             int bucketIndex = GetBucketIndex(value);
@@ -241,7 +232,7 @@ namespace HdrHistogram.NET
             AddToTotalCount(count);
         }
 
-        private void RecordSingleValue(long value) //throws ArrayIndexOutOfBoundsException 
+        private void RecordSingleValue(long value)
         {
             // Dissect the value into bucket and sub-bucket parts, and derive index into counts array:
             int bucketIndex = GetBucketIndex(value);
@@ -252,7 +243,7 @@ namespace HdrHistogram.NET
         }
 
         private void RecordValueWithCountAndExpectedInterval(long value, long count,
-                                                             long expectedIntervalBetweenValueSamples) //throws ArrayIndexOutOfBoundsException 
+                                                             long expectedIntervalBetweenValueSamples)
         {
             RecordCountAtValue(count, value);
             if (expectedIntervalBetweenValueSamples <= 0)
@@ -354,7 +345,7 @@ namespace HdrHistogram.NET
         /// </summary>
         /// <param name="fromHistogram">The other histogram.</param>
         /// <exception cref="System.IndexOutOfRangeException">if values in fromHistogram's are higher than highestTrackableValue.</exception>
-        public void Add(AbstractHistogram fromHistogram) //throws ArrayIndexOutOfBoundsException 
+        public void Add(AbstractHistogram fromHistogram)
         {
             if (this.HighestTrackableValue < fromHistogram.HighestTrackableValue)
             {
@@ -818,7 +809,7 @@ namespace HdrHistogram.NET
         /// <param name="value">The value for which to provide the recorded count</param>
         /// <returns>The total count of values recorded in the histogram at the given value (to within the histogram resolution at the value level).</returns>
         /// <exception cref="IndexOutOfRangeException">On parameters that are outside the tracked value range</exception>
-        public long GetCountAtValue(long value) //throws ArrayIndexOutOfBoundsException 
+        public long GetCountAtValue(long value)
         {
             int bucketIndex = GetBucketIndex(value);
             int subBucketIndex = GetSubBucketIndex(value, bucketIndex);
@@ -1259,7 +1250,7 @@ namespace HdrHistogram.NET
         /// <returns>The number of bytes written to the array</returns>
         public long EncodeIntoCompressedByteBuffer(ByteBuffer targetBuffer)
         {
-            return EncodeIntoCompressedByteBuffer(targetBuffer, /*Deflater.DEFAULT_COMPRESSION*/ CompressionLevel.Optimal);
+            return EncodeIntoCompressedByteBuffer(targetBuffer, CompressionLevel.Optimal);
         }
 
         private static readonly Type[] constructorArgsTypes = { typeof(long), typeof(long), typeof(int) };
@@ -1336,8 +1327,7 @@ namespace HdrHistogram.NET
             return histogram;
         }
 
-        protected static AbstractHistogram DecodeFromCompressedByteBuffer(ByteBuffer buffer, Type histogramClass,
-                                                                long minBarForHighestTrackableValue) //throws DataFormatException 
+        protected static AbstractHistogram DecodeFromCompressedByteBuffer(ByteBuffer buffer, Type histogramClass, long minBarForHighestTrackableValue)
         {
             int cookie = buffer.getInt();
             if (GetCookieBase(cookie) != compressedEncodingCookieBase)
