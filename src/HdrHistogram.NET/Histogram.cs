@@ -41,6 +41,8 @@ namespace HdrHistogram.NET
         long totalCount;
         readonly long[] counts;
 
+        protected override int WordSizeInBytes => 8;
+
         protected override long GetCountAtIndex(int index) 
         {
             return counts[index];
@@ -64,14 +66,14 @@ namespace HdrHistogram.NET
 
         public override /*Histogram*/ AbstractHistogram Copy() 
         {
-            Histogram copy = new Histogram(lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits);
+            Histogram copy = new Histogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
             copy.Add(this);
             return copy;
         }
 
         public override /*Histogram*/ AbstractHistogram CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples) 
         {
-            Histogram toHistogram = new Histogram(lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits);
+            Histogram toHistogram = new Histogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
             toHistogram.AddWhileCorrectingForCoordinatedOmission(this, expectedIntervalBetweenValueSamples);
             return toHistogram;
         }
@@ -136,8 +138,7 @@ namespace HdrHistogram.NET
                          int numberOfSignificantValueDigits) 
             : base(lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits)
         {
-            counts = new long[countsArrayLength];
-            wordSizeInBytes = 8;
+            counts = new long[CountsArrayLength];
         }
 
         /**
@@ -172,7 +173,7 @@ namespace HdrHistogram.NET
 
         protected override void FillCountsArrayFromBuffer(ByteBuffer buffer, int length)
         {
-            lock (updateLock)
+            lock (UpdateLock)
             {
                 buffer.asLongBuffer().get(counts, 0, length);
             }
@@ -186,7 +187,7 @@ namespace HdrHistogram.NET
 
         protected override void FillBufferFromCountsArray(ByteBuffer buffer, int length)
         {
-            lock (updateLock)
+            lock (UpdateLock)
             {
                 if ((cachedDstLongBuffer == null) ||
                     (buffer != cachedDstByteBuffer) ||

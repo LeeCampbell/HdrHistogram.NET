@@ -23,6 +23,8 @@ namespace HdrHistogram.NET
         long totalCount;
         readonly long[] counts;
 
+        protected override int WordSizeInBytes => 8;
+
         protected override long GetCountAtIndex(int index) 
         {
             return counts[index];
@@ -30,7 +32,7 @@ namespace HdrHistogram.NET
 
         protected override void IncrementCountAtIndex(int index) 
         {
-            lock (updateLock) 
+            lock (UpdateLock) 
             {
                 counts[index]++;
             }
@@ -38,7 +40,7 @@ namespace HdrHistogram.NET
 
         protected override void AddToCountAtIndex(int index, long value) 
         {
-            lock (updateLock) 
+            lock (UpdateLock) 
             {
                 counts[index] += value;
             }
@@ -46,7 +48,7 @@ namespace HdrHistogram.NET
 
         protected override void ClearCounts() 
         {
-            lock (updateLock) 
+            lock (UpdateLock) 
             {
                 Array.Clear(counts, 0, counts.Length);
                 totalCount = 0;
@@ -58,7 +60,7 @@ namespace HdrHistogram.NET
             // Synchronize add(). Avoid deadlocks by synchronizing in order of construction identity count.
             if (Identity < other.Identity) 
             {
-                lock (updateLock)
+                lock (UpdateLock)
                 {
                     lock (other)
                     {
@@ -70,7 +72,7 @@ namespace HdrHistogram.NET
             {
                 lock(other) 
                 {
-                    lock (updateLock) 
+                    lock (UpdateLock) 
                     {
                         base.Add(other);
                     }
@@ -80,14 +82,14 @@ namespace HdrHistogram.NET
 
         public override /*SynchronizedHistogram*/ AbstractHistogram Copy() 
         {
-            SynchronizedHistogram copy = new SynchronizedHistogram(lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits);
+            SynchronizedHistogram copy = new SynchronizedHistogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
             copy.add(this);
             return copy;
         }
 
         public override /*SynchronizedHistogram*/ AbstractHistogram CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples) 
         {
-            SynchronizedHistogram toHistogram = new SynchronizedHistogram(lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits);
+            SynchronizedHistogram toHistogram = new SynchronizedHistogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
             toHistogram.AddWhileCorrectingForCoordinatedOmission(this, expectedIntervalBetweenValueSamples);
             return toHistogram;
         }
@@ -99,7 +101,7 @@ namespace HdrHistogram.NET
 
         protected override void SetTotalCount(long totalCount) 
         {
-            lock (updateLock) 
+            lock (UpdateLock) 
             {
                this.totalCount = totalCount;
             }
@@ -107,7 +109,7 @@ namespace HdrHistogram.NET
 
         protected override void IncrementTotalCount() 
         {
-            lock (updateLock) 
+            lock (UpdateLock) 
             {
                 totalCount++;
             }
@@ -115,7 +117,7 @@ namespace HdrHistogram.NET
 
         protected override void AddToTotalCount(long value) 
         {
-            lock (updateLock) 
+            lock (UpdateLock) 
             {
                 totalCount += value;
             }
@@ -160,8 +162,7 @@ namespace HdrHistogram.NET
         public SynchronizedHistogram(long lowestTrackableValue, long highestTrackableValue, int numberOfSignificantValueDigits)
             : base(lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits)
         {
-            counts = new long[countsArrayLength];
-            wordSizeInBytes = 8;
+            counts = new long[CountsArrayLength];
         }
 
         /**
@@ -196,7 +197,7 @@ namespace HdrHistogram.NET
 
         protected override void FillCountsArrayFromBuffer(ByteBuffer buffer, int length) 
         {
-            lock (updateLock)
+            lock (UpdateLock)
             {
                 buffer.asLongBuffer().get(counts, 0, length);
             }
@@ -210,7 +211,7 @@ namespace HdrHistogram.NET
 
         protected override void FillBufferFromCountsArray(ByteBuffer buffer, int length) 
         {
-            lock (updateLock)
+            lock (UpdateLock)
             {
                 if ((cachedDstLongBuffer == null) ||
                     (buffer != cachedDstByteBuffer) ||

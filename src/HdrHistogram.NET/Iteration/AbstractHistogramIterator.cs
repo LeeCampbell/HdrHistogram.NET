@@ -187,7 +187,7 @@ namespace HdrHistogram.NET.Iteration
 
         private bool exhaustedSubBuckets()
         {
-            return (this.currentBucketIndex >= this.histogram.bucketCount);
+            return (this.currentBucketIndex >= this.histogram.BucketCount);
         }
 
         private void incrementSubBucket()
@@ -199,9 +199,9 @@ namespace HdrHistogram.NET.Iteration
             this.currentValueAtIndex = this.nextValueAtIndex;
             // Figure out the next next index:
             this.nextSubBucketIndex++;
-            if (this.nextSubBucketIndex >= this.histogram.subBucketCount)
+            if (this.nextSubBucketIndex >= this.histogram.SubBucketCount)
             {
-                this.nextSubBucketIndex = this.histogram.subBucketHalfCount;
+                this.nextSubBucketIndex = this.histogram.SubBucketHalfCount;
                 this.nextBucketIndex++;
             }
             this.nextValueAtIndex = this.histogram.ValueFromIndex(this.nextBucketIndex, this.nextSubBucketIndex);
