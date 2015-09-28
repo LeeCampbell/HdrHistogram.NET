@@ -631,11 +631,10 @@ namespace HdrHistogram.NET
         //
         //
 
-        /**
-         * Get the lowest recorded value level in the histogram
-         *
-         * @return the Min value recorded in the histogram
-         */
+        /// <summary>
+        /// Get the lowest recorded value level in the histogram
+        /// </summary>
+        /// <returns>the Min value recorded in the histogram</returns>
         public long getMinValue()
         {
             recordedValuesIterator.reset();
@@ -648,11 +647,10 @@ namespace HdrHistogram.NET
             return lowestEquivalentValue(min);
         }
 
-        /**
-         * Get the highest recorded value level in the histogram
-         *
-         * @return the Max value recorded in the histogram
-         */
+        /// <summary>
+        /// Get the highest recorded value level in the histogram
+        /// </summary>
+        /// <returns>the Max value recorded in the histogram</returns>
         public long getMaxValue()
         {
             recordedValuesIterator.reset();
@@ -665,11 +663,10 @@ namespace HdrHistogram.NET
             return lowestEquivalentValue(max);
         }
 
-        /**
-         * Get the computed mean value of all recorded values in the histogram
-         *
-         * @return the mean value (in value units) of the histogram data
-         */
+        /// <summary>
+        /// Get the computed mean value of all recorded values in the histogram
+        /// </summary>
+        /// <returns>the mean value (in value units) of the histogram data</returns>
         public double getMean()
         {
             recordedValuesIterator.reset();
@@ -682,11 +679,10 @@ namespace HdrHistogram.NET
             return (totalValue * 1.0) / getTotalCount();
         }
 
-        /**
-         * Get the computed standard deviation of all recorded values in the histogram
-         *
-         * @return the standard deviation (in value units) of the histogram data
-         */
+        /// <summary>
+        /// Get the computed standard deviation of all recorded values in the histogram
+        /// </summary>
+        /// <returns>the standard deviation (in value units) of the histogram data</returns>
         public double getStdDeviation()
         {
             double mean = getMean();
@@ -701,15 +697,13 @@ namespace HdrHistogram.NET
             double std_deviation = Math.Sqrt(geometric_deviation_total / getTotalCount());
             return std_deviation;
         }
-
-        /**
-         * Get the value at a given percentile
-         *
-         * @param percentile    The percentile for which the return the associated value
-         * @return The value below which a given percentage of the overall recorded value entries in the
-         * histogram all fall.
-         */
-        public long getValueAtPercentile(/*final*/ double percentile)
+               
+        /// <summary>
+        /// Get the value at a given percentile
+        /// </summary>
+        /// <param name="percentile">The percentile to get the value for</param>
+        /// <returns>The value a given percentage of all recorded value entries in the histogram fall below.</returns>
+        public long getValueAtPercentile(double percentile)
         {
             double requestedPercentile = Math.Min(percentile, 100.0); // Truncate down to 100%
             long countAtPercentile = (long)(((requestedPercentile / 100.0) * getTotalCount()) + 0.5); // round to nearest
@@ -731,14 +725,12 @@ namespace HdrHistogram.NET
             throw new ArgumentOutOfRangeException("percentile value not found in range"); // should not reach here.
         }
 
-        /**
-         * Get the percentile at a given value
-         *
-         * @param value    The value for which the return the associated percentile
-         * @return The percentile of values recorded at or below the given percentage in the
-         * histogram all fall.
-         */
-        public double getPercentileAtOrBelowValue(/*final*/ long value)
+        /// <summary>
+        /// Get the percentile at a given value
+        /// </summary>
+        /// <param name="value">The value to get the associated percentile for</param>
+        /// <returns>The percentile of values recorded at or below the given value in the histogram.</returns>
+        public double getPercentileAtOrBelowValue(long value)
         {
             long totalToCurrentIJ = 0;
 
@@ -759,21 +751,16 @@ namespace HdrHistogram.NET
             }
 
             return (100.0 * totalToCurrentIJ) / getTotalCount();
-        }
+        }        
 
-        /**
-         * Get the count of recorded values within a range of value levels. (inclusive to within the histogram's resolution)
-         *
-         * @param lowValue  The lower value bound on the range for which
-         *                  to provide the recorded count. Will be rounded down with
-         *                  {@link Histogram#lowestEquivalentValue lowestEquivalentValue}.
-         * @param highValue  The higher value bound on the range for which to provide the recorded count.
-         *                   Will be rounded up with {@link Histogram#highestEquivalentValue highestEquivalentValue}.
-         * @return the total count of values recorded in the histogram within the value range that is
-         * {@literal >=} lowestEquivalentValue(<i>lowValue</i>) and {@literal <=} highestEquivalentValue(<i>highValue</i>)
-         * @throws ArrayIndexOutOfBoundsException on values that are outside the tracked value range
-         */
-        public long getCountBetweenValues(/*final*/ long lowValue, /*final*/ long highValue) //throws ArrayIndexOutOfBoundsException 
+        /// <summary>
+        /// Get the count of recorded values within a range of value levels. (inclusive to within the histogram's resolution)
+        /// </summary>
+        /// <param name="lowValue">The lower value bound on the range for which to provide the recorded count. Will be rounded down with <see cref="lowestEquivalentValue"/>.</param>
+        /// <param name="highValue">The higher value bound on the range for which to provide the recorded count. Will be rounded up with <see cref="highestEquivalentValue"/>.</param>
+        /// <returns>the total count of values recorded in the histogram within the value range that is &gt;= <param name="lowValue"/> &lt;= <param name="highValue"></param></returns>
+        /// <exception cref="IndexOutOfRangeException">on parameters that are outside the tracked value range</exception>
+        public long getCountBetweenValues(long lowValue, long highValue)
         {
             long count = 0;
 
@@ -803,14 +790,12 @@ namespace HdrHistogram.NET
             return count;
         }
 
-        /**
-         * Get the count of recorded values at a specific value
-         *
-         * @param value The value for which to provide the recorded count
-         * @return The total count of values recorded in the histogram at the given value (to within
-         * the histogram resolution at the value level).
-         * @throws ArrayIndexOutOfBoundsException On values that are outside the tracked value range
-         */
+        /// <summary>
+        /// Get the count of recorded values at a specific value
+        /// </summary>
+        /// <param name="value">The value for which to provide the recorded count</param>
+        /// <returns>The total count of values recorded in the histogram at the given value (to within the histogram resolution at the value level).</returns>
+        /// <exception cref="IndexOutOfRangeException">On parameters that are outside the tracked value range</exception>
         public long getCountAtValue(/*final*/ long value) //throws ArrayIndexOutOfBoundsException 
         {
             int bucketIndex = getBucketIndex(value);
@@ -819,77 +804,54 @@ namespace HdrHistogram.NET
             return getCountAt(bucketIndex, subBucketIndex);
         }
 
-        /**
-         * Provide a means of iterating through histogram values according to percentile levels. The iteration is
-         * performed in steps that start at 0% and reduce their distance to 100% according to the
-         * <i>percentileTicksPerHalfDistance</i> parameter, ultimately reaching 100% when all recorded histogram
-         * values are exhausted.
-         * <p>
-         * @param percentileTicksPerHalfDistance The number of iteration steps per half-distance to 100%.
-         * @return An {@link java.lang.Iterable}{@literal <}{@link HistogramIterationValue}{@literal >}
-         * through the histogram using a
-         * {@link PercentileIterator}
-         */
-        public Percentiles percentiles(/*final*/ int percentileTicksPerHalfDistance)
+        /// <summary>
+        /// Provide a means of iterating through histogram values according to percentile levels. 
+        /// The iteration is performed in steps that start at 0% and reduce their distance to 100% according to the <i>percentileTicksPerHalfDistance</i> parameter, ultimately reaching 100% when all recorded histogram values are exhausted.
+        /// </summary>
+        /// <param name="percentileTicksPerHalfDistance">The number of iteration steps per half-distance to 100%.</param>
+        /// <returns>An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="PercentileIterator"/></returns>
+        public Percentiles percentiles(int percentileTicksPerHalfDistance)
         {
             return new Percentiles(this, percentileTicksPerHalfDistance);
         }
-
-        /**
-         * Provide a means of iterating through histogram values using linear steps. The iteration is
-         * performed in steps of <i>valueUnitsPerBucket</i> in size, terminating when all recorded histogram
-         * values are exhausted.
-         *
-         * @param valueUnitsPerBucket  The size (in value units) of the linear buckets to use
-         * @return An {@link java.lang.Iterable}{@literal <}{@link HistogramIterationValue}{@literal >}
-         * through the histogram using a
-         * {@link LinearIterator}
-         */
+        
+        /// <summary>
+        /// Provide a means of iterating through histogram values using linear steps. The iteration is performed in steps of <i>valueUnitsPerBucket</i> in size, terminating when all recorded histogram values are exhausted.
+        /// </summary>
+        /// <param name="valueUnitsPerBucket">The size (in value units) of the linear buckets to use</param>
+        /// <returns>An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LinearIterator"/></returns>
         public LinearBucketValues linearBucketValues(/*final*/ int valueUnitsPerBucket)
         {
             return new LinearBucketValues(this, valueUnitsPerBucket);
         }
-
-        /**
-         * Provide a means of iterating through histogram values at logarithmically increasing levels. The iteration is
-         * performed in steps that start at <i>valueUnitsInFirstBucket</i> and increase exponentially according to
-         * <i>logBase</i>, terminating when all recorded histogram values are exhausted.
-         *
-         * @param valueUnitsInFirstBucket The size (in value units) of the first bucket in the iteration
-         * @param logBase The multiplier by which bucket sizes will grow in eahc iteration step
-         * @return An {@link java.lang.Iterable}{@literal <}{@link HistogramIterationValue}{@literal >}
-         * through the histogram using
-         * a {@link LogarithmicIterator}
-         */
+        
+        /// <summary>
+        /// Provide a means of iterating through histogram values at logarithmically increasing levels. 
+        /// The iteration is performed in steps that start at<i>valueUnitsInFirstBucket</i> and increase exponentially according to <i>logBase</i>, terminating when all recorded histogram values are exhausted.
+        /// </summary>
+        /// <param name="valueUnitsInFirstBucket">The size (in value units) of the first bucket in the iteration</param>
+        /// <param name="logBase">The multiplier by which bucket sizes will grow in each iteration step</param>
+        /// <returns>An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LogarithmicIterator"/></returns>
         public LogarithmicBucketValues logarithmicBucketValues(/*final*/ int valueUnitsInFirstBucket, /*final*/ double logBase)
         {
             return new LogarithmicBucketValues(this, valueUnitsInFirstBucket, logBase);
         }
 
-        /**
-         * Provide a means of iterating through all recorded histogram values using the finest granularity steps
-         * supported by the underlying representation. The iteration steps through all non-zero recorded value counts,
-         * and terminates when all recorded histogram values are exhausted.
-         *
-         * @return An {@link java.lang.Iterable}{@literal <}{@link HistogramIterationValue}{@literal >}
-         * through the histogram using
-         * a {@link RecordedValuesIterator}
-         */
+        /// <summary>
+        /// Provide a means of iterating through all recorded histogram values using the finest granularity steps supported by the underlying representation.
+        /// The iteration steps through all non-zero recorded value counts, and terminates when all recorded histogram values are exhausted.
+        /// </summary>
+        /// <returns>An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="RecordedValuesIterator"/></returns>
         public RecordedValues recordedValues()
         {
             return new RecordedValues(this);
         }
 
-        /**
-         * Provide a means of iterating through all histogram values using the finest granularity steps supported by
-         * the underlying representation. The iteration steps through all possible unit value levels, regardless of
-         * whether or not there were recorded values for that value level, and terminates when all recorded histogram
-         * values are exhausted.
-         *
-         * @return An {@link java.lang.Iterable}{@literal <}{@link HistogramIterationValue}{@literal >}
-         * through the histogram using
-         * a {@link RecordedValuesIterator}
-         */
+        /// <summary>
+        /// Provide a means of iterating through all histogram values using the finest granularity steps supported by the underlying representation.
+        /// The iteration steps through all possible unit value levels, regardless of whether or not there were recorded values for that value level, and terminates when all recorded histogram values are exhausted.
+        /// </summary>
+        /// <returns>An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="RecordedValuesIterator"/></returns>
         public AllValues allValues()
         {
             return new AllValues(this);
@@ -898,9 +860,7 @@ namespace HdrHistogram.NET
 
         // Percentile iterator support:
 
-        /**
-     * 
-     */
+
         /// <summary>
         /// An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="PercentileIterator"/>
         /// </summary>
@@ -954,7 +914,7 @@ namespace HdrHistogram.NET
         }
 
         // Logarithmic iterator support:
-        
+
         /// <summary>
         /// An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LogarithmicIterator"/>
         /// </summary>
@@ -983,7 +943,7 @@ namespace HdrHistogram.NET
         }
 
         // Recorded value iterator support:
-       
+
         /// <summary>
         /// An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="RecordedValuesIterator"/>
         /// </summary>
@@ -995,7 +955,7 @@ namespace HdrHistogram.NET
             {
                 this.histogram = histogram;
             }
-            
+
             public IEnumerator<HistogramIterationValue> GetEnumerator()
             {
                 return new RecordedValuesIterator(histogram);
@@ -1008,7 +968,7 @@ namespace HdrHistogram.NET
         }
 
         // AllValues iterator support:
-        
+
         /// <summary>
         /// An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="AllValuesIterator"/>
         /// </summary>
@@ -1020,7 +980,7 @@ namespace HdrHistogram.NET
             {
                 this.histogram = histogram;
             }
-            
+
             public IEnumerator<HistogramIterationValue> GetEnumerator()
             {
                 return new AllValuesIterator(histogram);
