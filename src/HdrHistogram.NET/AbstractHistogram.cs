@@ -697,7 +697,7 @@ namespace HdrHistogram.NET
             double std_deviation = Math.Sqrt(geometric_deviation_total / getTotalCount());
             return std_deviation;
         }
-               
+
         /// <summary>
         /// Get the value at a given percentile
         /// </summary>
@@ -751,7 +751,7 @@ namespace HdrHistogram.NET
             }
 
             return (100.0 * totalToCurrentIJ) / getTotalCount();
-        }        
+        }
 
         /// <summary>
         /// Get the count of recorded values within a range of value levels. (inclusive to within the histogram's resolution)
@@ -814,7 +814,7 @@ namespace HdrHistogram.NET
         {
             return new Percentiles(this, percentileTicksPerHalfDistance);
         }
-        
+
         /// <summary>
         /// Provide a means of iterating through histogram values using linear steps. The iteration is performed in steps of <i>valueUnitsPerBucket</i> in size, terminating when all recorded histogram values are exhausted.
         /// </summary>
@@ -824,7 +824,7 @@ namespace HdrHistogram.NET
         {
             return new LinearBucketValues(this, valueUnitsPerBucket);
         }
-        
+
         /// <summary>
         /// Provide a means of iterating through histogram values at logarithmically increasing levels. 
         /// The iteration is performed in steps that start at<i>valueUnitsInFirstBucket</i> and increase exponentially according to <i>logBase</i>, terminating when all recorded histogram values are exhausted.
@@ -999,7 +999,7 @@ namespace HdrHistogram.NET
         //
         //
         //
-        
+
         /// <summary>
         /// Produce textual representation of the value distribution of histogram data by percentile. 
         /// The distribution is output with exponentially increasing resolution, with each exponentially decreasing half-distance containing <i>dumpTicksPerHalf</i> percentile reporting tick points.
@@ -1115,7 +1115,7 @@ namespace HdrHistogram.NET
         //
         //
 
-     /// <summary>
+        /// <summary>
         /// Get the capacity needed to encode this histogram into a <see cref="ByteBuffer"/>
         /// </summary>
         /// <returns>the capacity needed to encode this histogram into a <see cref="ByteBuffer"/></returns>
@@ -1155,7 +1155,7 @@ namespace HdrHistogram.NET
         {
             return (cookie & 0xf0) >> 4;
         }
-        
+
         /// <summary>
         /// Encode this histogram into a <see cref="ByteBuffer"/>
         /// </summary>
@@ -1354,15 +1354,14 @@ namespace HdrHistogram.NET
         //
         //
 
-        /**
-         * Determine if this histogram had any of it's value counts overflow.
-         * Since counts are kept in fixed integer form with potentially limited range (e.g. int and short), a
-         * specific value range count could potentially overflow, leading to an inaccurate and misleading histogram
-         * representation. This method accurately determines whether or not an overflow condition has happened in an
-         * IntHistogram or ShortHistogram.
-         *
-         * @return True if this histogram has had a count value overflow.
-         */
+        /// <summary>
+        /// Determine if this histogram had any of it's value counts overflow.
+        /// </summary>
+        /// <returns><c>true</c> if this histogram has had a count value overflow, else <c>false</c>.</returns>
+        /// <remarks>
+        /// Since counts are kept in fixed integer form with potentially limited range (e.g. int and short), a specific value range count could potentially overflow, leading to an inaccurate and misleading histogram representation.
+        /// This method accurately determines whether or not an overflow condition has happened in an IntHistogram or ShortHistogram.
+        /// </remarks>
         public bool hasOverflowed()
         {
             // On overflow, the totalCount accumulated counter will (always) not match the total of counts
@@ -1374,32 +1373,25 @@ namespace HdrHistogram.NET
             return (totalCounted != getTotalCount());
         }
 
-        /**
-         * Reestablish the internal notion of totalCount by recalculating it from recorded values.
-         *
-         * Implementations of AbstractHistogram may maintain a separately tracked notion of totalCount,
-         * which is useful for concurrent modification tracking, overflow detection, and speed of execution
-         * in iteration. This separately tracked totalCount can get into a state that is inconsistent with
-         * the currently recorded value counts under various concurrent modification and overflow conditions.
-         *
-         * Applying this method will override internal indications of potential overflows and concurrent
-         * modification, and will reestablish a self-consistent representation of the histogram data
-         * based purely on the current internal representation of recorded counts.
-         * <p>
-         * In cases of concurrent modifications such as during copying, or due to racy multi-threaded
-         * updates on non-atomic or non-synchronized variants, which can result in potential loss
-         * of counts and an inconsistent (indicating potential overflow) internal state, calling this
-         * method on a histogram will reestablish a consistent internal state based on the potentially
-         * lossy counts representations.
-         * <p>
-         * Note that this method is not synchronized against concurrent modification in any way,
-         * and will only reliably reestablish consistent internal state when no concurrent modification
-         * of the histogram is performed while it executes.
-         * <p>
-         * Note that in the cases of actual overflow conditions (which can result in negative counts)
-         * this self consistent view may be very wrong, and not just slightly lossy.
-         *
-         */
+        /// <summary>
+        /// Reestablish the internal notion of totalCount by recalculating it from recorded values.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Implementations of AbstractHistogram may maintain a separately tracked notion of totalCount, which is useful for concurrent modification tracking, overflow detection, and speed of execution in iteration.
+        /// This separately tracked totalCount can get into a state that is inconsistent with the currently recorded value counts under various concurrent modification and overflow conditions.
+        /// </para>
+        /// <para>
+        /// Applying this method will override internal indications of potential overflows and concurrent modification, and will reestablish a self-consistent representation of the histogram data based purely on the current internal representation of recorded counts.
+        /// </para>
+        /// <para>
+        /// In cases of concurrent modifications such as during copying, or due to racy multi-threaded updates on non-atomic or non-synchronized variants, which can result in potential loss of counts and an inconsistent (indicating potential overflow) internal state, calling this method on a histogram will reestablish a consistent internal state based on the potentially lossy counts representations.
+        /// </para>
+        /// <para>
+        /// Note that this method is not synchronized against concurrent modification in any way, and will only reliably reestablish consistent internal state when no concurrent modification of the histogram is performed while it executes.
+        /// </para>
+        /// Note that in the cases of actual overflow conditions (which can result in negative counts) this self consistent view may be very wrong, and not just slightly lossy.
+        /// </remarks>
         public void reestablishTotalCount()
         {
             // On overflow, the totalCount accumulated counter will (always) not match the total of counts
