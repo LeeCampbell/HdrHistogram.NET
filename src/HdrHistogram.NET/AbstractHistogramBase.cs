@@ -16,14 +16,9 @@ namespace HdrHistogram.NET
 {
     public abstract class AbstractHistogramBase
     {
-        private static long nextIdentity = -1L;
-        internal static long GetNextIdentity()
-        {
-            return Interlocked.Increment(ref nextIdentity);
-        }
-
+        
         // "Cold" accessed fields. Not used in the recording code path:
-        internal long identity;
+        
 
         internal long highestTrackableValue;
         internal long lowestTrackableValue;

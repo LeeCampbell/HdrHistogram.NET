@@ -17,6 +17,7 @@ using HdrHistogram.NET.Iteration;
 using HdrHistogram.NET.Utilities;
 using System.IO.Compression;
 using System.Reflection;
+using System.Threading;
 
 namespace HdrHistogram.NET
 {
@@ -41,18 +42,24 @@ namespace HdrHistogram.NET
     /// </remarks>
     public abstract class AbstractHistogram : AbstractHistogramBase //, ISerializable 
     {
+        private static long _nextIdentity = -1L;
+
         // "Hot" accessed fields (used in the the value recording code path) are bunched here, such
         // that they will have a good chance of ending up in the same cache line as the totalCounts and
         // counts array reference fields that subclass implementations will typically add.
         private int _subBucketHalfCountMagnitude;
         private int _unitMagnitude;
         private long _subBucketMask;
-
         private long _startTimeStampMsec;
         private long _endTimeStampMsec;
 
         internal int subBucketHalfCount;
 
+        private static long GetNextIdentity()
+        {
+            return Interlocked.Increment(ref _nextIdentity);
+        }
+        public long Identity { get; private set; }
 
         // Sub-classes will typically add a totalCount field and a counts array field.
 
@@ -123,7 +130,7 @@ namespace HdrHistogram.NET
             {
                 throw new ArgumentException("numberOfSignificantValueDigits must be between 0 and 6");
             }
-            identity = GetNextIdentity();
+            Identity = GetNextIdentity();
 
             Init(lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits, 0);
         }

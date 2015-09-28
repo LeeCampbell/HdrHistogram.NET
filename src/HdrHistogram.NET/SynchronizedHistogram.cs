@@ -56,7 +56,7 @@ namespace HdrHistogram.NET
         public void add(AbstractHistogram other) 
         {
             // Synchronize add(). Avoid deadlocks by synchronizing in order of construction identity count.
-            if (identity < other.identity) 
+            if (Identity < other.Identity) 
             {
                 lock (updateLock)
                 {
