@@ -46,7 +46,7 @@ namespace HdrHistogram.NET.Iteration
 
         protected override bool reachedIterationLevel() 
         {
-            long currentIJCount = this.histogram.getCountAt(this.currentBucketIndex, this.currentSubBucketIndex);
+            long currentIJCount = this.histogram.GetCountAt(this.currentBucketIndex, this.currentSubBucketIndex);
             return (currentIJCount != 0) &&
                     ((this.visitedSubBucketIndex != this.currentSubBucketIndex) || (this.visitedBucketIndex != this.currentBucketIndex));
         }

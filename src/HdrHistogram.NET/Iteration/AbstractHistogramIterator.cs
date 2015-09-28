@@ -83,7 +83,7 @@ namespace HdrHistogram.NET.Iteration
          */
         public virtual bool hasNext()
         {
-            if (this.histogram.getTotalCount() != this.savedHistogramTotalRawCount)
+            if (this.histogram.GetTotalCount() != this.savedHistogramTotalRawCount)
             {
                 throw new InvalidOperationException();
             }
@@ -100,12 +100,12 @@ namespace HdrHistogram.NET.Iteration
             // Move through the sub buckets and buckets until we hit the next reporting level:
             while (!this.exhaustedSubBuckets())
             {
-                this.countAtThisValue = this.histogram.getCountAt(this.currentBucketIndex, this.currentSubBucketIndex);
+                this.countAtThisValue = this.histogram.GetCountAt(this.currentBucketIndex, this.currentSubBucketIndex);
                 if (this.freshSubBucket)
                 {
                     // Don't add unless we've incremented since last bucket...
                     this.totalCountToCurrentIndex += this.countAtThisValue;
-                    this.totalValueToCurrentIndex += this.countAtThisValue * this.histogram.medianEquivalentValue(this.currentValueAtIndex);
+                    this.totalValueToCurrentIndex += this.countAtThisValue * this.histogram.MedianEquivalentValue(this.currentValueAtIndex);
                     this.freshSubBucket = false;
                 }
                 if (this.reachedIterationLevel())
@@ -124,7 +124,7 @@ namespace HdrHistogram.NET.Iteration
                     this.totalCountToPrevIndex = this.totalCountToCurrentIndex;
                     // move the next iteration level forward:
                     this.incrementIterationLevel();
-                    if (this.histogram.getTotalCount() != this.savedHistogramTotalRawCount)
+                    if (this.histogram.GetTotalCount() != this.savedHistogramTotalRawCount)
                     {
                         throw new InvalidOperationException();
                     }
@@ -139,8 +139,8 @@ namespace HdrHistogram.NET.Iteration
         protected void resetIterator(AbstractHistogram histogram)
         {
             this.histogram = histogram;
-            this.savedHistogramTotalRawCount = histogram.getTotalCount();
-            this.arrayTotalCount = histogram.getTotalCount();
+            this.savedHistogramTotalRawCount = histogram.GetTotalCount();
+            this.arrayTotalCount = histogram.GetTotalCount();
             this.currentBucketIndex = 0;
             this.currentSubBucketIndex = 0;
             this.currentValueAtIndex = 0;
@@ -182,7 +182,7 @@ namespace HdrHistogram.NET.Iteration
 
         protected virtual long getValueIteratedTo()
         {
-            return this.histogram.highestEquivalentValue(this.currentValueAtIndex);
+            return this.histogram.HighestEquivalentValue(this.currentValueAtIndex);
         }
 
         private bool exhaustedSubBuckets()
@@ -204,7 +204,7 @@ namespace HdrHistogram.NET.Iteration
                 this.nextSubBucketIndex = this.histogram.subBucketHalfCount;
                 this.nextBucketIndex++;
             }
-            this.nextValueAtIndex = this.histogram.valueFromIndex(this.nextBucketIndex, this.nextSubBucketIndex);
+            this.nextValueAtIndex = this.histogram.ValueFromIndex(this.nextBucketIndex, this.nextSubBucketIndex);
         }
     }
 }

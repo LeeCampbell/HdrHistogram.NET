@@ -60,7 +60,7 @@ namespace HdrHistogram.NET.Examples
             timer.Stop();
             // From http://stackoverflow.com/questions/2329079/how-do-you-convert-stopwatch-ticks-to-nanoseconds-milliseconds-and-seconds/2329103#2329103
             long elapsedNanos = (long)(((double)timer.ElapsedTicks / Stopwatch.Frequency) * 1000000000);
-            histogram.recordValue(elapsedNanos);
+            histogram.RecordValue(elapsedNanos);
         }
 
         public static void Run()
@@ -76,7 +76,7 @@ namespace HdrHistogram.NET.Examples
             //} while (now - startTime < WARMUP_TIME_MSEC);
             } while (timer.ElapsedMilliseconds < WARMUP_TIME_MSEC);
 
-            histogram.reset();
+            histogram.Reset();
 
             do {
                 recordTimeToCreateAndCloseDatagramSocket();
@@ -86,13 +86,13 @@ namespace HdrHistogram.NET.Examples
 
             Console.WriteLine("Recorded latencies [in usec] for Create+Close of a DatagramSocket:");
 
-            var size = histogram.getEstimatedFootprintInBytes();
+            var size = histogram.GetEstimatedFootprintInBytes();
             Console.WriteLine("Histogram size = {0} bytes ({1:F2} MB)", size, size / 1024.0 / 1024.0);
 
             // 1 usec = 1000 ns (nanos), results are displayed in usecs, so we need to scale
-            histogram.outputPercentileDistribution(Console.Out, outputValueUnitScalingRatio: 1000.0);
+            histogram.OutputPercentileDistribution(Console.Out, outputValueUnitScalingRatio: 1000.0);
             Console.WriteLine();
-            histogram.outputPercentileDistribution(Console.Out, outputValueUnitScalingRatio: 1000.0 * 1000.0);
+            histogram.OutputPercentileDistribution(Console.Out, outputValueUnitScalingRatio: 1000.0 * 1000.0);
             //Console.WriteLine();
             //data.outputPercentileDistribution(
             //    Console.Out, percentileTicksPerHalfDistance: 5, outputValueUnitScalingRatio: 1000.0, useCsvFormat: true);

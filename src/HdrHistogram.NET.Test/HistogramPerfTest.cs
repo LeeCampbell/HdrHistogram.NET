@@ -40,7 +40,7 @@ namespace HdrHistogram.NET.Test
         void recordLoopWithExpectedInterval(AbstractHistogram histogram, long loopCount, long expectedInterval)
         {
             for (long i = 0; i < loopCount; i++)
-                histogram.recordValueWithExpectedInterval(testValueLevel + (i & 0x8000), expectedInterval);
+                histogram.RecordValueWithExpectedInterval(testValueLevel + (i & 0x8000), expectedInterval);
         }
 
         long LeadingZerosSpeedLoop(long loopCount)
@@ -78,7 +78,7 @@ namespace HdrHistogram.NET.Test
             long rate = 1000000 * warmupLoopLength / deltaUsec;
             Console.WriteLine("{0}Warmup:\n{1:N0} value recordings completed in {2:N0} usec, rate = {3:N0} value recording calls per sec.",
                                 label, warmupLoopLength, deltaUsec, rate);
-            histogram.reset();
+            histogram.Reset();
             // Wait a bit to make sure compiler had a chance to do it's stuff:
             try
             {
@@ -101,9 +101,9 @@ namespace HdrHistogram.NET.Test
                                 label, timingLoopCount, deltaUsec, rate);
             if (multiThreaded == false)
             {
-                rate = 1000000 * histogram.getTotalCount() / deltaUsec;
+                rate = 1000000 * histogram.GetTotalCount() / deltaUsec;
                 Console.WriteLine("{0}{1:N0} raw recorded entries completed in {2:N0} usec, rate = {3:N0} recorded values per sec.",
-                                    label, histogram.getTotalCount(), deltaUsec, rate);
+                                    label, histogram.GetTotalCount(), deltaUsec, rate);
             }
 
             if (assertNoGC)
@@ -129,7 +129,7 @@ namespace HdrHistogram.NET.Test
             testRawRecordingSpeedAtExpectedInterval("Histogram: ", histogram, 1000000000, rawtimingLoopCount);
 
             // Check that the histogram contains as many values are we wrote to it
-            Assert.AreEqual(rawtimingLoopCount, histogram.getTotalCount());
+            Assert.AreEqual(rawtimingLoopCount, histogram.GetTotalCount());
         }
 
         [Test]
@@ -141,7 +141,7 @@ namespace HdrHistogram.NET.Test
             testRawRecordingSpeedAtExpectedInterval("SynchronizedHistogram: ", histogram, 1000000000, synchronizedTimingLoopCount);
 
             // Check that the histogram contains as many values are we wrote to it
-            Assert.AreEqual(synchronizedTimingLoopCount, histogram.getTotalCount());
+            Assert.AreEqual(synchronizedTimingLoopCount, histogram.GetTotalCount());
         }
 
         //[Test]

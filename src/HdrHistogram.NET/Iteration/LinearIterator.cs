@@ -34,7 +34,7 @@ namespace HdrHistogram.NET.Iteration
             base.resetIterator(histogram);
             this.valueUnitsPerBucket = valueUnitsPerBucket;
             this.nextValueReportingLevel = valueUnitsPerBucket;
-            this.nextValueReportingLevelLowestEquivalent = histogram.lowestEquivalentValue(this.nextValueReportingLevel);
+            this.nextValueReportingLevelLowestEquivalent = histogram.LowestEquivalentValue(this.nextValueReportingLevel);
         }
 
         /**
@@ -59,7 +59,7 @@ namespace HdrHistogram.NET.Iteration
         protected override void incrementIterationLevel() 
         {
             this.nextValueReportingLevel += this.valueUnitsPerBucket;
-            this.nextValueReportingLevelLowestEquivalent = this.histogram.lowestEquivalentValue(this.nextValueReportingLevel);
+            this.nextValueReportingLevelLowestEquivalent = this.histogram.LowestEquivalentValue(this.nextValueReportingLevel);
         }
 
         protected override long getValueIteratedTo() 

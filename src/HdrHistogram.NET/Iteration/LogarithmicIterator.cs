@@ -39,7 +39,7 @@ namespace HdrHistogram.NET.Iteration
             this.logBase = logBase;
             this.valueUnitsInFirstBucket = valueUnitsInFirstBucket;
             this.nextValueReportingLevel = valueUnitsInFirstBucket;
-            this.nextValueReportingLevelLowestEquivalent = histogram.lowestEquivalentValue(this.nextValueReportingLevel);
+            this.nextValueReportingLevelLowestEquivalent = histogram.LowestEquivalentValue(this.nextValueReportingLevel);
         }
 
         /**
@@ -64,7 +64,7 @@ namespace HdrHistogram.NET.Iteration
 
         protected override void incrementIterationLevel() {
             this.nextValueReportingLevel *= (long)this.logBase;
-            this.nextValueReportingLevelLowestEquivalent = this.histogram.lowestEquivalentValue(this.nextValueReportingLevel);
+            this.nextValueReportingLevelLowestEquivalent = this.histogram.LowestEquivalentValue(this.nextValueReportingLevel);
         }
 
         protected override long getValueIteratedTo() {
