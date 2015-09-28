@@ -20,12 +20,12 @@ namespace HdrHistogram.NET.Iteration
          */
         public void reset() 
         {
-            this.reset(this.histogram);
+            this.reset(this.SourceHistogram);
         }
 
         private void reset(AbstractHistogram histogram) 
         {
-            base.resetIterator(histogram);
+            base.ResetIterator(histogram);
             this.visitedSubBucketIndex = -1;
             this.visitedBucketIndex = -1;
         }
@@ -38,17 +38,17 @@ namespace HdrHistogram.NET.Iteration
             this.reset(histogram);
         }
 
-        protected override void incrementIterationLevel() 
+        protected override void IncrementIterationLevel() 
         {
-            this.visitedSubBucketIndex = this.currentSubBucketIndex;
-            this.visitedBucketIndex = this.currentBucketIndex;
+            this.visitedSubBucketIndex = this.CurrentSubBucketIndex;
+            this.visitedBucketIndex = this.CurrentBucketIndex;
         }
 
-        protected override bool reachedIterationLevel() 
+        protected override bool ReachedIterationLevel() 
         {
-            long currentIJCount = this.histogram.GetCountAt(this.currentBucketIndex, this.currentSubBucketIndex);
+            long currentIJCount = this.SourceHistogram.GetCountAt(this.CurrentBucketIndex, this.CurrentSubBucketIndex);
             return (currentIJCount != 0) &&
-                    ((this.visitedSubBucketIndex != this.currentSubBucketIndex) || (this.visitedBucketIndex != this.currentBucketIndex));
+                    ((this.visitedSubBucketIndex != this.CurrentSubBucketIndex) || (this.visitedBucketIndex != this.CurrentBucketIndex));
         }
     }
 }

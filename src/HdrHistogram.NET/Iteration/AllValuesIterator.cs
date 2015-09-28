@@ -25,11 +25,11 @@ namespace HdrHistogram.NET.Iteration
          * Reset iterator for re-use in a fresh iteration over the same histogram data set.
          */
         public void reset() {
-            this.reset(this.histogram);
+            this.reset(this.SourceHistogram);
         }
 
         private void reset(AbstractHistogram histogram) {
-            base.resetIterator(histogram);
+            base.ResetIterator(histogram);
             this.visitedSubBucketIndex = -1;
             this.visitedBucketIndex = -1;
         }
@@ -41,13 +41,13 @@ namespace HdrHistogram.NET.Iteration
             this.reset(histogram);
         }
 
-        protected override void incrementIterationLevel() {
-            this.visitedSubBucketIndex = this.currentSubBucketIndex;
-            this.visitedBucketIndex = this.currentBucketIndex;
+        protected override void IncrementIterationLevel() {
+            this.visitedSubBucketIndex = this.CurrentSubBucketIndex;
+            this.visitedBucketIndex = this.CurrentBucketIndex;
         }
 
-        protected override bool reachedIterationLevel() {
-            return (this.visitedSubBucketIndex != this.currentSubBucketIndex) || (this.visitedBucketIndex != this.currentBucketIndex);
+        protected override bool ReachedIterationLevel() {
+            return (this.visitedSubBucketIndex != this.CurrentSubBucketIndex) || (this.visitedBucketIndex != this.CurrentBucketIndex);
         }
     }
 }

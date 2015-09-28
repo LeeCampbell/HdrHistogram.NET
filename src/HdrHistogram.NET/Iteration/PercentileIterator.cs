@@ -32,12 +32,12 @@ namespace HdrHistogram.NET.Iteration
          */
         public void reset(int percentileTicksPerHalfDistance) 
         {
-            this.reset(this.histogram, percentileTicksPerHalfDistance);
+            this.reset(this.SourceHistogram, percentileTicksPerHalfDistance);
         }
 
         private void reset(AbstractHistogram histogram, int percentileTicksPerHalfDistance) 
         {
-            base.resetIterator(histogram);
+            base.ResetIterator(histogram);
             this.percentileTicksPerHalfDistance = percentileTicksPerHalfDistance;
             this.percentileLevelToIterateTo = 0.0;
             this.percentileLevelToIterateFrom = 0.0;
@@ -53,12 +53,12 @@ namespace HdrHistogram.NET.Iteration
             this.reset(histogram, percentileTicksPerHalfDistance);
         }
 
-        public override bool hasNext() 
+        public override bool HasNext() 
         {
-            if (base.hasNext())
+            if (base.HasNext())
                 return true;
             // We want one additional last step to 100%
-            if (!this.reachedLastRecordedValue && (this.arrayTotalCount > 0)) {
+            if (!this.reachedLastRecordedValue && (this.ArrayTotalCount > 0)) {
                 this.percentileLevelToIterateTo = 100.0;
                 this.reachedLastRecordedValue = true;
                 return true;
@@ -66,7 +66,7 @@ namespace HdrHistogram.NET.Iteration
             return false;
         }
 
-        protected override void incrementIterationLevel() 
+        protected override void IncrementIterationLevel() 
         {
             this.percentileLevelToIterateFrom = this.percentileLevelToIterateTo;
             long percentileReportingTicks =
@@ -76,22 +76,17 @@ namespace HdrHistogram.NET.Iteration
             this.percentileLevelToIterateTo += 100.0 / percentileReportingTicks;
         }
 
-        protected override bool reachedIterationLevel() 
+        protected override bool ReachedIterationLevel() 
         {
-            if (this.countAtThisValue == 0)
+            if (this.CountAtThisValue == 0)
                 return false;
-            double currentPercentile = (100.0 * (double) this.totalCountToCurrentIndex) / this.arrayTotalCount;
+            double currentPercentile = (100.0 * (double) this.TotalCountToCurrentIndex) / this.ArrayTotalCount;
             return (currentPercentile >= this.percentileLevelToIterateTo);
         }
 
-        protected override double getPercentileIteratedTo() 
+        protected override double GetPercentileIteratedTo() 
         {
             return this.percentileLevelToIterateTo;
-        }
-
-        protected override double getPercentileIteratedFrom() 
-        {
-            return this.percentileLevelToIterateFrom;
         }
     }
 }

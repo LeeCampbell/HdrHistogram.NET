@@ -649,9 +649,9 @@ namespace HdrHistogram.NET
         {
             _recordedValuesIterator.reset();
             long min = 0;
-            if (_recordedValuesIterator.hasNext())
+            if (_recordedValuesIterator.HasNext())
             {
-                HistogramIterationValue iterationValue = _recordedValuesIterator.next();
+                HistogramIterationValue iterationValue = _recordedValuesIterator.Next();
                 min = iterationValue.getValueIteratedTo();
             }
             return LowestEquivalentValue(min);
@@ -665,9 +665,9 @@ namespace HdrHistogram.NET
         {
             _recordedValuesIterator.reset();
             long max = 0;
-            while (_recordedValuesIterator.hasNext())
+            while (_recordedValuesIterator.HasNext())
             {
-                HistogramIterationValue iterationValue = _recordedValuesIterator.next();
+                HistogramIterationValue iterationValue = _recordedValuesIterator.Next();
                 max = iterationValue.getValueIteratedTo();
             }
             return LowestEquivalentValue(max);
@@ -681,9 +681,9 @@ namespace HdrHistogram.NET
         {
             _recordedValuesIterator.reset();
             long totalValue = 0;
-            while (_recordedValuesIterator.hasNext())
+            while (_recordedValuesIterator.HasNext())
             {
-                HistogramIterationValue iterationValue = _recordedValuesIterator.next();
+                HistogramIterationValue iterationValue = _recordedValuesIterator.Next();
                 totalValue = iterationValue.getTotalValueToThisValue();
             }
             return (totalValue * 1.0) / GetTotalCount();
@@ -698,9 +698,9 @@ namespace HdrHistogram.NET
             double mean = GetMean();
             double geometric_deviation_total = 0.0;
             _recordedValuesIterator.reset();
-            while (_recordedValuesIterator.hasNext())
+            while (_recordedValuesIterator.HasNext())
             {
-                HistogramIterationValue iterationValue = _recordedValuesIterator.next();
+                HistogramIterationValue iterationValue = _recordedValuesIterator.Next();
                 Double deviation = (MedianEquivalentValue(iterationValue.getValueIteratedTo()) * 1.0) - mean;
                 geometric_deviation_total += (deviation * deviation) * iterationValue.getCountAddedInThisIterationStep();
             }
@@ -1050,9 +1050,9 @@ namespace HdrHistogram.NET
 
             try
             {
-                while (iterator.hasNext())
+                while (iterator.HasNext())
                 {
-                    HistogramIterationValue iterationValue = iterator.next();
+                    HistogramIterationValue iterationValue = iterator.Next();
                     if (iterationValue.getPercentileLevelIteratedTo() != 100.0D)
                     {
                         printStream.Write(percentileFormatString,

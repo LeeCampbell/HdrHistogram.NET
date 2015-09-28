@@ -27,11 +27,11 @@ namespace HdrHistogram.NET.Iteration
          * @param valueUnitsPerBucket The size (in value units) of each bucket iteration.
          */
         public void reset(int valueUnitsPerBucket) {
-            this.reset(this.histogram, valueUnitsPerBucket);
+            this.reset(this.SourceHistogram, valueUnitsPerBucket);
         }
 
         private void reset(AbstractHistogram histogram, long valueUnitsPerBucket) {
-            base.resetIterator(histogram);
+            base.ResetIterator(histogram);
             this.valueUnitsPerBucket = valueUnitsPerBucket;
             this.nextValueReportingLevel = valueUnitsPerBucket;
             this.nextValueReportingLevelLowestEquivalent = histogram.LowestEquivalentValue(this.nextValueReportingLevel);
@@ -45,31 +45,31 @@ namespace HdrHistogram.NET.Iteration
             this.reset(histogram, valueUnitsPerBucket);
         }
 
-        public override bool hasNext() 
+        public override bool HasNext() 
         {
-            if (base.hasNext()) 
+            if (base.HasNext()) 
             {
                 return true;
             }
             // If next iterate does not move to the next sub bucket index (which is empty if
             // if we reached this point), then we are not done iterating... Otherwise we're done.
-            return (this.nextValueReportingLevelLowestEquivalent < this.nextValueAtIndex);
+            return (this.nextValueReportingLevelLowestEquivalent < this.NextValueAtIndex);
         }
 
-        protected override void incrementIterationLevel() 
+        protected override void IncrementIterationLevel() 
         {
             this.nextValueReportingLevel += this.valueUnitsPerBucket;
-            this.nextValueReportingLevelLowestEquivalent = this.histogram.LowestEquivalentValue(this.nextValueReportingLevel);
+            this.nextValueReportingLevelLowestEquivalent = this.SourceHistogram.LowestEquivalentValue(this.nextValueReportingLevel);
         }
 
-        protected override long getValueIteratedTo() 
+        protected override long GetValueIteratedTo() 
         {
             return this.nextValueReportingLevel;
         }
 
-        protected override bool reachedIterationLevel() 
+        protected override bool ReachedIterationLevel() 
         {
-            return (this.currentValueAtIndex >= this.nextValueReportingLevelLowestEquivalent);
+            return (this.CurrentValueAtIndex >= this.nextValueReportingLevelLowestEquivalent);
         }
     }
 }

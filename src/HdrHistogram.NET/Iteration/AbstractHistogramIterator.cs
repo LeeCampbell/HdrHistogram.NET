@@ -16,37 +16,24 @@ namespace HdrHistogram.NET.Iteration
 {
     public abstract class AbstractHistogramIterator : IEnumerator<HistogramIterationValue>
     {
-        internal AbstractHistogram histogram;
+        private long _savedHistogramTotalRawCount;
+        private int _nextBucketIndex;
+        private int _nextSubBucketIndex;
+        private long _prevValueIteratedTo;
+        private long _totalCountToPrevIndex;
+        private long _totalValueToCurrentIndex;
+        private bool _freshSubBucket;
+        private HistogramIterationValue _currentIterationValue;
 
-        internal long savedHistogramTotalRawCount;
+        protected AbstractHistogram SourceHistogram { get; private set; }
+        protected int CurrentBucketIndex { get; private set; }
+        protected int CurrentSubBucketIndex { get; private set; }
+        protected long CurrentValueAtIndex { get; private set; }
+        protected long NextValueAtIndex { get; private set; }
+        protected long TotalCountToCurrentIndex { get; private set; }
+        protected long ArrayTotalCount { get; private set; }
+        protected long CountAtThisValue { get; private set; }
 
-        internal int currentBucketIndex;
-
-        internal int currentSubBucketIndex;
-
-        internal long currentValueAtIndex;
-
-        internal int nextBucketIndex;
-
-        internal int nextSubBucketIndex;
-
-        internal long nextValueAtIndex;
-
-        internal long prevValueIteratedTo;
-
-        internal long totalCountToPrevIndex;
-
-        internal long totalCountToCurrentIndex;
-
-        internal long totalValueToCurrentIndex;
-
-        internal long arrayTotalCount;
-
-        internal long countAtThisValue;
-
-        private bool freshSubBucket;
-
-        private HistogramIterationValue currentIterationValue;
 
         public void Dispose()
         {
@@ -55,25 +42,24 @@ namespace HdrHistogram.NET.Iteration
 
         public bool MoveNext()
         {
-            var canMove = this.hasNext();
+            var canMove = this.HasNext();
             if (canMove)
             {
-                this.Current = this.next();
+                this.Current = this.Next();
             }
             return canMove;
         }
 
         public void Reset()
         {
-            this.resetIterator(this.histogram);
+            this.ResetIterator(this.SourceHistogram);
         }
+
+        
 
         public HistogramIterationValue Current { get; private set; }
+        object IEnumerator.Current => this.Current;
 
-        object IEnumerator.Current
-        {
-            get { return this.Current; }
-        }
 
         /**
          * Returns true if the iteration has more elements. (In other words, returns true if next would return an
@@ -81,13 +67,13 @@ namespace HdrHistogram.NET.Iteration
          *
          * @return true if the iterator has more elements.
          */
-        public virtual bool hasNext()
+        public virtual bool HasNext()
         {
-            if (this.histogram.GetTotalCount() != this.savedHistogramTotalRawCount)
+            if (this.SourceHistogram.GetTotalCount() != this._savedHistogramTotalRawCount)
             {
                 throw new InvalidOperationException();
             }
-            return (this.totalCountToCurrentIndex < this.arrayTotalCount);
+            return (this.TotalCountToCurrentIndex < this.ArrayTotalCount);
         }
 
         /**
@@ -95,116 +81,103 @@ namespace HdrHistogram.NET.Iteration
          *
          * @return the {@link HistogramIterationValue} associated with the next element in the iteration.
          */
-        public HistogramIterationValue next()
+        public HistogramIterationValue Next()
         {
             // Move through the sub buckets and buckets until we hit the next reporting level:
-            while (!this.exhaustedSubBuckets())
+            while (!this.ExhaustedSubBuckets())
             {
-                this.countAtThisValue = this.histogram.GetCountAt(this.currentBucketIndex, this.currentSubBucketIndex);
-                if (this.freshSubBucket)
+                this.CountAtThisValue = this.SourceHistogram.GetCountAt(this.CurrentBucketIndex, this.CurrentSubBucketIndex);
+                if (this._freshSubBucket)
                 {
                     // Don't add unless we've incremented since last bucket...
-                    this.totalCountToCurrentIndex += this.countAtThisValue;
-                    this.totalValueToCurrentIndex += this.countAtThisValue * this.histogram.MedianEquivalentValue(this.currentValueAtIndex);
-                    this.freshSubBucket = false;
+                    this.TotalCountToCurrentIndex += this.CountAtThisValue;
+                    this._totalValueToCurrentIndex += this.CountAtThisValue * this.SourceHistogram.MedianEquivalentValue(this.CurrentValueAtIndex);
+                    this._freshSubBucket = false;
                 }
-                if (this.reachedIterationLevel())
+                if (this.ReachedIterationLevel())
                 {
-                    long valueIteratedTo = this.getValueIteratedTo();
-                    this.currentIterationValue.set(
+                    long valueIteratedTo = this.GetValueIteratedTo();
+                    this._currentIterationValue.set(
                         valueIteratedTo,
-                        this.prevValueIteratedTo,
-                        this.countAtThisValue,
-                        (this.totalCountToCurrentIndex - this.totalCountToPrevIndex),
-                        this.totalCountToCurrentIndex,
-                        this.totalValueToCurrentIndex,
-                        ((100.0 * this.totalCountToCurrentIndex) / this.arrayTotalCount),
-                        this.getPercentileIteratedTo());
-                    this.prevValueIteratedTo = valueIteratedTo;
-                    this.totalCountToPrevIndex = this.totalCountToCurrentIndex;
+                        this._prevValueIteratedTo,
+                        this.CountAtThisValue,
+                        (this.TotalCountToCurrentIndex - this._totalCountToPrevIndex),
+                        this.TotalCountToCurrentIndex,
+                        this._totalValueToCurrentIndex,
+                        ((100.0 * this.TotalCountToCurrentIndex) / this.ArrayTotalCount),
+                        this.GetPercentileIteratedTo());
+                    this._prevValueIteratedTo = valueIteratedTo;
+                    this._totalCountToPrevIndex = this.TotalCountToCurrentIndex;
                     // move the next iteration level forward:
-                    this.incrementIterationLevel();
-                    if (this.histogram.GetTotalCount() != this.savedHistogramTotalRawCount)
+                    this.IncrementIterationLevel();
+                    if (this.SourceHistogram.GetTotalCount() != this._savedHistogramTotalRawCount)
                     {
                         throw new InvalidOperationException();
                     }
-                    return this.currentIterationValue;
+                    return this._currentIterationValue;
                 }
-                this.incrementSubBucket();
+                this.IncrementSubBucket();
             }
             // Should not reach here. But possible for overflowed histograms under certain conditions
             throw new ArgumentOutOfRangeException();
         }
 
-        protected void resetIterator(AbstractHistogram histogram)
+        protected void ResetIterator(AbstractHistogram histogram)
         {
-            this.histogram = histogram;
-            this.savedHistogramTotalRawCount = histogram.GetTotalCount();
-            this.arrayTotalCount = histogram.GetTotalCount();
-            this.currentBucketIndex = 0;
-            this.currentSubBucketIndex = 0;
-            this.currentValueAtIndex = 0;
-            this.nextBucketIndex = 0;
-            this.nextSubBucketIndex = 1;
-            this.nextValueAtIndex = 1;
-            this.prevValueIteratedTo = 0;
-            this.totalCountToPrevIndex = 0;
-            this.totalCountToCurrentIndex = 0;
-            this.totalValueToCurrentIndex = 0;
-            this.countAtThisValue = 0;
-            this.freshSubBucket = true;
-            if (this.currentIterationValue == null)
-                this.currentIterationValue = new HistogramIterationValue();
-            this.currentIterationValue.reset();
+            this.SourceHistogram = histogram;
+            this._savedHistogramTotalRawCount = histogram.GetTotalCount();
+            this.ArrayTotalCount = histogram.GetTotalCount();
+            this.CurrentBucketIndex = 0;
+            this.CurrentSubBucketIndex = 0;
+            this.CurrentValueAtIndex = 0;
+            this._nextBucketIndex = 0;
+            this._nextSubBucketIndex = 1;
+            this.NextValueAtIndex = 1;
+            this._prevValueIteratedTo = 0;
+            this._totalCountToPrevIndex = 0;
+            this.TotalCountToCurrentIndex = 0;
+            this._totalValueToCurrentIndex = 0;
+            this.CountAtThisValue = 0;
+            this._freshSubBucket = true;
+            if (this._currentIterationValue == null)
+                this._currentIterationValue = new HistogramIterationValue();
+            this._currentIterationValue.reset();
         }
 
-        /**
-         * Not supported. Will throw an {@link UnsupportedOperationException}.
-         */
-        public void remove()
+        protected abstract void IncrementIterationLevel();
+
+        protected abstract bool ReachedIterationLevel();
+
+        protected virtual double GetPercentileIteratedTo()
         {
-            throw new InvalidOperationException();
+            return (100.0 * (double)this.TotalCountToCurrentIndex) / this.ArrayTotalCount;
         }
 
-        /*private*/ protected abstract void incrementIterationLevel();
-
-        /*private*/ protected abstract bool reachedIterationLevel();
-
-        protected virtual double getPercentileIteratedTo()
+        protected virtual long GetValueIteratedTo()
         {
-            return (100.0 * (double)this.totalCountToCurrentIndex) / this.arrayTotalCount;
+            return this.SourceHistogram.HighestEquivalentValue(this.CurrentValueAtIndex);
         }
 
-        protected virtual double getPercentileIteratedFrom()
+        private bool ExhaustedSubBuckets()
         {
-            return (100.0 * (double)this.totalCountToPrevIndex) / this.arrayTotalCount;
+            return (this.CurrentBucketIndex >= this.SourceHistogram.BucketCount);
         }
 
-        protected virtual long getValueIteratedTo()
+        private void IncrementSubBucket()
         {
-            return this.histogram.HighestEquivalentValue(this.currentValueAtIndex);
-        }
-
-        private bool exhaustedSubBuckets()
-        {
-            return (this.currentBucketIndex >= this.histogram.BucketCount);
-        }
-
-        private void incrementSubBucket()
-        {
-            this.freshSubBucket = true;
+            this._freshSubBucket = true;
             // Take on the next index:
-            this.currentBucketIndex = this.nextBucketIndex;
-            this.currentSubBucketIndex = this.nextSubBucketIndex;
-            this.currentValueAtIndex = this.nextValueAtIndex;
+            this.CurrentBucketIndex = this._nextBucketIndex;
+            this.CurrentSubBucketIndex = this._nextSubBucketIndex;
+            this.CurrentValueAtIndex = this.NextValueAtIndex;
             // Figure out the next next index:
-            this.nextSubBucketIndex++;
-            if (this.nextSubBucketIndex >= this.histogram.SubBucketCount)
+            this._nextSubBucketIndex++;
+            if (this._nextSubBucketIndex >= this.SourceHistogram.SubBucketCount)
             {
-                this.nextSubBucketIndex = this.histogram.SubBucketHalfCount;
-                this.nextBucketIndex++;
+                this._nextSubBucketIndex = this.SourceHistogram.SubBucketHalfCount;
+                this._nextBucketIndex++;
             }
-            this.nextValueAtIndex = this.histogram.ValueFromIndex(this.nextBucketIndex, this.nextSubBucketIndex);
+            this.NextValueAtIndex = this.SourceHistogram.ValueFromIndex(this._nextBucketIndex, this._nextSubBucketIndex);
         }
     }
 }
