@@ -210,7 +210,7 @@ namespace HdrHistogram.NET
             recordValueWithCountAndExpectedInterval(value, 1, expectedIntervalBetweenValueSamples);
         }
 
-        
+
         private void recordCountAtValue(/*final*/ long count, /*final*/ long value) //throws ArrayIndexOutOfBoundsException 
         {
             // Dissect the value into bucket and sub-bucket parts, and derive index into counts array:
@@ -269,7 +269,7 @@ namespace HdrHistogram.NET
         //
         //
         //
-        
+
         /// <summary>
         /// Create a copy of this histogram, complete with data and everything.
         /// </summary>
@@ -490,9 +490,9 @@ namespace HdrHistogram.NET
         //
         //
         //
-        
+
         //TODO: Make properties. -LC
-        
+
         /// <summary>
         /// Get the configured lowestTrackableValue
         /// </summary>
@@ -501,7 +501,7 @@ namespace HdrHistogram.NET
         {
             return lowestTrackableValue;
         }
-        
+
         /// <summary>
         /// Get the configured highestTrackableValue
         /// </summary>
@@ -899,23 +899,22 @@ namespace HdrHistogram.NET
         // Percentile iterator support:
 
         /**
-         * An {@link java.lang.Iterable}{@literal <}{@link HistogramIterationValue}{@literal >} through
-         * the histogram using a {@link PercentileIterator}
-         */
+     * 
+     */
+        /// <summary>
+        /// An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="PercentileIterator"/>
+        /// </summary>
         public class Percentiles : IEnumerable<HistogramIterationValue>
         {
             readonly AbstractHistogram histogram;
             readonly int percentileTicksPerHalfDistance;
 
-            public /*private*/ Percentiles(/*final*/ AbstractHistogram histogram, /*final*/ int percentileTicksPerHalfDistance)
+            public Percentiles(AbstractHistogram histogram, int percentileTicksPerHalfDistance)
             {
                 this.histogram = histogram;
                 this.percentileTicksPerHalfDistance = percentileTicksPerHalfDistance;
             }
 
-            /**
-             * @return A {@link PercentileIterator}<{@link HistogramIterationValue}>
-             */
             public IEnumerator<HistogramIterationValue> GetEnumerator()
             {
                 return new PercentileIterator(histogram, percentileTicksPerHalfDistance);
@@ -929,24 +928,20 @@ namespace HdrHistogram.NET
 
         // Linear iterator support:
 
-        /**
-         * An {@link java.lang.Iterable}{@literal <}{@link HistogramIterationValue}{@literal >} through
-         * the histogram using a {@link LinearIterator}
-         */
+        /// <summary>
+        /// An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LinearIterator"/>
+        /// </summary>
         public class LinearBucketValues : IEnumerable<HistogramIterationValue>
         {
-            readonly AbstractHistogram histogram;
-            readonly int valueUnitsPerBucket;
+            private readonly AbstractHistogram histogram;
+            private readonly int valueUnitsPerBucket;
 
-            public /*private*/ LinearBucketValues(/*final*/ AbstractHistogram histogram, /*final*/ int valueUnitsPerBucket)
+            public LinearBucketValues(AbstractHistogram histogram, int valueUnitsPerBucket)
             {
                 this.histogram = histogram;
                 this.valueUnitsPerBucket = valueUnitsPerBucket;
             }
 
-            /**
-             * @return A {@link LinearIterator}<{@link HistogramIterationValue}>
-             */
             public IEnumerator<HistogramIterationValue> GetEnumerator()
             {
                 return new LinearIterator(histogram, valueUnitsPerBucket);
@@ -959,28 +954,23 @@ namespace HdrHistogram.NET
         }
 
         // Logarithmic iterator support:
-
-        /**
-         * An {@link java.lang.Iterable}{@literal <}{@link HistogramIterationValue}{@literal >} through
-         * the histogram using a {@link LogarithmicIterator}
-         */
+        
+        /// <summary>
+        /// An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LogarithmicIterator"/>
+        /// </summary>
         public class LogarithmicBucketValues : IEnumerable<HistogramIterationValue>
         {
             readonly AbstractHistogram histogram;
             readonly int valueUnitsInFirstBucket;
             readonly double logBase;
 
-            public /*private*/ LogarithmicBucketValues(/*final*/ AbstractHistogram histogram,
-                                            /*final*/ int valueUnitsInFirstBucket,/*final*/ double logBase)
+            public LogarithmicBucketValues(AbstractHistogram histogram, int valueUnitsInFirstBucket, double logBase)
             {
                 this.histogram = histogram;
                 this.valueUnitsInFirstBucket = valueUnitsInFirstBucket;
                 this.logBase = logBase;
             }
 
-            /**
-             * @return A {@link LogarithmicIterator}<{@link HistogramIterationValue}>
-             */
             public IEnumerator<HistogramIterationValue> GetEnumerator()
             {
                 return new LogarithmicIterator(histogram, valueUnitsInFirstBucket, logBase);
@@ -993,23 +983,19 @@ namespace HdrHistogram.NET
         }
 
         // Recorded value iterator support:
-
-        /**
-         * An {@link java.lang.Iterable}{@literal <}{@link HistogramIterationValue}{@literal >} through
-         * the histogram using a {@link RecordedValuesIterator}
-         */
+       
+        /// <summary>
+        /// An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="RecordedValuesIterator"/>
+        /// </summary>
         public class RecordedValues : IEnumerable<HistogramIterationValue>
         {
             readonly AbstractHistogram histogram;
 
-            public /*private*/ RecordedValues(/*final*/ AbstractHistogram histogram)
+            public RecordedValues(AbstractHistogram histogram)
             {
                 this.histogram = histogram;
             }
-
-            /**
-             * @return A {@link RecordedValuesIterator}<{@link HistogramIterationValue}>
-             */
+            
             public IEnumerator<HistogramIterationValue> GetEnumerator()
             {
                 return new RecordedValuesIterator(histogram);
@@ -1022,23 +1008,19 @@ namespace HdrHistogram.NET
         }
 
         // AllValues iterator support:
-
-        /**
-         * An {@link java.lang.Iterable}{@literal <}{@link HistogramIterationValue}{@literal >} through
-         * the histogram using a {@link AllValuesIterator}
-         */
+        
+        /// <summary>
+        /// An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="AllValuesIterator"/>
+        /// </summary>
         public class AllValues : IEnumerable<HistogramIterationValue>
         {
-            readonly AbstractHistogram histogram;
+            private readonly AbstractHistogram histogram;
 
-            public /*private*/ AllValues(/*final*/ AbstractHistogram histogram)
+            public AllValues(AbstractHistogram histogram)
             {
                 this.histogram = histogram;
             }
-
-            /**
-             * @return A {@link AllValuesIterator}<{@link HistogramIterationValue}>
-             */
+            
             public IEnumerator<HistogramIterationValue> GetEnumerator()
             {
                 return new AllValuesIterator(histogram);
@@ -1170,7 +1152,7 @@ namespace HdrHistogram.NET
         //
         //
 
-       //
+        //
         //
         //
         // Encoding/Decoding support:
