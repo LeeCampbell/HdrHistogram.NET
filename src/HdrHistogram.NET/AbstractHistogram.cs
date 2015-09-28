@@ -43,6 +43,9 @@ namespace HdrHistogram.NET
     public abstract class AbstractHistogram
     {
         private static long _nextIdentity = -1L;
+        private static readonly int EncodingCookieBase = 0x1c849308;
+        private static readonly int CompressedEncodingCookieBase = 0x1c849309;
+        private static readonly Type[] HistogramClassConstructorArgsTypes = { typeof(long), typeof(long), typeof(int) };
 
         // "Cold" accessed fields. Not used in the recording code path:
 
@@ -56,8 +59,6 @@ namespace HdrHistogram.NET
         private readonly RecordedValuesIterator _recordedValuesIterator;
         protected readonly object UpdateLock = new object();
 
-        private long _startTimeStampMsec;
-        private long _endTimeStampMsec;
         private ByteBuffer _intermediateUncompressedByteBuffer = null;
 
 
@@ -77,8 +78,26 @@ namespace HdrHistogram.NET
         internal int SubBucketCount { get; }    //Candidate for private read-only field. -LC
         internal int SubBucketHalfCount { get; }//Candidate for private read-only field. -LC
 
-        
 
+        //
+        //
+        //
+        // Timestamp support:
+        //
+        //
+        //
+
+        /// <summary>
+        /// Gets or Sets the start time stamp value associated with this histogram to a given value.
+        /// By convention in msec since the epoch.
+        /// </summary>
+        public long StartTimeStamp { get; set; }
+
+        /// <summary>
+        /// Gets or Sets the end time stamp value associated with this histogram to a given value.
+        /// By convention in msec since the epoch.
+        /// </summary>
+        public long EndTimeStamp { get; set; }
 
         protected abstract int WordSizeInBytes { get; }
 
@@ -106,9 +125,15 @@ namespace HdrHistogram.NET
 
         protected abstract void ClearCounts();
 
-        protected abstract int _getEstimatedFootprintInBytes();
 
         public abstract long GetTotalCount();
+
+        /// <summary>
+        /// Provide a (conservatively high) estimate of the Histogram's total footprint in bytes
+        /// </summary>
+        /// <returns>a (conservatively high) estimate of the Histogram's total footprint in bytes</returns>
+        public abstract int GetEstimatedFootprintInBytes();
+
 
         //
         //
@@ -605,36 +630,8 @@ namespace HdrHistogram.NET
             return (LowestEquivalentValue(value1) == LowestEquivalentValue(value2));
         }
 
-        /// <summary>
-        /// Provide a (conservatively high) estimate of the Histogram's total footprint in bytes
-        /// </summary>
-        /// <returns>a (conservatively high) estimate of the Histogram's total footprint in bytes</returns>
-        public int GetEstimatedFootprintInBytes()
-        {
-            return _getEstimatedFootprintInBytes();
-        }
-
-        //
-        //
-        //
-        // Timestamp support:
-        //
-        //
-        //
-
-        /// <summary>
-        /// Gets or Sets the start time stamp value associated with this histogram to a given value.
-        /// By convention in msec since the epoch.
-        /// </summary>
-        public long StartTimeStamp { get { return _startTimeStampMsec; } set { _startTimeStampMsec = value; } }
-
-        /// <summary>
-        /// Gets or Sets the end time stamp value associated with this histogram to a given value.
-        /// By convention in msec since the epoch.
-        /// </summary>
-        public long EndTimeStamp { get { return _endTimeStampMsec; } set { _endTimeStampMsec = value; } }
-
         
+
 
         //
         //
@@ -1146,17 +1143,16 @@ namespace HdrHistogram.NET
 
         protected abstract void FillBufferFromCountsArray(ByteBuffer buffer, int length);
 
-        private static int encodingCookieBase = 0x1c849308;
-        private static int compressedEncodingCookieBase = 0x1c849309;
+        
 
         private int GetEncodingCookie()
         {
-            return encodingCookieBase + (WordSizeInBytes << 4);
+            return EncodingCookieBase + (WordSizeInBytes << 4);
         }
 
         private int GetCompressedEncodingCookie()
         {
-            return compressedEncodingCookieBase + (WordSizeInBytes << 4);
+            return CompressedEncodingCookieBase + (WordSizeInBytes << 4);
         }
 
         private static int GetCookieBase(int cookie)
@@ -1210,7 +1206,7 @@ namespace HdrHistogram.NET
         /// <param name="targetBuffer">The buffer to encode into</param>
         /// <param name="compressionLevel">Compression level.</param>
         /// <returns>The number of bytes written to the buffer</returns>
-        public long EncodeIntoCompressedByteBuffer(ByteBuffer targetBuffer, CompressionLevel /*int*/ compressionLevel)
+        public long EncodeIntoCompressedByteBuffer(ByteBuffer targetBuffer, CompressionLevel compressionLevel)
         {
             lock (UpdateLock)
             {
@@ -1253,14 +1249,14 @@ namespace HdrHistogram.NET
             return EncodeIntoCompressedByteBuffer(targetBuffer, CompressionLevel.Optimal);
         }
 
-        private static readonly Type[] constructorArgsTypes = { typeof(long), typeof(long), typeof(int) };
+        
 
         static AbstractHistogram ConstructHistogramFromBufferHeader(ByteBuffer buffer,
                                                                     Type histogramClass,
                                                                     long minBarForHighestTrackableValue)
         {
             int cookie = buffer.getInt();
-            if (GetCookieBase(cookie) != encodingCookieBase)
+            if (GetCookieBase(cookie) != EncodingCookieBase)
             {
                 throw new ArgumentException("The buffer does not contain a Histogram");
             }
@@ -1275,7 +1271,7 @@ namespace HdrHistogram.NET
             try
             {
                 //@SuppressWarnings("unchecked")
-                ConstructorInfo constructor = histogramClass.GetConstructor(constructorArgsTypes);
+                ConstructorInfo constructor = histogramClass.GetConstructor(HistogramClassConstructorArgsTypes);
                 AbstractHistogram histogram =
                         (AbstractHistogram)constructor.Invoke(new object[] { lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits });
                 histogram.SetTotalCount(totalCount); // Restore totalCount
@@ -1330,7 +1326,7 @@ namespace HdrHistogram.NET
         protected static AbstractHistogram DecodeFromCompressedByteBuffer(ByteBuffer buffer, Type histogramClass, long minBarForHighestTrackableValue)
         {
             int cookie = buffer.getInt();
-            if (GetCookieBase(cookie) != compressedEncodingCookieBase)
+            if (GetCookieBase(cookie) != CompressedEncodingCookieBase)
             {
                 throw new ArgumentException("The buffer does not contain a compressed Histogram");
             }

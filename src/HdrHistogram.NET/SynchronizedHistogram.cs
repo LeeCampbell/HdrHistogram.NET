@@ -123,7 +123,7 @@ namespace HdrHistogram.NET
             }
         }
 
-        protected override int _getEstimatedFootprintInBytes() 
+        public override int GetEstimatedFootprintInBytes() 
         {
             return (512 + (8 * counts.Length));
         }
