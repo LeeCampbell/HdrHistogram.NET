@@ -15,16 +15,16 @@ namespace HdrHistogram.NET.Iteration
     /// representation.The iteration steps through all possible unit value levels, regardless of whether or not
     /// there were recorded values for that value level, and terminates when all recorded histogram values are exhausted.
     /// </summary>
-    public sealed class AllValuesIterator : AbstractHistogramIterator
+    public sealed class AllValuesEnumerator : AbstractHistogramEnumerator
     {
         private int _visitedSubBucketIndex;
         private int _visitedBucketIndex;
 
         /// <summary>
-        /// Constructor for the <see cref="AllValuesIterator"/>.
+        /// Constructor for the <see cref="AllValuesEnumerator"/>.
         /// </summary>
         /// <param name="histogram">The histogram this iterator will operate on</param>
-        public AllValuesIterator(AbstractHistogram histogram)
+        public AllValuesEnumerator(AbstractHistogram histogram)
         {
             ResetIterator(histogram);
         }

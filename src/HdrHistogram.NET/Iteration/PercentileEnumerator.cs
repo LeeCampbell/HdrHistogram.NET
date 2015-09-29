@@ -18,18 +18,18 @@ namespace HdrHistogram.NET.Iteration
     /// <i>percentileTicksPerHalfDistance</i> parameter, ultimately reaching 100% when all recorded histogram
     /// values are exhausted.
     /// </summary>
-    public sealed class PercentileIterator : AbstractHistogramIterator
+    public sealed class PercentileEnumerator : AbstractHistogramEnumerator
     {
         private int _percentileTicksPerHalfDistance;
         private double _percentileLevelToIterateTo;
         private bool _reachedLastRecordedValue;
         
         /// <summary>
-        /// The constuctor for the <see cref="PercentileIterator"/>
+        /// The constuctor for the <see cref="PercentileEnumerator"/>
         /// </summary>
         /// <param name="histogram">The histogram this iterator will operate on</param>
         /// <param name="percentileTicksPerHalfDistance">The number of iteration steps per half-distance to 100%.</param>
-        public PercentileIterator(AbstractHistogram histogram, int percentileTicksPerHalfDistance) 
+        public PercentileEnumerator(AbstractHistogram histogram, int percentileTicksPerHalfDistance) 
         {
             Reset(histogram, percentileTicksPerHalfDistance);
         }

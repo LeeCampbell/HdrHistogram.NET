@@ -11,27 +11,30 @@
 namespace HdrHistogram.NET.Iteration
 {
     /// <summary>
-    /// Used for iterating through histogram values in linear steps. The iteration is
-    /// performed in steps of<i>valueUnitsPerBucket</i> in size, terminating when all recorded histogram
-    /// values are exhausted. Note that each iteration "bucket" includes values up to and including
-    /// the next bucket boundary value.
+    /// Used for iterating through histogram values in logarithmically increasing levels. The iteration is
+    /// performed in steps that start at<i>valueUnitsInFirstBucket</i> and increase exponentially according to
+    /// <i>logBase</i>, terminating when all recorded histogram values are exhausted. Note that each iteration "bucket"
+    /// includes values up to and including the next bucket boundary value.
     /// </summary>
-    public sealed class LinearIterator : AbstractHistogramIterator
+    public sealed class LogarithmicEnumerator : AbstractHistogramEnumerator
     {
-        private readonly long _valueUnitsPerBucket;
+        private readonly double _logBase;
         private long _nextValueReportingLevel;
         private long _nextValueReportingLevelLowestEquivalent;
 
         /// <summary>
-        /// The constructor for the <see cref="LinearIterator"/>
+        /// The constructor for the <see cref="LogarithmicEnumerator"/>
         /// </summary>
         /// <param name="histogram">The histogram this iterator will operate on</param>
-        /// <param name="valueUnitsPerBucket">The size (in value units) of each bucket iteration.</param>
-        public LinearIterator(AbstractHistogram histogram, int valueUnitsPerBucket)
+        /// <param name="valueUnitsInFirstBucket">the size (in value units) of the first value bucket step</param>
+        /// <param name="logBase">the multiplier by which the bucket size is expanded in each iteration step.</param>
+        public LogarithmicEnumerator(AbstractHistogram histogram, int valueUnitsInFirstBucket, double logBase)
         {
-            _valueUnitsPerBucket = valueUnitsPerBucket;
-            _nextValueReportingLevel = valueUnitsPerBucket;
+            _logBase = logBase;
+
             ResetIterator(histogram);
+            _nextValueReportingLevel = valueUnitsInFirstBucket;
+            _nextValueReportingLevelLowestEquivalent = histogram.LowestEquivalentValue(_nextValueReportingLevel);
         }
 
         public override bool HasNext()
@@ -45,15 +48,9 @@ namespace HdrHistogram.NET.Iteration
             return (_nextValueReportingLevelLowestEquivalent < NextValueAtIndex);
         }
 
-        protected override void ResetIterator(AbstractHistogram histogram)
-        {
-            base.ResetIterator(histogram);
-            _nextValueReportingLevelLowestEquivalent = histogram.LowestEquivalentValue(_nextValueReportingLevel);
-        }
-
         protected override void IncrementIterationLevel()
         {
-            _nextValueReportingLevel += _valueUnitsPerBucket;
+            _nextValueReportingLevel *= (long)_logBase;
             _nextValueReportingLevelLowestEquivalent = SourceHistogram.LowestEquivalentValue(_nextValueReportingLevel);
         }
 

@@ -14,7 +14,7 @@ using System.Collections.Generic;
 
 namespace HdrHistogram.NET.Iteration
 {
-    public abstract class AbstractHistogramIterator : IEnumerator<HistogramIterationValue>
+    public abstract class AbstractHistogramEnumerator : IEnumerator<HistogramIterationValue>
     {
         private long _savedHistogramTotalRawCount;
         private int _nextBucketIndex;

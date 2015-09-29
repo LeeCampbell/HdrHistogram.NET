@@ -53,7 +53,7 @@ namespace HdrHistogram.NET.Iteration
         /// <summary>
         /// The percentile level that the iterator returning this HistogramIterationValue had iterated to.
         /// Generally, percentileLevelIteratedTo will be equal to or smaller than percentile, but the same value point can contain multiple iteration levels for some iterators. 
-        /// e.g. a PercentileIterator can stop multiple times in the exact same value point (if the count at that value covers a range of multiple percentiles in the requested percentile iteration points).
+        /// e.g. a PercentileEnumerator can stop multiple times in the exact same value point (if the count at that value covers a range of multiple percentiles in the requested percentile iteration points).
         /// </summary>
         public double PercentileLevelIteratedTo { get; private set; }
 

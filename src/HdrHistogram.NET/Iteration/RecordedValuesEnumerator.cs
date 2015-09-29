@@ -10,16 +10,16 @@
 
 namespace HdrHistogram.NET.Iteration
 {
-    public sealed class RecordedValuesIterator : AbstractHistogramIterator
+    public sealed class RecordedValuesEnumerator : AbstractHistogramEnumerator
     {
         private int _visitedSubBucketIndex;
         private int _visitedBucketIndex;
 
         /// <summary>
-        /// The constructor for <see cref="RecordedValuesIterator"/>
+        /// The constructor for <see cref="RecordedValuesEnumerator"/>
         /// </summary>
         /// <param name="histogram">The histogram this iterator will operate on</param>
-        public RecordedValuesIterator(AbstractHistogram histogram)
+        public RecordedValuesEnumerator(AbstractHistogram histogram)
         {
             ResetIterator(histogram);
         }

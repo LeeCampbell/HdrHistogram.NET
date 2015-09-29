@@ -55,8 +55,8 @@ namespace HdrHistogram.NET
         private readonly int _subBucketHalfCountMagnitude;
         private readonly int _unitMagnitude;
         private readonly long _subBucketMask;
-        private readonly PercentileIterator _percentileIterator;
-        private readonly RecordedValuesIterator _recordedValuesIterator;
+        private readonly PercentileEnumerator _percentileEnumerator;
+        private readonly RecordedValuesEnumerator _recordedValuesEnumerator;
 
         protected readonly object UpdateLock = new object();
 
@@ -112,8 +112,8 @@ namespace HdrHistogram.NET
             if (highestTrackableValue < 2 * lowestTrackableValue) throw new ArgumentException("highestTrackableValue must be >= 2 * lowestTrackableValue");
             if ((numberOfSignificantValueDigits < 0) || (numberOfSignificantValueDigits > 5)) throw new ArgumentException("numberOfSignificantValueDigits must be between 0 and 6");
 
-            _percentileIterator = new PercentileIterator(this, 1);
-            _recordedValuesIterator = new RecordedValuesIterator(this);
+            _percentileEnumerator = new PercentileEnumerator(this, 1);
+            _recordedValuesEnumerator = new RecordedValuesEnumerator(this);
 
             Identity = GetNextIdentity();
             LowestTrackableValue = lowestTrackableValue;
@@ -636,11 +636,11 @@ namespace HdrHistogram.NET
         /// <returns>the Min value recorded in the histogram</returns>
         public long GetMinValue()
         {
-            _recordedValuesIterator.Reset();
+            _recordedValuesEnumerator.Reset();
             long min = 0;
-            if (_recordedValuesIterator.HasNext())
+            if (_recordedValuesEnumerator.HasNext())
             {
-                HistogramIterationValue iterationValue = _recordedValuesIterator.Next();
+                HistogramIterationValue iterationValue = _recordedValuesEnumerator.Next();
                 min = iterationValue.ValueIteratedTo;
             }
             return LowestEquivalentValue(min);
@@ -652,11 +652,11 @@ namespace HdrHistogram.NET
         /// <returns>the Max value recorded in the histogram</returns>
         public long GetMaxValue()
         {
-            _recordedValuesIterator.Reset();
+            _recordedValuesEnumerator.Reset();
             long max = 0;
-            while (_recordedValuesIterator.HasNext())
+            while (_recordedValuesEnumerator.HasNext())
             {
-                HistogramIterationValue iterationValue = _recordedValuesIterator.Next();
+                HistogramIterationValue iterationValue = _recordedValuesEnumerator.Next();
                 max = iterationValue.ValueIteratedTo;
             }
             return LowestEquivalentValue(max);
@@ -668,11 +668,11 @@ namespace HdrHistogram.NET
         /// <returns>the mean value (in value units) of the histogram data</returns>
         public double GetMean()
         {
-            _recordedValuesIterator.Reset();
+            _recordedValuesEnumerator.Reset();
             long totalValue = 0;
-            while (_recordedValuesIterator.HasNext())
+            while (_recordedValuesEnumerator.HasNext())
             {
-                HistogramIterationValue iterationValue = _recordedValuesIterator.Next();
+                HistogramIterationValue iterationValue = _recordedValuesEnumerator.Next();
                 totalValue = iterationValue.TotalValueToThisValue;
             }
             return (totalValue * 1.0) / TotalCount;
@@ -686,10 +686,10 @@ namespace HdrHistogram.NET
         {
             double mean = GetMean();
             double geometric_deviation_total = 0.0;
-            _recordedValuesIterator.Reset();
-            while (_recordedValuesIterator.HasNext())
+            _recordedValuesEnumerator.Reset();
+            while (_recordedValuesEnumerator.HasNext())
             {
-                HistogramIterationValue iterationValue = _recordedValuesIterator.Next();
+                HistogramIterationValue iterationValue = _recordedValuesEnumerator.Next();
                 Double deviation = (MedianEquivalentValue(iterationValue.ValueIteratedTo) * 1.0) - mean;
                 geometric_deviation_total += (deviation * deviation) * iterationValue.CountAddedInThisIterationStep;
             }
@@ -808,7 +808,7 @@ namespace HdrHistogram.NET
         /// The iteration is performed in steps that start at 0% and reduce their distance to 100% according to the <i>percentileTicksPerHalfDistance</i> parameter, ultimately reaching 100% when all recorded histogram values are exhausted.
         /// </summary>
         /// <param name="percentileTicksPerHalfDistance">The number of iteration steps per half-distance to 100%.</param>
-        /// <returns>An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="PercentileIterator"/></returns>
+        /// <returns>An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="PercentileEnumerator"/></returns>
         public Percentiles percentiles(int percentileTicksPerHalfDistance)
         {
             return new Percentiles(this, percentileTicksPerHalfDistance);
@@ -818,7 +818,7 @@ namespace HdrHistogram.NET
         /// Provide a means of iterating through histogram values using linear steps. The iteration is performed in steps of <i>valueUnitsPerBucket</i> in size, terminating when all recorded histogram values are exhausted.
         /// </summary>
         /// <param name="valueUnitsPerBucket">The size (in value units) of the linear buckets to use</param>
-        /// <returns>An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LinearIterator"/></returns>
+        /// <returns>An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LinearEnumerator"/></returns>
         public LinearBucketValues linearBucketValues(int valueUnitsPerBucket)
         {
             return new LinearBucketValues(this, valueUnitsPerBucket);
@@ -830,7 +830,7 @@ namespace HdrHistogram.NET
         /// </summary>
         /// <param name="valueUnitsInFirstBucket">The size (in value units) of the first bucket in the iteration</param>
         /// <param name="logBase">The multiplier by which bucket sizes will grow in each iteration step</param>
-        /// <returns>An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LogarithmicIterator"/></returns>
+        /// <returns>An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LogarithmicEnumerator"/></returns>
         public LogarithmicBucketValues logarithmicBucketValues(int valueUnitsInFirstBucket, double logBase)
         {
             return new LogarithmicBucketValues(this, valueUnitsInFirstBucket, logBase);
@@ -840,7 +840,7 @@ namespace HdrHistogram.NET
         /// Provide a means of iterating through all recorded histogram values using the finest granularity steps supported by the underlying representation.
         /// The iteration steps through all non-zero recorded value counts, and terminates when all recorded histogram values are exhausted.
         /// </summary>
-        /// <returns>An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="RecordedValuesIterator"/></returns>
+        /// <returns>An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="RecordedValuesEnumerator"/></returns>
         public RecordedValues recordedValues()
         {
             return new RecordedValues(this);
@@ -850,18 +850,18 @@ namespace HdrHistogram.NET
         /// Provide a means of iterating through all histogram values using the finest granularity steps supported by the underlying representation.
         /// The iteration steps through all possible unit value levels, regardless of whether or not there were recorded values for that value level, and terminates when all recorded histogram values are exhausted.
         /// </summary>
-        /// <returns>An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="RecordedValuesIterator"/></returns>
+        /// <returns>An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="RecordedValuesEnumerator"/></returns>
         public AllValues allValues()
         {
             return new AllValues(this);
         }
 
 
-        // Percentile iterator support:
+        // Percentile enumerator support:
 
 
         /// <summary>
-        /// An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="PercentileIterator"/>
+        /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="PercentileEnumerator"/>
         /// </summary>
         public class Percentiles : IEnumerable<HistogramIterationValue>
         {
@@ -876,7 +876,7 @@ namespace HdrHistogram.NET
 
             public IEnumerator<HistogramIterationValue> GetEnumerator()
             {
-                return new PercentileIterator(histogram, percentileTicksPerHalfDistance);
+                return new PercentileEnumerator(histogram, percentileTicksPerHalfDistance);
             }
 
             IEnumerator IEnumerable.GetEnumerator()
@@ -885,10 +885,10 @@ namespace HdrHistogram.NET
             }
         }
 
-        // Linear iterator support:
+        // Linear enumerator support:
 
         /// <summary>
-        /// An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LinearIterator"/>
+        /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LinearEnumerator"/>
         /// </summary>
         public class LinearBucketValues : IEnumerable<HistogramIterationValue>
         {
@@ -903,7 +903,7 @@ namespace HdrHistogram.NET
 
             public IEnumerator<HistogramIterationValue> GetEnumerator()
             {
-                return new LinearIterator(histogram, valueUnitsPerBucket);
+                return new LinearEnumerator(histogram, valueUnitsPerBucket);
             }
 
             IEnumerator IEnumerable.GetEnumerator()
@@ -912,10 +912,10 @@ namespace HdrHistogram.NET
             }
         }
 
-        // Logarithmic iterator support:
+        // Logarithmic enumerator support:
 
         /// <summary>
-        /// An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LogarithmicIterator"/>
+        /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LogarithmicEnumerator"/>
         /// </summary>
         public class LogarithmicBucketValues : IEnumerable<HistogramIterationValue>
         {
@@ -932,7 +932,7 @@ namespace HdrHistogram.NET
 
             public IEnumerator<HistogramIterationValue> GetEnumerator()
             {
-                return new LogarithmicIterator(histogram, valueUnitsInFirstBucket, logBase);
+                return new LogarithmicEnumerator(histogram, valueUnitsInFirstBucket, logBase);
             }
 
             IEnumerator IEnumerable.GetEnumerator()
@@ -941,10 +941,10 @@ namespace HdrHistogram.NET
             }
         }
 
-        // Recorded value iterator support:
+        // Recorded value enumerator support:
 
         /// <summary>
-        /// An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="RecordedValuesIterator"/>
+        /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="RecordedValuesEnumerator"/>
         /// </summary>
         public class RecordedValues : IEnumerable<HistogramIterationValue>
         {
@@ -957,7 +957,7 @@ namespace HdrHistogram.NET
 
             public IEnumerator<HistogramIterationValue> GetEnumerator()
             {
-                return new RecordedValuesIterator(histogram);
+                return new RecordedValuesEnumerator(histogram);
             }
 
             IEnumerator IEnumerable.GetEnumerator()
@@ -966,10 +966,10 @@ namespace HdrHistogram.NET
             }
         }
 
-        // AllValues iterator support:
+        // AllValues enumerator support:
 
         /// <summary>
-        /// An iterator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="AllValuesIterator"/>
+        /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="AllValuesEnumerator"/>
         /// </summary>
         public class AllValues : IEnumerable<HistogramIterationValue>
         {
@@ -982,7 +982,7 @@ namespace HdrHistogram.NET
 
             public IEnumerator<HistogramIterationValue> GetEnumerator()
             {
-                return new AllValuesIterator(histogram);
+                return new AllValuesEnumerator(histogram);
             }
 
             IEnumerator IEnumerable.GetEnumerator()
@@ -1021,8 +1021,8 @@ namespace HdrHistogram.NET
                 printStream.Write("{0,12} {1,14} {2,10} {3,14}\n\n", "Value", "Percentile", "TotalCount", "1/(1-Percentile)");
             }
 
-            PercentileIterator iterator = _percentileIterator;
-            iterator.Reset(percentileTicksPerHalfDistance);
+            PercentileEnumerator enumerator = _percentileEnumerator;
+            enumerator.Reset(percentileTicksPerHalfDistance);
 
             String percentileFormatString;
             String lastLinePercentileFormatString;
@@ -1039,9 +1039,9 @@ namespace HdrHistogram.NET
 
             try
             {
-                while (iterator.HasNext())
+                while (enumerator.HasNext())
                 {
-                    HistogramIterationValue iterationValue = iterator.Next();
+                    HistogramIterationValue iterationValue = enumerator.Next();
                     if (iterationValue.PercentileLevelIteratedTo != 100.0D)
                     {
                         printStream.Write(percentileFormatString,
