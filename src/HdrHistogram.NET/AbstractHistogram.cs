@@ -420,8 +420,8 @@ namespace HdrHistogram.NET
             //for (HistogramIterationValue v : fromHistogram.recordedValues()) 
             foreach (HistogramIterationValue v in fromHistogram.recordedValues())
             {
-                toHistogram.RecordValueWithCountAndExpectedInterval(v.getValueIteratedTo(),
-                        v.getCountAtValueIteratedTo(), expectedIntervalBetweenValueSamples);
+                toHistogram.RecordValueWithCountAndExpectedInterval(v.ValueIteratedTo,
+                        v.CountAtValueIteratedTo, expectedIntervalBetweenValueSamples);
             }
         }
 
@@ -652,7 +652,7 @@ namespace HdrHistogram.NET
             if (_recordedValuesIterator.HasNext())
             {
                 HistogramIterationValue iterationValue = _recordedValuesIterator.Next();
-                min = iterationValue.getValueIteratedTo();
+                min = iterationValue.ValueIteratedTo;
             }
             return LowestEquivalentValue(min);
         }
@@ -668,7 +668,7 @@ namespace HdrHistogram.NET
             while (_recordedValuesIterator.HasNext())
             {
                 HistogramIterationValue iterationValue = _recordedValuesIterator.Next();
-                max = iterationValue.getValueIteratedTo();
+                max = iterationValue.ValueIteratedTo;
             }
             return LowestEquivalentValue(max);
         }
@@ -684,7 +684,7 @@ namespace HdrHistogram.NET
             while (_recordedValuesIterator.HasNext())
             {
                 HistogramIterationValue iterationValue = _recordedValuesIterator.Next();
-                totalValue = iterationValue.getTotalValueToThisValue();
+                totalValue = iterationValue.TotalValueToThisValue;
             }
             return (totalValue * 1.0) / GetTotalCount();
         }
@@ -701,8 +701,8 @@ namespace HdrHistogram.NET
             while (_recordedValuesIterator.HasNext())
             {
                 HistogramIterationValue iterationValue = _recordedValuesIterator.Next();
-                Double deviation = (MedianEquivalentValue(iterationValue.getValueIteratedTo()) * 1.0) - mean;
-                geometric_deviation_total += (deviation * deviation) * iterationValue.getCountAddedInThisIterationStep();
+                Double deviation = (MedianEquivalentValue(iterationValue.ValueIteratedTo) * 1.0) - mean;
+                geometric_deviation_total += (deviation * deviation) * iterationValue.CountAddedInThisIterationStep;
             }
             double std_deviation = Math.Sqrt(geometric_deviation_total / GetTotalCount());
             return std_deviation;
@@ -1053,20 +1053,20 @@ namespace HdrHistogram.NET
                 while (iterator.HasNext())
                 {
                     HistogramIterationValue iterationValue = iterator.Next();
-                    if (iterationValue.getPercentileLevelIteratedTo() != 100.0D)
+                    if (iterationValue.PercentileLevelIteratedTo != 100.0D)
                     {
                         printStream.Write(percentileFormatString,
-                                iterationValue.getValueIteratedTo() / outputValueUnitScalingRatio,
-                                iterationValue.getPercentileLevelIteratedTo() / 100.0D,
-                                iterationValue.getTotalCountToThisValue(),
-                                1 / (1.0D - (iterationValue.getPercentileLevelIteratedTo() / 100.0D)));
+                                iterationValue.ValueIteratedTo / outputValueUnitScalingRatio,
+                                iterationValue.PercentileLevelIteratedTo / 100.0D,
+                                iterationValue.TotalCountToThisValue,
+                                1 / (1.0D - (iterationValue.PercentileLevelIteratedTo / 100.0D)));
                     }
                     else
                     {
                         printStream.Write(lastLinePercentileFormatString,
-                                iterationValue.getValueIteratedTo() / outputValueUnitScalingRatio,
-                                iterationValue.getPercentileLevelIteratedTo() / 100.0D,
-                                iterationValue.getTotalCountToThisValue());
+                                iterationValue.ValueIteratedTo / outputValueUnitScalingRatio,
+                                iterationValue.PercentileLevelIteratedTo / 100.0D,
+                                iterationValue.TotalCountToThisValue);
                     }
                 }
 

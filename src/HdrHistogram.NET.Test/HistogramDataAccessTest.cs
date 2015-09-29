@@ -98,15 +98,15 @@ namespace HdrHistogram.NET.Test
             // based on the actual (not pixelized) value, there will be subtle differences due to roundoffs:
 
             //        for (HistogramIterationValue v : histogram.allValues()) {
-            //            long preCorrectedCount = v.getCountAtValueIteratedTo();
-            //            long postCorrectedCount = postCorrectedHistogram.getCountAtValue(v.getValueIteratedTo());
-            //            Assert.assertEquals("pre and post corrected count at value " + v.getValueIteratedTo(),
+            //            long preCorrectedCount = v.getCountAtValueIteratedTo;
+            //            long postCorrectedCount = postCorrectedHistogram.getCountAtValue(v.getValueIteratedTo);
+            //            Assert.assertEquals("pre and post corrected count at value " + v.getValueIteratedTo,
             //                    preCorrectedCount, postCorrectedCount);
             //        }
             //
             //        for (HistogramIterationValue v : postCorrectedHistogram.allValues()) {
-            //            long preCorrectedCount = v.getCountAtValueIteratedTo();
-            //            long postCorrectedCount = histogram.getCountAtValue(v.getValueIteratedTo());
+            //            long preCorrectedCount = v.getCountAtValueIteratedTo;
+            //            long postCorrectedCount = histogram.getCountAtValue(v.getValueIteratedTo);
             //            Assert.assertEquals("pre and post corrected count at value " + v.getValueIteratedTo(),
             //                    preCorrectedCount, postCorrectedCount);
             //        }
@@ -270,22 +270,22 @@ namespace HdrHistogram.NET.Test
             foreach (HistogramIterationValue v  in histogram.percentiles(5 /* ticks per half */)) 
             {
                 Assert.assertEquals("Value at Iterated-to Percentile is the same as the matching getValueAtPercentile():\n" +
-                        "getPercentileLevelIteratedTo = " + v.getPercentileLevelIteratedTo() +
-                        "\ngetValueIteratedTo = " + v.getValueIteratedTo() +
-                        "\ngetValueIteratedFrom = " + v.getValueIteratedFrom() +
+                        "getPercentileLevelIteratedTo = " + v.PercentileLevelIteratedTo +
+                        "\ngetValueIteratedTo = " + v.ValueIteratedTo +
+                        "\ngetValueIteratedFrom = " + v.ValueIteratedFrom +
                         "\ngetValueAtPercentile(getPercentileLevelIteratedTo()) = " +
-                        histogram.GetValueAtPercentile(v.getPercentileLevelIteratedTo()) +
-                        "\ngetPercentile = " + v.getPercentile() +
-                        "\ngetValueAtPercentile(getPercentile())" +
-                        histogram.GetValueAtPercentile(v.getPercentile()) +
+                        histogram.GetValueAtPercentile(v.PercentileLevelIteratedTo) +
+                        "\ngetPercentile = " + v.Percentile +
+                        "\ngetValueAtPercentile(Percentile())" +
+                        histogram.GetValueAtPercentile(v.Percentile) +
                         "\nequivalent1 = " +
-                        histogram.HighestEquivalentValue(histogram.GetValueAtPercentile(v.getPercentileLevelIteratedTo())) +
+                        histogram.HighestEquivalentValue(histogram.GetValueAtPercentile(v.PercentileLevelIteratedTo)) +
                         "\nequivalent2 = " +
-                        histogram.HighestEquivalentValue(histogram.GetValueAtPercentile(v.getPercentile())) +
+                        histogram.HighestEquivalentValue(histogram.GetValueAtPercentile(v.Percentile)) +
                         "\n"
                         ,
-                        v.getValueIteratedTo(),
-                        histogram.HighestEquivalentValue(histogram.GetValueAtPercentile(v.getPercentile())));
+                        v.ValueIteratedTo,
+                        histogram.HighestEquivalentValue(histogram.GetValueAtPercentile(v.Percentile)));
             }
         }
 
@@ -302,7 +302,7 @@ namespace HdrHistogram.NET.Test
             // Iterate raw data using linear buckets of 100 msec each.
             foreach (HistogramIterationValue v in rawHistogram.linearBucketValues(100000))
             {
-                long countAddedInThisBucket = v.getCountAddedInThisIterationStep();
+                long countAddedInThisBucket = v.CountAddedInThisIterationStep;
                 if (index == 0) 
                 {
                     Assert.assertEquals("Raw Linear 100 msec bucket # 0 added a count of 10000",
@@ -327,11 +327,11 @@ namespace HdrHistogram.NET.Test
             // Iterate data using linear buckets of 10 msec each.
             foreach (HistogramIterationValue v in histogram.linearBucketValues(10000))
             {
-                long countAddedInThisBucket = v.getCountAddedInThisIterationStep();
+                long countAddedInThisBucket = v.CountAddedInThisIterationStep;
                 if (index == 0) 
                 {
                     Assert.assertEquals("Linear 1 sec bucket # 0 [" +
-                            v.getValueIteratedFrom() + ".." + v.getValueIteratedTo() +
+                            v.ValueIteratedFrom + ".." + v.ValueIteratedTo +
                             "] added a count of 10001",
                             10001, countAddedInThisBucket);
                 }
@@ -340,7 +340,7 @@ namespace HdrHistogram.NET.Test
                 // more, and some will have 0 (when the first bucket in the equivalent range was the one that
                 // got the total count bump).
                 // However, we can still verify the sum of counts added in all the buckets...
-                totalAddedCounts += v.getCountAddedInThisIterationStep();
+                totalAddedCounts += v.CountAddedInThisIterationStep;
                 index++;
             }
             Assert.assertEquals("There should be 10000 linear buckets of size 10000 usec between 0 and 100 sec.",
@@ -352,11 +352,11 @@ namespace HdrHistogram.NET.Test
             // Iterate data using linear buckets of 1 msec each.
             foreach (HistogramIterationValue v in histogram.linearBucketValues(1000)) 
             {
-                long countAddedInThisBucket = v.getCountAddedInThisIterationStep();
+                long countAddedInThisBucket = v.CountAddedInThisIterationStep;
                 if (index == 0) 
                 {
                     Assert.assertEquals("Linear 1 sec bucket # 0 [" +
-                            v.getValueIteratedFrom() + ".." + v.getValueIteratedTo() +
+                            v.ValueIteratedFrom + ".." + v.ValueIteratedTo +
                             "] added a count of 10000",
                             10000, countAddedInThisBucket);
                 }
@@ -365,7 +365,7 @@ namespace HdrHistogram.NET.Test
                 // more, and some will have 0 (when the first bucket in the equivalent range was the one that
                 // got the total count bump).
                 // However, we can still verify the sum of counts added in all the buckets...
-                totalAddedCounts += v.getCountAddedInThisIterationStep();
+                totalAddedCounts += v.CountAddedInThisIterationStep;
                 index++;
             }
             // You may ask "why 100007 and not 100000?" for the value below? The answer is that at this fine
@@ -387,7 +387,7 @@ namespace HdrHistogram.NET.Test
             // Iterate raw data using logarithmic buckets starting at 10 msec.
             foreach (HistogramIterationValue v in rawHistogram.logarithmicBucketValues(10000, 2)) 
             {
-                long countAddedInThisBucket = v.getCountAddedInThisIterationStep();
+                long countAddedInThisBucket = v.CountAddedInThisIterationStep;
                 if (index == 0) 
                 {
                     Assert.assertEquals("Raw Logarithmic 10 msec bucket # 0 added a count of 10000",
@@ -412,14 +412,14 @@ namespace HdrHistogram.NET.Test
             // Iterate data using linear buckets of 1 sec each.
             foreach (HistogramIterationValue v in histogram.logarithmicBucketValues(10000, 2)) 
             {
-                long countAddedInThisBucket = v.getCountAddedInThisIterationStep();
+                long countAddedInThisBucket = v.CountAddedInThisIterationStep;
                 if (index == 0) {
                     Assert.assertEquals("Logarithmic 10 msec bucket # 0 [" +
-                            v.getValueIteratedFrom() + ".." + v.getValueIteratedTo() +
+                            v.ValueIteratedFrom + ".." + v.ValueIteratedTo +
                             "] added a count of 10001",
                             10001, countAddedInThisBucket);
                 }
-                totalAddedCounts += v.getCountAddedInThisIterationStep();
+                totalAddedCounts += v.CountAddedInThisIterationStep;
                 index++;
             }
             Assert.assertEquals("There should be 14 Logarithmic buckets of size 10000 usec between 0 and 100 sec.",
@@ -434,7 +434,7 @@ namespace HdrHistogram.NET.Test
             // Iterate raw data by stepping through every value that has a count recorded:
             foreach (HistogramIterationValue v in rawHistogram.recordedValues()) 
             {
-                long countAddedInThisBucket = v.getCountAddedInThisIterationStep();
+                long countAddedInThisBucket = v.CountAddedInThisIterationStep;
                 if (index == 0) 
                 {
                     Assert.assertEquals("Raw recorded value bucket # 0 added a count of 10000",
@@ -454,20 +454,20 @@ namespace HdrHistogram.NET.Test
             // Iterate data using linear buckets of 1 sec each.
             foreach (HistogramIterationValue v in histogram.recordedValues()) 
             {
-                long countAddedInThisBucket = v.getCountAddedInThisIterationStep();
+                long countAddedInThisBucket = v.CountAddedInThisIterationStep;
                 if (index == 0) 
                 {
                     Assert.assertEquals("Recorded bucket # 0 [" +
-                            v.getValueIteratedFrom() + ".." + v.getValueIteratedTo() +
+                            v.ValueIteratedFrom + ".." + v.ValueIteratedTo +
                             "] added a count of 10000",
                             10000, countAddedInThisBucket);
                 }
                 Assert.assertTrue("The count in recorded bucket #" + index + " is not 0",
-                        v.getCountAtValueIteratedTo() != 0);
+                        v.CountAtValueIteratedTo != 0);
                 Assert.assertEquals("The count in recorded bucket #" + index +
                         " is exactly the amount added since the last iteration ",
-                        v.getCountAtValueIteratedTo(), v.getCountAddedInThisIterationStep());
-                totalAddedCounts += v.getCountAddedInThisIterationStep();
+                        v.CountAtValueIteratedTo, v.CountAddedInThisIterationStep);
+                totalAddedCounts += v.CountAddedInThisIterationStep;
                 index++;
             }
             Assert.assertEquals("Total added counts should be 20000", 20000, totalAddedCounts);
@@ -481,13 +481,13 @@ namespace HdrHistogram.NET.Test
             // Iterate raw data by stepping through every value that ahs a count recorded:
             foreach (HistogramIterationValue v in rawHistogram.allValues()) 
             {
-                long countAddedInThisBucket = v.getCountAddedInThisIterationStep();
+                long countAddedInThisBucket = v.CountAddedInThisIterationStep;
                 if (index == 1000) 
                 {
                     Assert.assertEquals("Raw allValues bucket # 0 added a count of 10000",
                             10000, countAddedInThisBucket);
                 } 
-                else if (histogram.ValuesAreEquivalent(v.getValueIteratedTo(), 100000000)) 
+                else if (histogram.ValuesAreEquivalent(v.ValueIteratedTo, 100000000)) 
                 {
                     Assert.assertEquals("Raw allValues value bucket # " + index + " added a count of 1",
                             1, countAddedInThisBucket);
@@ -497,7 +497,7 @@ namespace HdrHistogram.NET.Test
                     Assert.assertEquals("Raw allValues value bucket # " + index + " added a count of 0",
                             0, countAddedInThisBucket);
                 }
-                latestValueAtIndex = v.getValueIteratedTo();
+                latestValueAtIndex = v.ValueIteratedTo;
                 index++;
             }
             Assert.assertEquals("Count at latest value iterated to is 1",
@@ -508,18 +508,18 @@ namespace HdrHistogram.NET.Test
             // Iterate data using linear buckets of 1 sec each.
             foreach (HistogramIterationValue v in histogram.allValues()) 
             {
-                long countAddedInThisBucket = v.getCountAddedInThisIterationStep();
+                long countAddedInThisBucket = v.CountAddedInThisIterationStep;
                 if (index == 1000) 
                 {
                     Assert.assertEquals("AllValues bucket # 0 [" +
-                            v.getValueIteratedFrom() + ".." + v.getValueIteratedTo() +
+                            v.ValueIteratedFrom + ".." + v.ValueIteratedTo +
                             "] added a count of 10000",
                             10000, countAddedInThisBucket);
                 }
                 Assert.assertEquals("The count in AllValues bucket #" + index +
                         " is exactly the amount added since the last iteration ",
-                        v.getCountAtValueIteratedTo(), v.getCountAddedInThisIterationStep());
-                totalAddedCounts += v.getCountAddedInThisIterationStep();
+                        v.CountAtValueIteratedTo, v.CountAddedInThisIterationStep);
+                totalAddedCounts += v.CountAddedInThisIterationStep;
                 index++;
             }
             Assert.assertEquals("Total added counts should be 20000", 20000, totalAddedCounts);

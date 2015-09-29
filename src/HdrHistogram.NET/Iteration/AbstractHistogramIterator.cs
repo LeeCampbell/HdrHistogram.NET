@@ -85,7 +85,7 @@ namespace HdrHistogram.NET.Iteration
                 if (ReachedIterationLevel())
                 {
                     long valueIteratedTo = GetValueIteratedTo();
-                    _currentIterationValue.set(
+                    _currentIterationValue.Set(
                         valueIteratedTo,
                         _prevValueIteratedTo,
                         CountAtThisValue,
@@ -134,7 +134,7 @@ namespace HdrHistogram.NET.Iteration
             _freshSubBucket = true;
             if (_currentIterationValue == null)
                 _currentIterationValue = new HistogramIterationValue();
-            _currentIterationValue.reset();
+            _currentIterationValue.Reset();
         }
 
         protected abstract void IncrementIterationLevel();
