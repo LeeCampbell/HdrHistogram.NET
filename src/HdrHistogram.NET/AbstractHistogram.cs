@@ -16,6 +16,7 @@ using System.IO;
 using HdrHistogram.NET.Iteration;
 using HdrHistogram.NET.Utilities;
 using System.IO.Compression;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 
@@ -55,8 +56,6 @@ namespace HdrHistogram.NET
         private readonly int _subBucketHalfCountMagnitude;
         private readonly int _unitMagnitude;
         private readonly long _subBucketMask;
-        private readonly PercentileEnumerator _percentileEnumerator;
-        private readonly RecordedValuesEnumerator _recordedValuesEnumerator;
 
         protected readonly object UpdateLock = new object();
 
@@ -111,9 +110,6 @@ namespace HdrHistogram.NET
             if (lowestTrackableValue < 1) throw new ArgumentException("lowestTrackableValue must be >= 1");
             if (highestTrackableValue < 2 * lowestTrackableValue) throw new ArgumentException("highestTrackableValue must be >= 2 * lowestTrackableValue");
             if ((numberOfSignificantValueDigits < 0) || (numberOfSignificantValueDigits > 5)) throw new ArgumentException("numberOfSignificantValueDigits must be between 0 and 6");
-
-            _percentileEnumerator = new PercentileEnumerator(this, 1);
-            _recordedValuesEnumerator = new RecordedValuesEnumerator(this);
 
             Identity = GetNextIdentity();
             LowestTrackableValue = lowestTrackableValue;
@@ -636,15 +632,7 @@ namespace HdrHistogram.NET
         /// <returns>the Min value recorded in the histogram</returns>
         public long GetMinValue()
         {
-            //TODO: Can this not just be RecordedValues.First() -LC
-
-            _recordedValuesEnumerator.Reset();
-            long min = 0;
-            if (_recordedValuesEnumerator.HasNext())
-            {
-                HistogramIterationValue iterationValue = _recordedValuesEnumerator.Next();
-                min = iterationValue.ValueIteratedTo;
-            }
+            long min = RecordedValues().Select(hiv=>hiv.ValueIteratedTo).FirstOrDefault();
             return LowestEquivalentValue(min);
         }
 
@@ -654,14 +642,7 @@ namespace HdrHistogram.NET
         /// <returns>the Max value recorded in the histogram</returns>
         public long GetMaxValue()
         {
-            //TODO: Can this not just be RecordedValues.Last() -LC
-            _recordedValuesEnumerator.Reset();
-            long max = 0;
-            while (_recordedValuesEnumerator.HasNext())
-            {
-                HistogramIterationValue iterationValue = _recordedValuesEnumerator.Next();
-                max = iterationValue.ValueIteratedTo;
-            }
+            long max = RecordedValues().Select(hiv=>hiv.ValueIteratedTo).LastOrDefault();
             return LowestEquivalentValue(max);
         }
 
@@ -671,13 +652,7 @@ namespace HdrHistogram.NET
         /// <returns>the mean value (in value units) of the histogram data</returns>
         public double GetMean()
         {
-            _recordedValuesEnumerator.Reset();
-            long totalValue = 0;
-            while (_recordedValuesEnumerator.HasNext())
-            {
-                HistogramIterationValue iterationValue = _recordedValuesEnumerator.Next();
-                totalValue = iterationValue.TotalValueToThisValue;
-            }
+            long totalValue = RecordedValues().Select(hiv=>hiv.TotalValueToThisValue).LastOrDefault();
             return (totalValue * 1.0) / TotalCount;
         }
 
@@ -688,16 +663,14 @@ namespace HdrHistogram.NET
         public double GetStdDeviation()
         {
             double mean = GetMean();
-            double geometric_deviation_total = 0.0;
-            _recordedValuesEnumerator.Reset();
-            while (_recordedValuesEnumerator.HasNext())
+            double geometricDeviationTotal = 0.0;
+            foreach (var iterationValue in RecordedValues())
             {
-                HistogramIterationValue iterationValue = _recordedValuesEnumerator.Next();
-                Double deviation = (MedianEquivalentValue(iterationValue.ValueIteratedTo) * 1.0) - mean;
-                geometric_deviation_total += (deviation * deviation) * iterationValue.CountAddedInThisIterationStep;
+                double deviation = (MedianEquivalentValue(iterationValue.ValueIteratedTo) * 1.0) - mean;
+                geometricDeviationTotal += (deviation * deviation) * iterationValue.CountAddedInThisIterationStep;
             }
-            double std_deviation = Math.Sqrt(geometric_deviation_total / TotalCount);
-            return std_deviation;
+            double stdDeviation = Math.Sqrt(geometricDeviationTotal / TotalCount);
+            return stdDeviation;
         }
 
         /// <summary>
@@ -890,11 +863,10 @@ namespace HdrHistogram.NET
                 printStream.Write("{0,12} {1,14} {2,10} {3,14}\n\n", "Value", "Percentile", "TotalCount", "1/(1-Percentile)");
             }
 
-            PercentileEnumerator enumerator = _percentileEnumerator;
-            enumerator.Reset(percentileTicksPerHalfDistance);
+            PercentileEnumerator enumerator = new PercentileEnumerator(this, percentileTicksPerHalfDistance);
 
-            String percentileFormatString;
-            String lastLinePercentileFormatString;
+            string percentileFormatString;
+            string lastLinePercentileFormatString;
             if (useCsvFormat)
             {
                 percentileFormatString = "{0:F" + NumberOfSignificantValueDigits + "},{1:F12},{2},{3:F2}\n";
@@ -1159,8 +1131,7 @@ namespace HdrHistogram.NET
             //}
         }
 
-        protected static AbstractHistogram DecodeFromByteBuffer(ByteBuffer buffer, Type histogramClass,
-                                                      long minBarForHighestTrackableValue)
+        protected static AbstractHistogram DecodeFromByteBuffer(ByteBuffer buffer, Type histogramClass, long minBarForHighestTrackableValue)
         {
             AbstractHistogram histogram = ConstructHistogramFromBufferHeader(buffer, histogramClass,
                     minBarForHighestTrackableValue);
