@@ -34,12 +34,9 @@ namespace HdrHistogram.NET.Iteration
         protected long ArrayTotalCount { get; private set; }
         protected long CountAtThisValue { get; private set; }
 
-
-        public void Dispose()
-        {
-            //throw new NotImplementedException();
-        }
-
+        public HistogramIterationValue Current { get; private set; }
+        object IEnumerator.Current => this.Current;
+        
         public bool MoveNext()
         {
             var canMove = this.HasNext();
@@ -55,18 +52,10 @@ namespace HdrHistogram.NET.Iteration
             this.ResetIterator(this.SourceHistogram);
         }
 
-        
-
-        public HistogramIterationValue Current { get; private set; }
-        object IEnumerator.Current => this.Current;
-
-
-        /**
-         * Returns true if the iteration has more elements. (In other words, returns true if next would return an
-         * element rather than throwing an exception.)
-         *
-         * @return true if the iterator has more elements.
-         */
+        /// <summary>
+        ///  Returns <c>true</c> if the iteration has more elements. (In other words, returns true if next would return an element rather than throwing an exception.)
+        /// </summary>
+        /// <returns><c>true</c> if the iterator has more elements.</returns>
         public virtual bool HasNext()
         {
             if (this.SourceHistogram.GetTotalCount() != this._savedHistogramTotalRawCount)
@@ -76,11 +65,10 @@ namespace HdrHistogram.NET.Iteration
             return (this.TotalCountToCurrentIndex < this.ArrayTotalCount);
         }
 
-        /**
-         * Returns the next element in the iteration.
-         *
-         * @return the {@link HistogramIterationValue} associated with the next element in the iteration.
-         */
+        /// <summary>
+        /// Returns the next element in the iteration.
+        /// </summary>
+        /// <returns>the <see cref="HistogramIterationValue"/> associated with the next element in the iteration.</returns>
         public HistogramIterationValue Next()
         {
             // Move through the sub buckets and buckets until we hit the next reporting level:
@@ -122,7 +110,12 @@ namespace HdrHistogram.NET.Iteration
             throw new ArgumentOutOfRangeException();
         }
 
-        protected void ResetIterator(AbstractHistogram histogram)
+        public void Dispose()
+        {
+            //throw new NotImplementedException();
+        }
+
+        protected virtual void ResetIterator(AbstractHistogram histogram)
         {
             this.SourceHistogram = histogram;
             this._savedHistogramTotalRawCount = histogram.GetTotalCount();

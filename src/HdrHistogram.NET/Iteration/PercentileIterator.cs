@@ -12,45 +12,35 @@ using System;
 
 namespace HdrHistogram.NET.Iteration
 {
-    /**
-     * Used for iterating through histogram values according to percentile levels. The iteration is
-     * performed in steps that start at 0% and reduce their distance to 100% according to the
-     * <i>percentileTicksPerHalfDistance</i> parameter, ultimately reaching 100% when all recorded histogram
-     * values are exhausted.
-    */
-    public class PercentileIterator : AbstractHistogramIterator
+    /// <summary>
+    /// Used for iterating through histogram values according to percentile levels.The iteration is
+    /// performed in steps that start at 0% and reduce their distance to 100% according to the
+    /// <i>percentileTicksPerHalfDistance</i> parameter, ultimately reaching 100% when all recorded histogram
+    /// values are exhausted.
+    /// </summary>
+    public sealed class PercentileIterator : AbstractHistogramIterator
     {
-        int percentileTicksPerHalfDistance;
-        double percentileLevelToIterateTo;
-        double percentileLevelToIterateFrom;
-        bool reachedLastRecordedValue;
-
-        /**
-         * Reset iterator for re-use in a fresh iteration over the same histogram data set.
-         *
-         * @param percentileTicksPerHalfDistance The number of iteration steps per half-distance to 100%.
-         */
-        public void reset(int percentileTicksPerHalfDistance) 
-        {
-            this.reset(this.SourceHistogram, percentileTicksPerHalfDistance);
-        }
-
-        private void reset(AbstractHistogram histogram, int percentileTicksPerHalfDistance) 
-        {
-            base.ResetIterator(histogram);
-            this.percentileTicksPerHalfDistance = percentileTicksPerHalfDistance;
-            this.percentileLevelToIterateTo = 0.0;
-            this.percentileLevelToIterateFrom = 0.0;
-            this.reachedLastRecordedValue = false;
-        }
-
-        /**
-         * @param histogram The histogram this iterator will operate on
-         * @param percentileTicksPerHalfDistance The number of iteration steps per half-distance to 100%.
-         */
+        private int _percentileTicksPerHalfDistance;
+        private double _percentileLevelToIterateTo;
+        private bool _reachedLastRecordedValue;
+        
+        /// <summary>
+        /// The constuctor for the <see cref="PercentileIterator"/>
+        /// </summary>
+        /// <param name="histogram">The histogram this iterator will operate on</param>
+        /// <param name="percentileTicksPerHalfDistance">The number of iteration steps per half-distance to 100%.</param>
         public PercentileIterator(AbstractHistogram histogram, int percentileTicksPerHalfDistance) 
         {
-            this.reset(histogram, percentileTicksPerHalfDistance);
+            Reset(histogram, percentileTicksPerHalfDistance);
+        }
+
+        /// <summary>
+        /// Reset iterator for re-use in a fresh iteration over the same histogram data set.
+        /// </summary>
+        /// <param name="percentileTicksPerHalfDistance">The number of iteration steps per half-distance to 100%.</param>
+        public void Reset(int percentileTicksPerHalfDistance)
+        {
+            Reset(SourceHistogram, percentileTicksPerHalfDistance);
         }
 
         public override bool HasNext() 
@@ -58,9 +48,9 @@ namespace HdrHistogram.NET.Iteration
             if (base.HasNext())
                 return true;
             // We want one additional last step to 100%
-            if (!this.reachedLastRecordedValue && (this.ArrayTotalCount > 0)) {
-                this.percentileLevelToIterateTo = 100.0;
-                this.reachedLastRecordedValue = true;
+            if (!_reachedLastRecordedValue && (ArrayTotalCount > 0)) {
+                _percentileLevelToIterateTo = 100.0;
+                _reachedLastRecordedValue = true;
                 return true;
             }
             return false;
@@ -68,25 +58,32 @@ namespace HdrHistogram.NET.Iteration
 
         protected override void IncrementIterationLevel() 
         {
-            this.percentileLevelToIterateFrom = this.percentileLevelToIterateTo;
             long percentileReportingTicks =
-                    this.percentileTicksPerHalfDistance *
+                    _percentileTicksPerHalfDistance *
                             (long) Math.Pow(2,
-                                    (long) (Math.Log(100.0 / (100.0 - (this.percentileLevelToIterateTo))) / Math.Log(2)) + 1);
-            this.percentileLevelToIterateTo += 100.0 / percentileReportingTicks;
+                                    (long) (Math.Log(100.0 / (100.0 - (_percentileLevelToIterateTo))) / Math.Log(2)) + 1);
+            _percentileLevelToIterateTo += 100.0 / percentileReportingTicks;
         }
 
         protected override bool ReachedIterationLevel() 
         {
-            if (this.CountAtThisValue == 0)
+            if (CountAtThisValue == 0)
                 return false;
-            double currentPercentile = (100.0 * (double) this.TotalCountToCurrentIndex) / this.ArrayTotalCount;
-            return (currentPercentile >= this.percentileLevelToIterateTo);
+            double currentPercentile = (100.0 * (double) TotalCountToCurrentIndex) / ArrayTotalCount;
+            return (currentPercentile >= _percentileLevelToIterateTo);
         }
 
         protected override double GetPercentileIteratedTo() 
         {
-            return this.percentileLevelToIterateTo;
+            return _percentileLevelToIterateTo;
+        }
+
+        private void Reset(AbstractHistogram histogram, int percentileTicksPerHalfDistance)
+        {
+            ResetIterator(histogram);
+            _percentileTicksPerHalfDistance = percentileTicksPerHalfDistance;
+            _percentileLevelToIterateTo = 0.0;
+            _reachedLastRecordedValue = false;
         }
     }
 }

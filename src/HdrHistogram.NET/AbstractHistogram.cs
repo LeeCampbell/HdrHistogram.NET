@@ -647,7 +647,7 @@ namespace HdrHistogram.NET
         /// <returns>the Min value recorded in the histogram</returns>
         public long GetMinValue()
         {
-            _recordedValuesIterator.reset();
+            _recordedValuesIterator.Reset();
             long min = 0;
             if (_recordedValuesIterator.HasNext())
             {
@@ -663,7 +663,7 @@ namespace HdrHistogram.NET
         /// <returns>the Max value recorded in the histogram</returns>
         public long GetMaxValue()
         {
-            _recordedValuesIterator.reset();
+            _recordedValuesIterator.Reset();
             long max = 0;
             while (_recordedValuesIterator.HasNext())
             {
@@ -679,7 +679,7 @@ namespace HdrHistogram.NET
         /// <returns>the mean value (in value units) of the histogram data</returns>
         public double GetMean()
         {
-            _recordedValuesIterator.reset();
+            _recordedValuesIterator.Reset();
             long totalValue = 0;
             while (_recordedValuesIterator.HasNext())
             {
@@ -697,7 +697,7 @@ namespace HdrHistogram.NET
         {
             double mean = GetMean();
             double geometric_deviation_total = 0.0;
-            _recordedValuesIterator.reset();
+            _recordedValuesIterator.Reset();
             while (_recordedValuesIterator.HasNext())
             {
                 HistogramIterationValue iterationValue = _recordedValuesIterator.Next();
@@ -1033,7 +1033,7 @@ namespace HdrHistogram.NET
             }
 
             PercentileIterator iterator = _percentileIterator;
-            iterator.reset(percentileTicksPerHalfDistance);
+            iterator.Reset(percentileTicksPerHalfDistance);
 
             String percentileFormatString;
             String lastLinePercentileFormatString;

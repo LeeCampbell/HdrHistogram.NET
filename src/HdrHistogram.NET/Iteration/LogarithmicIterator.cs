@@ -10,69 +10,58 @@
 
 namespace HdrHistogram.NET.Iteration
 {
-    /**
-     * Used for iterating through histogram values in logarithmically increasing levels. The iteration is
-     * performed in steps that start at <i>valueUnitsInFirstBucket</i> and increase exponentially according to
-     * <i>logBase</i>, terminating when all recorded histogram values are exhausted. Note that each iteration "bucket"
-     * includes values up to and including the next bucket boundary value.
-     */
-    public class LogarithmicIterator : AbstractHistogramIterator
+    /// <summary>
+    /// Used for iterating through histogram values in logarithmically increasing levels. The iteration is
+    /// performed in steps that start at<i>valueUnitsInFirstBucket</i> and increase exponentially according to
+    /// <i>logBase</i>, terminating when all recorded histogram values are exhausted. Note that each iteration "bucket"
+    /// includes values up to and including the next bucket boundary value.
+    /// </summary>
+    public sealed class LogarithmicIterator : AbstractHistogramIterator
     {
-        int valueUnitsInFirstBucket;
-        double logBase;
-        long nextValueReportingLevel;
-        long nextValueReportingLevelLowestEquivalent;
+        private readonly double _logBase;
+        private long _nextValueReportingLevel;
+        private long _nextValueReportingLevelLowestEquivalent;
 
-        /**
-         * Reset iterator for re-use in a fresh iteration over the same histogram data set.
-         * @param valueUnitsInFirstBucket the size (in value units) of the first value bucket step
-         * @param logBase the multiplier by which the bucket size is expanded in each iteration step.
-         */
-        public void reset(int valueUnitsInFirstBucket, double logBase) 
+        /// <summary>
+        /// The constructor for the <see cref="LogarithmicIterator"/>
+        /// </summary>
+        /// <param name="histogram">The histogram this iterator will operate on</param>
+        /// <param name="valueUnitsInFirstBucket">the size (in value units) of the first value bucket step</param>
+        /// <param name="logBase">the multiplier by which the bucket size is expanded in each iteration step.</param>
+        public LogarithmicIterator(AbstractHistogram histogram, int valueUnitsInFirstBucket, double logBase)
         {
-            this.reset(this.SourceHistogram, valueUnitsInFirstBucket, logBase);
+            _logBase = logBase;
+
+            ResetIterator(histogram);
+            _nextValueReportingLevel = valueUnitsInFirstBucket;
+            _nextValueReportingLevelLowestEquivalent = histogram.LowestEquivalentValue(_nextValueReportingLevel);
         }
 
-        private void reset(AbstractHistogram histogram, int valueUnitsInFirstBucket, double logBase) 
+        public override bool HasNext()
         {
-            base.ResetIterator(histogram);
-            this.logBase = logBase;
-            this.valueUnitsInFirstBucket = valueUnitsInFirstBucket;
-            this.nextValueReportingLevel = valueUnitsInFirstBucket;
-            this.nextValueReportingLevelLowestEquivalent = histogram.LowestEquivalentValue(this.nextValueReportingLevel);
-        }
-
-        /**
-         * @param histogram The histogram this iterator will operate on
-         * @param valueUnitsInFirstBucket the size (in value units) of the first value bucket step
-         * @param logBase the multiplier by which the bucket size is expanded in each iteration step.
-         */
-        public LogarithmicIterator(AbstractHistogram histogram, int valueUnitsInFirstBucket, double logBase) 
-        {
-            this.reset(histogram, valueUnitsInFirstBucket, logBase);
-        }
-
-        public override bool HasNext() 
-        {
-            if (base.HasNext()) {
+            if (base.HasNext())
+            {
                 return true;
             }
             // If next iterate does not move to the next sub bucket index (which is empty if
             // if we reached this point), then we are not done iterating... Otherwise we're done.
-            return (this.nextValueReportingLevelLowestEquivalent < this.NextValueAtIndex);
+            return (_nextValueReportingLevelLowestEquivalent < NextValueAtIndex);
         }
 
-        protected override void IncrementIterationLevel() {
-            this.nextValueReportingLevel *= (long)this.logBase;
-            this.nextValueReportingLevelLowestEquivalent = this.SourceHistogram.LowestEquivalentValue(this.nextValueReportingLevel);
+        protected override void IncrementIterationLevel()
+        {
+            _nextValueReportingLevel *= (long)_logBase;
+            _nextValueReportingLevelLowestEquivalent = SourceHistogram.LowestEquivalentValue(_nextValueReportingLevel);
         }
 
-        protected override long GetValueIteratedTo() {
-            return this.nextValueReportingLevel;
+        protected override long GetValueIteratedTo()
+        {
+            return _nextValueReportingLevel;
         }
 
-        protected override bool ReachedIterationLevel() {
-            return (this.CurrentValueAtIndex >= this.nextValueReportingLevelLowestEquivalent);
+        protected override bool ReachedIterationLevel()
+        {
+            return (CurrentValueAtIndex >= _nextValueReportingLevelLowestEquivalent);
         }
     }
 }

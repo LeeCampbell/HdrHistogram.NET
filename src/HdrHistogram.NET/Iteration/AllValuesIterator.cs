@@ -10,44 +10,42 @@
 
 namespace HdrHistogram.NET.Iteration
 {
-    /**
-     * Used for iterating through histogram values using the finest granularity steps supported by the underlying
-     * representation. The iteration steps through all possible unit value levels, regardless of whether or not
-     * there were recorded values for that value level, and terminates when all recorded histogram values are exhausted.
-     */
-
-    public class AllValuesIterator : AbstractHistogramIterator
+    /// <summary>
+    /// Used for iterating through histogram values using the finest granularity steps supported by the underlying
+    /// representation.The iteration steps through all possible unit value levels, regardless of whether or not
+    /// there were recorded values for that value level, and terminates when all recorded histogram values are exhausted.
+    /// </summary>
+    public sealed class AllValuesIterator : AbstractHistogramIterator
     {
-        int visitedSubBucketIndex;
-        int visitedBucketIndex;
+        private int _visitedSubBucketIndex;
+        private int _visitedBucketIndex;
 
-        /**
-         * Reset iterator for re-use in a fresh iteration over the same histogram data set.
-         */
-        public void reset() {
-            this.reset(this.SourceHistogram);
+        /// <summary>
+        /// Constructor for the <see cref="AllValuesIterator"/>.
+        /// </summary>
+        /// <param name="histogram">The histogram this iterator will operate on</param>
+        public AllValuesIterator(AbstractHistogram histogram)
+        {
+            ResetIterator(histogram);
         }
 
-        private void reset(AbstractHistogram histogram) {
+        protected override void ResetIterator(AbstractHistogram histogram)
+        {
             base.ResetIterator(histogram);
-            this.visitedSubBucketIndex = -1;
-            this.visitedBucketIndex = -1;
+            _visitedSubBucketIndex = -1;
+            _visitedBucketIndex = -1;
         }
 
-        /**
-         * @param histogram The histogram this iterator will operate on
-         */
-        public AllValuesIterator(AbstractHistogram histogram) {
-            this.reset(histogram);
+        protected override void IncrementIterationLevel()
+        {
+            _visitedSubBucketIndex = CurrentSubBucketIndex;
+            _visitedBucketIndex = CurrentBucketIndex;
         }
 
-        protected override void IncrementIterationLevel() {
-            this.visitedSubBucketIndex = this.CurrentSubBucketIndex;
-            this.visitedBucketIndex = this.CurrentBucketIndex;
-        }
-
-        protected override bool ReachedIterationLevel() {
-            return (this.visitedSubBucketIndex != this.CurrentSubBucketIndex) || (this.visitedBucketIndex != this.CurrentBucketIndex);
+        protected override bool ReachedIterationLevel()
+        {
+            return (_visitedSubBucketIndex != CurrentSubBucketIndex) 
+                || (_visitedBucketIndex != CurrentBucketIndex);
         }
     }
 }

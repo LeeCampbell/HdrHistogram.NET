@@ -10,45 +10,38 @@
 
 namespace HdrHistogram.NET.Iteration
 {
-    public class RecordedValuesIterator : AbstractHistogramIterator
+    public sealed class RecordedValuesIterator : AbstractHistogramIterator
     {
-        int visitedSubBucketIndex;
-        int visitedBucketIndex;
+        private int _visitedSubBucketIndex;
+        private int _visitedBucketIndex;
 
-        /**
-         * Reset iterator for re-use in a fresh iteration over the same histogram data set.
-         */
-        public void reset() 
-        {
-            this.reset(this.SourceHistogram);
-        }
-
-        private void reset(AbstractHistogram histogram) 
-        {
-            base.ResetIterator(histogram);
-            this.visitedSubBucketIndex = -1;
-            this.visitedBucketIndex = -1;
-        }
-
-        /**
-         * @param histogram The histogram this iterator will operate on
-         */
+        /// <summary>
+        /// The constructor for <see cref="RecordedValuesIterator"/>
+        /// </summary>
+        /// <param name="histogram">The histogram this iterator will operate on</param>
         public RecordedValuesIterator(AbstractHistogram histogram) 
         {
-            this.reset(histogram);
+            ResetIterator(histogram);
+        }
+
+        protected override void ResetIterator(AbstractHistogram histogram)
+        {
+            base.ResetIterator(histogram);
+            _visitedSubBucketIndex = -1;
+            _visitedBucketIndex = -1;
         }
 
         protected override void IncrementIterationLevel() 
         {
-            this.visitedSubBucketIndex = this.CurrentSubBucketIndex;
-            this.visitedBucketIndex = this.CurrentBucketIndex;
+            _visitedSubBucketIndex = CurrentSubBucketIndex;
+            _visitedBucketIndex = CurrentBucketIndex;
         }
 
         protected override bool ReachedIterationLevel() 
         {
-            long currentIJCount = this.SourceHistogram.GetCountAt(this.CurrentBucketIndex, this.CurrentSubBucketIndex);
+            long currentIJCount = SourceHistogram.GetCountAt(CurrentBucketIndex, CurrentSubBucketIndex);
             return (currentIJCount != 0) &&
-                    ((this.visitedSubBucketIndex != this.CurrentSubBucketIndex) || (this.visitedBucketIndex != this.CurrentBucketIndex));
+                    ((_visitedSubBucketIndex != CurrentSubBucketIndex) || (_visitedBucketIndex != CurrentBucketIndex));
         }
     }
 }
