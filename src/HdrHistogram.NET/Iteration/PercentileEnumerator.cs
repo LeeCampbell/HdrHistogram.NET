@@ -9,16 +9,43 @@
  */
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace HdrHistogram.NET.Iteration
 {
+    /// <summary>
+    /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="PercentileEnumerator"/>
+    /// </summary>
+    sealed class PercentileEnumerable : IEnumerable<HistogramIterationValue>
+    {
+        private readonly AbstractHistogram _histogram;
+        private readonly int _percentileTicksPerHalfDistance;
+
+        public PercentileEnumerable(AbstractHistogram histogram, int percentileTicksPerHalfDistance)
+        {
+            _histogram = histogram;
+            _percentileTicksPerHalfDistance = percentileTicksPerHalfDistance;
+        }
+
+        public IEnumerator<HistogramIterationValue> GetEnumerator()
+        {
+            return new PercentileEnumerator(_histogram, _percentileTicksPerHalfDistance);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+    }
+
     /// <summary>
     /// Used for iterating through histogram values according to percentile levels.The iteration is
     /// performed in steps that start at 0% and reduce their distance to 100% according to the
     /// <i>percentileTicksPerHalfDistance</i> parameter, ultimately reaching 100% when all recorded histogram
     /// values are exhausted.
     /// </summary>
-    public sealed class PercentileEnumerator : AbstractHistogramEnumerator
+    sealed class PercentileEnumerator : AbstractHistogramEnumerator
     {
         private int _percentileTicksPerHalfDistance;
         private double _percentileLevelToIterateTo;

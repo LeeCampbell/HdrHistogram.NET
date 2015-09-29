@@ -43,8 +43,8 @@ namespace HdrHistogram.NET
     public abstract class AbstractHistogram
     {
         private static long _nextIdentity = -1L;
-        private static readonly int EncodingCookieBase = 0x1c849308;
-        private static readonly int CompressedEncodingCookieBase = 0x1c849309;
+        private const int EncodingCookieBase = 0x1c849308;
+        private const int CompressedEncodingCookieBase = 0x1c849309;
         private static readonly Type[] HistogramClassConstructorArgsTypes = { typeof(long), typeof(long), typeof(int) };
 
         // "Cold" accessed fields. Not used in the recording code path:
@@ -406,8 +406,8 @@ namespace HdrHistogram.NET
             /*final*/
             AbstractHistogram toHistogram = this;
 
-            //for (HistogramIterationValue v : fromHistogram.recordedValues()) 
-            foreach (HistogramIterationValue v in fromHistogram.recordedValues())
+            //for (HistogramIterationValue v : fromHistogram.RecordedValues()) 
+            foreach (HistogramIterationValue v in fromHistogram.RecordedValues())
             {
                 toHistogram.RecordValueWithCountAndExpectedInterval(v.ValueIteratedTo,
                         v.CountAtValueIteratedTo, expectedIntervalBetweenValueSamples);
@@ -636,6 +636,8 @@ namespace HdrHistogram.NET
         /// <returns>the Min value recorded in the histogram</returns>
         public long GetMinValue()
         {
+            //TODO: Can this not just be RecordedValues.First() -LC
+
             _recordedValuesEnumerator.Reset();
             long min = 0;
             if (_recordedValuesEnumerator.HasNext())
@@ -652,6 +654,7 @@ namespace HdrHistogram.NET
         /// <returns>the Max value recorded in the histogram</returns>
         public long GetMaxValue()
         {
+            //TODO: Can this not just be RecordedValues.Last() -LC
             _recordedValuesEnumerator.Reset();
             long max = 0;
             while (_recordedValuesEnumerator.HasNext())
@@ -809,9 +812,9 @@ namespace HdrHistogram.NET
         /// </summary>
         /// <param name="percentileTicksPerHalfDistance">The number of iteration steps per half-distance to 100%.</param>
         /// <returns>An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="PercentileEnumerator"/></returns>
-        public Percentiles percentiles(int percentileTicksPerHalfDistance)
+        public IEnumerable<HistogramIterationValue> Percentiles(int percentileTicksPerHalfDistance)
         {
-            return new Percentiles(this, percentileTicksPerHalfDistance);
+            return new PercentileEnumerable(this, percentileTicksPerHalfDistance);
         }
 
         /// <summary>
@@ -819,9 +822,9 @@ namespace HdrHistogram.NET
         /// </summary>
         /// <param name="valueUnitsPerBucket">The size (in value units) of the linear buckets to use</param>
         /// <returns>An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LinearEnumerator"/></returns>
-        public LinearBucketValues linearBucketValues(int valueUnitsPerBucket)
+        public IEnumerable<HistogramIterationValue> LinearBucketValues(int valueUnitsPerBucket)
         {
-            return new LinearBucketValues(this, valueUnitsPerBucket);
+            return new LinearBucketEnumerable(this, valueUnitsPerBucket);
         }
 
         /// <summary>
@@ -831,9 +834,9 @@ namespace HdrHistogram.NET
         /// <param name="valueUnitsInFirstBucket">The size (in value units) of the first bucket in the iteration</param>
         /// <param name="logBase">The multiplier by which bucket sizes will grow in each iteration step</param>
         /// <returns>An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LogarithmicEnumerator"/></returns>
-        public LogarithmicBucketValues logarithmicBucketValues(int valueUnitsInFirstBucket, double logBase)
+        public IEnumerable<HistogramIterationValue> LogarithmicBucketValues(int valueUnitsInFirstBucket, double logBase)
         {
-            return new LogarithmicBucketValues(this, valueUnitsInFirstBucket, logBase);
+            return new LogarithmicBucketEnumerable(this, valueUnitsInFirstBucket, logBase);
         }
 
         /// <summary>
@@ -841,9 +844,9 @@ namespace HdrHistogram.NET
         /// The iteration steps through all non-zero recorded value counts, and terminates when all recorded histogram values are exhausted.
         /// </summary>
         /// <returns>An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="RecordedValuesEnumerator"/></returns>
-        public RecordedValues recordedValues()
+        public IEnumerable<HistogramIterationValue> RecordedValues()
         {
-            return new RecordedValues(this);
+            return new RecordedValuesEnumerable(this);
         }
 
         /// <summary>
@@ -851,146 +854,12 @@ namespace HdrHistogram.NET
         /// The iteration steps through all possible unit value levels, regardless of whether or not there were recorded values for that value level, and terminates when all recorded histogram values are exhausted.
         /// </summary>
         /// <returns>An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="RecordedValuesEnumerator"/></returns>
-        public AllValues allValues()
+        public IEnumerable<HistogramIterationValue> AllValues()
         {
-            return new AllValues(this);
+            return new AllValueEnumerable(this);
         }
 
-
-        // Percentile enumerator support:
-
-
-        /// <summary>
-        /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="PercentileEnumerator"/>
-        /// </summary>
-        public class Percentiles : IEnumerable<HistogramIterationValue>
-        {
-            readonly AbstractHistogram histogram;
-            readonly int percentileTicksPerHalfDistance;
-
-            public Percentiles(AbstractHistogram histogram, int percentileTicksPerHalfDistance)
-            {
-                this.histogram = histogram;
-                this.percentileTicksPerHalfDistance = percentileTicksPerHalfDistance;
-            }
-
-            public IEnumerator<HistogramIterationValue> GetEnumerator()
-            {
-                return new PercentileEnumerator(histogram, percentileTicksPerHalfDistance);
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return this.GetEnumerator();
-            }
-        }
-
-        // Linear enumerator support:
-
-        /// <summary>
-        /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LinearEnumerator"/>
-        /// </summary>
-        public class LinearBucketValues : IEnumerable<HistogramIterationValue>
-        {
-            private readonly AbstractHistogram histogram;
-            private readonly int valueUnitsPerBucket;
-
-            public LinearBucketValues(AbstractHistogram histogram, int valueUnitsPerBucket)
-            {
-                this.histogram = histogram;
-                this.valueUnitsPerBucket = valueUnitsPerBucket;
-            }
-
-            public IEnumerator<HistogramIterationValue> GetEnumerator()
-            {
-                return new LinearEnumerator(histogram, valueUnitsPerBucket);
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return this.GetEnumerator();
-            }
-        }
-
-        // Logarithmic enumerator support:
-
-        /// <summary>
-        /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LogarithmicEnumerator"/>
-        /// </summary>
-        public class LogarithmicBucketValues : IEnumerable<HistogramIterationValue>
-        {
-            readonly AbstractHistogram histogram;
-            readonly int valueUnitsInFirstBucket;
-            readonly double logBase;
-
-            public LogarithmicBucketValues(AbstractHistogram histogram, int valueUnitsInFirstBucket, double logBase)
-            {
-                this.histogram = histogram;
-                this.valueUnitsInFirstBucket = valueUnitsInFirstBucket;
-                this.logBase = logBase;
-            }
-
-            public IEnumerator<HistogramIterationValue> GetEnumerator()
-            {
-                return new LogarithmicEnumerator(histogram, valueUnitsInFirstBucket, logBase);
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return this.GetEnumerator();
-            }
-        }
-
-        // Recorded value enumerator support:
-
-        /// <summary>
-        /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="RecordedValuesEnumerator"/>
-        /// </summary>
-        public class RecordedValues : IEnumerable<HistogramIterationValue>
-        {
-            readonly AbstractHistogram histogram;
-
-            public RecordedValues(AbstractHistogram histogram)
-            {
-                this.histogram = histogram;
-            }
-
-            public IEnumerator<HistogramIterationValue> GetEnumerator()
-            {
-                return new RecordedValuesEnumerator(histogram);
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return this.GetEnumerator();
-            }
-        }
-
-        // AllValues enumerator support:
-
-        /// <summary>
-        /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="AllValuesEnumerator"/>
-        /// </summary>
-        public class AllValues : IEnumerable<HistogramIterationValue>
-        {
-            private readonly AbstractHistogram histogram;
-
-            public AllValues(AbstractHistogram histogram)
-            {
-                this.histogram = histogram;
-            }
-
-            public IEnumerator<HistogramIterationValue> GetEnumerator()
-            {
-                return new AllValuesEnumerator(histogram);
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return this.GetEnumerator();
-            }
-        }
-
+        
         //
         //
         //

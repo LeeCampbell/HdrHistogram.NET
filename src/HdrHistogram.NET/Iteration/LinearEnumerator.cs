@@ -8,15 +8,43 @@
  * https://github.com/HdrHistogram/HdrHistogram
  */
 
+using System.Collections;
+using System.Collections.Generic;
+
 namespace HdrHistogram.NET.Iteration
 {
+    /// <summary>
+    /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LinearEnumerator"/>
+    /// </summary>
+    sealed class LinearBucketEnumerable : IEnumerable<HistogramIterationValue>
+    {
+        private readonly AbstractHistogram _histogram;
+        private readonly int _valueUnitsPerBucket;
+
+        public LinearBucketEnumerable(AbstractHistogram histogram, int valueUnitsPerBucket)
+        {
+            this._histogram = histogram;
+            this._valueUnitsPerBucket = valueUnitsPerBucket;
+        }
+
+        public IEnumerator<HistogramIterationValue> GetEnumerator()
+        {
+            return new LinearEnumerator(_histogram, _valueUnitsPerBucket);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return this.GetEnumerator();
+        }
+    }
+
     /// <summary>
     /// Used for iterating through histogram values in linear steps. The iteration is
     /// performed in steps of<i>valueUnitsPerBucket</i> in size, terminating when all recorded histogram
     /// values are exhausted. Note that each iteration "bucket" includes values up to and including
     /// the next bucket boundary value.
     /// </summary>
-    public sealed class LinearEnumerator : AbstractHistogramEnumerator
+    sealed class LinearEnumerator : AbstractHistogramEnumerator
     {
         private readonly long _valueUnitsPerBucket;
         private long _nextValueReportingLevel;

@@ -8,14 +8,39 @@
  * https://github.com/HdrHistogram/HdrHistogram
  */
 
+using System.Collections;
+using System.Collections.Generic;
+
 namespace HdrHistogram.NET.Iteration
 {
+    /// <summary>
+    /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="AllValuesEnumerator"/>
+    /// </summary>
+    sealed class AllValueEnumerable : IEnumerable<HistogramIterationValue>
+    {
+        private readonly AbstractHistogram _histogram;
+
+        public AllValueEnumerable(AbstractHistogram histogram)
+        {
+            _histogram = histogram;
+        }
+
+        public IEnumerator<HistogramIterationValue> GetEnumerator()
+        {
+            return new AllValuesEnumerator(_histogram);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+    }
     /// <summary>
     /// Used for iterating through histogram values using the finest granularity steps supported by the underlying
     /// representation.The iteration steps through all possible unit value levels, regardless of whether or not
     /// there were recorded values for that value level, and terminates when all recorded histogram values are exhausted.
     /// </summary>
-    public sealed class AllValuesEnumerator : AbstractHistogramEnumerator
+    sealed class AllValuesEnumerator : AbstractHistogramEnumerator
     {
         private int _visitedSubBucketIndex;
         private int _visitedBucketIndex;
