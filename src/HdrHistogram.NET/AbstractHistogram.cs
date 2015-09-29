@@ -75,9 +75,9 @@ namespace HdrHistogram.NET
         protected int NumberOfSignificantValueDigits { get; }
         protected int CountsArrayLength { get; }
 
-        internal int BucketCount { get; }       //Candidate for private read-only field. -LC
-        internal int SubBucketCount { get; }    //Candidate for private read-only field. -LC
-        internal int SubBucketHalfCount { get; }//Candidate for private read-only field. -LC
+        internal int BucketCount { get; }       //TODO: Candidate for private read-only field. -LC
+        internal int SubBucketCount { get; }    //TODO: Candidate for private read-only field. -LC
+        internal int SubBucketHalfCount { get; }//TODO: Candidate for private read-only field. -LC
 
 
         //
