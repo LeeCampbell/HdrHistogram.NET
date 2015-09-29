@@ -57,6 +57,7 @@ namespace HdrHistogram.NET
         private readonly long _subBucketMask;
         private readonly PercentileIterator _percentileIterator;
         private readonly RecordedValuesIterator _recordedValuesIterator;
+
         protected readonly object UpdateLock = new object();
 
         private ByteBuffer _intermediateUncompressedByteBuffer = null;
@@ -77,64 +78,6 @@ namespace HdrHistogram.NET
         internal int BucketCount { get; }       //Candidate for private read-only field. -LC
         internal int SubBucketCount { get; }    //Candidate for private read-only field. -LC
         internal int SubBucketHalfCount { get; }//Candidate for private read-only field. -LC
-
-
-        //
-        //
-        //
-        // Timestamp support:
-        //
-        //
-        //
-
-        /// <summary>
-        /// Gets or Sets the start time stamp value associated with this histogram to a given value.
-        /// By convention in msec since the epoch.
-        /// </summary>
-        public long StartTimeStamp { get; set; }
-
-        /// <summary>
-        /// Gets or Sets the end time stamp value associated with this histogram to a given value.
-        /// By convention in msec since the epoch.
-        /// </summary>
-        public long EndTimeStamp { get; set; }
-
-        protected abstract int WordSizeInBytes { get; }
-
-        public abstract long TotalCount { get; }
-
-        // Sub-classes will typically add a totalCount field and a counts array field.
-
-        //
-        //
-        //
-        // Abstract, counts-type dependent methods to be provided by subclass implementations:
-        //
-        //
-        //
-
-        protected abstract long GetCountAtIndex(int index);
-
-        protected abstract void IncrementCountAtIndex(int index);
-
-        protected abstract void AddToCountAtIndex(int index, long value);
-
-        protected abstract void SetTotalCount(long totalCount);
-
-        protected abstract void IncrementTotalCount();
-
-        protected abstract void AddToTotalCount(long value);
-
-        protected abstract void ClearCounts();
-
-
-        
-
-        /// <summary>
-        /// Provide a (conservatively high) estimate of the Histogram's total footprint in bytes
-        /// </summary>
-        /// <returns>a (conservatively high) estimate of the Histogram's total footprint in bytes</returns>
-        public abstract int GetEstimatedFootprintInBytes();
 
 
         //
@@ -195,8 +138,52 @@ namespace HdrHistogram.NET
 
             CountsArrayLength = GetLengthForNumberOfBuckets(BucketCount);
 
-            SetTotalCount(0);
+            TotalCount = 0;
         }
+
+        //
+        //
+        //
+        // Timestamp support:
+        //
+        //
+        //
+
+        /// <summary>
+        /// Gets or Sets the start time stamp value associated with this histogram to a given value.
+        /// By convention in msec since the epoch.
+        /// </summary>
+        public long StartTimeStamp { get; set; }
+
+        /// <summary>
+        /// Gets or Sets the end time stamp value associated with this histogram to a given value.
+        /// By convention in msec since the epoch.
+        /// </summary>
+        public long EndTimeStamp { get; set; }
+
+        public abstract long TotalCount { get; protected set; }
+
+        protected abstract int WordSizeInBytes { get; }
+
+        protected abstract long GetCountAtIndex(int index);
+
+        protected abstract void IncrementCountAtIndex(int index);
+
+        protected abstract void AddToCountAtIndex(int index, long value);
+
+        protected abstract void IncrementTotalCount();
+
+        protected abstract void AddToTotalCount(long value);
+
+        protected abstract void ClearCounts();
+        
+
+        /// <summary>
+        /// Provide a (conservatively high) estimate of the Histogram's total footprint in bytes
+        /// </summary>
+        /// <returns>a (conservatively high) estimate of the Histogram's total footprint in bytes</returns>
+        public abstract int GetEstimatedFootprintInBytes();
+
 
         //
         //
@@ -372,7 +359,7 @@ namespace HdrHistogram.NET
         /// </summary>
         /// <param name="fromHistogram">The other histogram.</param>
         /// <exception cref="System.IndexOutOfRangeException">if values in fromHistogram's are higher than highestTrackableValue.</exception>
-        public void Add(AbstractHistogram fromHistogram)
+        public virtual void Add(AbstractHistogram fromHistogram)
         {
             if (this.HighestTrackableValue < fromHistogram.HighestTrackableValue)
             {
@@ -387,7 +374,7 @@ namespace HdrHistogram.NET
                 {
                     AddToCountAtIndex(i, fromHistogram.GetCountAtIndex(i));
                 }
-                SetTotalCount(TotalCount + fromHistogram.TotalCount);
+                TotalCount = TotalCount + fromHistogram.TotalCount;
             }
             else
             {
@@ -1276,7 +1263,7 @@ namespace HdrHistogram.NET
                 ConstructorInfo constructor = histogramClass.GetConstructor(HistogramClassConstructorArgsTypes);
                 AbstractHistogram histogram =
                         (AbstractHistogram)constructor.Invoke(new object[] { lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits });
-                histogram.SetTotalCount(totalCount); // Restore totalCount
+                histogram.TotalCount = totalCount; // Restore totalCount
                 if (cookie != histogram.GetEncodingCookie())
                 {
                     throw new ArgumentException(
@@ -1410,7 +1397,7 @@ namespace HdrHistogram.NET
             {
                 totalCounted += GetCountAtIndex(i);
             }
-            SetTotalCount(totalCounted);
+            TotalCount = totalCounted;
         }
 
         //
