@@ -19,7 +19,7 @@ namespace HdrHistogram.NET.Iteration
         /// The constructor for <see cref="RecordedValuesIterator"/>
         /// </summary>
         /// <param name="histogram">The histogram this iterator will operate on</param>
-        public RecordedValuesIterator(AbstractHistogram histogram) 
+        public RecordedValuesIterator(AbstractHistogram histogram)
         {
             ResetIterator(histogram);
         }
@@ -31,13 +31,13 @@ namespace HdrHistogram.NET.Iteration
             _visitedBucketIndex = -1;
         }
 
-        protected override void IncrementIterationLevel() 
+        protected override void IncrementIterationLevel()
         {
             _visitedSubBucketIndex = CurrentSubBucketIndex;
             _visitedBucketIndex = CurrentBucketIndex;
         }
 
-        protected override bool ReachedIterationLevel() 
+        protected override bool ReachedIterationLevel()
         {
             long currentIJCount = SourceHistogram.GetCountAt(CurrentBucketIndex, CurrentSubBucketIndex);
             return (currentIJCount != 0) &&

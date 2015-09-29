@@ -35,21 +35,21 @@ namespace HdrHistogram.NET.Iteration
         protected long CountAtThisValue { get; private set; }
 
         public HistogramIterationValue Current { get; private set; }
-        object IEnumerator.Current => this.Current;
+        object IEnumerator.Current => Current;
         
         public bool MoveNext()
         {
-            var canMove = this.HasNext();
+            var canMove = HasNext();
             if (canMove)
             {
-                this.Current = this.Next();
+                Current = Next();
             }
             return canMove;
         }
 
         public void Reset()
         {
-            this.ResetIterator(this.SourceHistogram);
+            ResetIterator(SourceHistogram);
         }
 
         /// <summary>
@@ -58,11 +58,11 @@ namespace HdrHistogram.NET.Iteration
         /// <returns><c>true</c> if the iterator has more elements.</returns>
         public virtual bool HasNext()
         {
-            if (this.SourceHistogram.GetTotalCount() != this._savedHistogramTotalRawCount)
+            if (SourceHistogram.GetTotalCount() != _savedHistogramTotalRawCount)
             {
                 throw new InvalidOperationException();
             }
-            return (this.TotalCountToCurrentIndex < this.ArrayTotalCount);
+            return (TotalCountToCurrentIndex < ArrayTotalCount);
         }
 
         /// <summary>
@@ -72,39 +72,39 @@ namespace HdrHistogram.NET.Iteration
         public HistogramIterationValue Next()
         {
             // Move through the sub buckets and buckets until we hit the next reporting level:
-            while (!this.ExhaustedSubBuckets())
+            while (!ExhaustedSubBuckets())
             {
-                this.CountAtThisValue = this.SourceHistogram.GetCountAt(this.CurrentBucketIndex, this.CurrentSubBucketIndex);
-                if (this._freshSubBucket)
+                CountAtThisValue = SourceHistogram.GetCountAt(CurrentBucketIndex, CurrentSubBucketIndex);
+                if (_freshSubBucket)
                 {
                     // Don't add unless we've incremented since last bucket...
-                    this.TotalCountToCurrentIndex += this.CountAtThisValue;
-                    this._totalValueToCurrentIndex += this.CountAtThisValue * this.SourceHistogram.MedianEquivalentValue(this.CurrentValueAtIndex);
-                    this._freshSubBucket = false;
+                    TotalCountToCurrentIndex += CountAtThisValue;
+                    _totalValueToCurrentIndex += CountAtThisValue * SourceHistogram.MedianEquivalentValue(CurrentValueAtIndex);
+                    _freshSubBucket = false;
                 }
-                if (this.ReachedIterationLevel())
+                if (ReachedIterationLevel())
                 {
-                    long valueIteratedTo = this.GetValueIteratedTo();
-                    this._currentIterationValue.set(
+                    long valueIteratedTo = GetValueIteratedTo();
+                    _currentIterationValue.set(
                         valueIteratedTo,
-                        this._prevValueIteratedTo,
-                        this.CountAtThisValue,
-                        (this.TotalCountToCurrentIndex - this._totalCountToPrevIndex),
-                        this.TotalCountToCurrentIndex,
-                        this._totalValueToCurrentIndex,
-                        ((100.0 * this.TotalCountToCurrentIndex) / this.ArrayTotalCount),
-                        this.GetPercentileIteratedTo());
-                    this._prevValueIteratedTo = valueIteratedTo;
-                    this._totalCountToPrevIndex = this.TotalCountToCurrentIndex;
+                        _prevValueIteratedTo,
+                        CountAtThisValue,
+                        (TotalCountToCurrentIndex - _totalCountToPrevIndex),
+                        TotalCountToCurrentIndex,
+                        _totalValueToCurrentIndex,
+                        ((100.0 * TotalCountToCurrentIndex) / ArrayTotalCount),
+                        GetPercentileIteratedTo());
+                    _prevValueIteratedTo = valueIteratedTo;
+                    _totalCountToPrevIndex = TotalCountToCurrentIndex;
                     // move the next iteration level forward:
-                    this.IncrementIterationLevel();
-                    if (this.SourceHistogram.GetTotalCount() != this._savedHistogramTotalRawCount)
+                    IncrementIterationLevel();
+                    if (SourceHistogram.GetTotalCount() != _savedHistogramTotalRawCount)
                     {
                         throw new InvalidOperationException();
                     }
-                    return this._currentIterationValue;
+                    return _currentIterationValue;
                 }
-                this.IncrementSubBucket();
+                IncrementSubBucket();
             }
             // Should not reach here. But possible for overflowed histograms under certain conditions
             throw new ArgumentOutOfRangeException();
@@ -117,24 +117,24 @@ namespace HdrHistogram.NET.Iteration
 
         protected virtual void ResetIterator(AbstractHistogram histogram)
         {
-            this.SourceHistogram = histogram;
-            this._savedHistogramTotalRawCount = histogram.GetTotalCount();
-            this.ArrayTotalCount = histogram.GetTotalCount();
-            this.CurrentBucketIndex = 0;
-            this.CurrentSubBucketIndex = 0;
-            this.CurrentValueAtIndex = 0;
-            this._nextBucketIndex = 0;
-            this._nextSubBucketIndex = 1;
-            this.NextValueAtIndex = 1;
-            this._prevValueIteratedTo = 0;
-            this._totalCountToPrevIndex = 0;
-            this.TotalCountToCurrentIndex = 0;
-            this._totalValueToCurrentIndex = 0;
-            this.CountAtThisValue = 0;
-            this._freshSubBucket = true;
-            if (this._currentIterationValue == null)
-                this._currentIterationValue = new HistogramIterationValue();
-            this._currentIterationValue.reset();
+            SourceHistogram = histogram;
+            _savedHistogramTotalRawCount = histogram.GetTotalCount();
+            ArrayTotalCount = histogram.GetTotalCount();
+            CurrentBucketIndex = 0;
+            CurrentSubBucketIndex = 0;
+            CurrentValueAtIndex = 0;
+            _nextBucketIndex = 0;
+            _nextSubBucketIndex = 1;
+            NextValueAtIndex = 1;
+            _prevValueIteratedTo = 0;
+            _totalCountToPrevIndex = 0;
+            TotalCountToCurrentIndex = 0;
+            _totalValueToCurrentIndex = 0;
+            CountAtThisValue = 0;
+            _freshSubBucket = true;
+            if (_currentIterationValue == null)
+                _currentIterationValue = new HistogramIterationValue();
+            _currentIterationValue.reset();
         }
 
         protected abstract void IncrementIterationLevel();
@@ -143,34 +143,34 @@ namespace HdrHistogram.NET.Iteration
 
         protected virtual double GetPercentileIteratedTo()
         {
-            return (100.0 * (double)this.TotalCountToCurrentIndex) / this.ArrayTotalCount;
+            return (100.0 * TotalCountToCurrentIndex) / ArrayTotalCount;
         }
 
         protected virtual long GetValueIteratedTo()
         {
-            return this.SourceHistogram.HighestEquivalentValue(this.CurrentValueAtIndex);
+            return SourceHistogram.HighestEquivalentValue(CurrentValueAtIndex);
         }
 
         private bool ExhaustedSubBuckets()
         {
-            return (this.CurrentBucketIndex >= this.SourceHistogram.BucketCount);
+            return (CurrentBucketIndex >= SourceHistogram.BucketCount);
         }
 
         private void IncrementSubBucket()
         {
-            this._freshSubBucket = true;
+            _freshSubBucket = true;
             // Take on the next index:
-            this.CurrentBucketIndex = this._nextBucketIndex;
-            this.CurrentSubBucketIndex = this._nextSubBucketIndex;
-            this.CurrentValueAtIndex = this.NextValueAtIndex;
+            CurrentBucketIndex = _nextBucketIndex;
+            CurrentSubBucketIndex = _nextSubBucketIndex;
+            CurrentValueAtIndex = NextValueAtIndex;
             // Figure out the next next index:
-            this._nextSubBucketIndex++;
-            if (this._nextSubBucketIndex >= this.SourceHistogram.SubBucketCount)
+            _nextSubBucketIndex++;
+            if (_nextSubBucketIndex >= SourceHistogram.SubBucketCount)
             {
-                this._nextSubBucketIndex = this.SourceHistogram.SubBucketHalfCount;
-                this._nextBucketIndex++;
+                _nextSubBucketIndex = SourceHistogram.SubBucketHalfCount;
+                _nextBucketIndex++;
             }
-            this.NextValueAtIndex = this.SourceHistogram.ValueFromIndex(this._nextBucketIndex, this._nextSubBucketIndex);
+            NextValueAtIndex = SourceHistogram.ValueFromIndex(_nextBucketIndex, _nextSubBucketIndex);
         }
     }
 }

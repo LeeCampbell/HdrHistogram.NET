@@ -69,7 +69,7 @@ namespace HdrHistogram.NET.Iteration
         {
             if (CountAtThisValue == 0)
                 return false;
-            double currentPercentile = (100.0 * (double) TotalCountToCurrentIndex) / ArrayTotalCount;
+            double currentPercentile = (100.0 * TotalCountToCurrentIndex) / ArrayTotalCount;
             return (currentPercentile >= _percentileLevelToIterateTo);
         }
 
