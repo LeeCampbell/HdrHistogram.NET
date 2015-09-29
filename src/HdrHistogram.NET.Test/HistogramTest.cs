@@ -114,7 +114,7 @@ namespace HdrHistogram.NET.Test
             Histogram histogram = new Histogram(highestTrackableValue, numberOfSignificantValueDigits);
             histogram.RecordValue(testValueLevel);
             Assert.assertEquals(1L, histogram.GetCountAtValue(testValueLevel));
-            Assert.assertEquals(1L, histogram.GetTotalCount());
+            Assert.assertEquals(1L, histogram.TotalCount);
         }
 
         [Test]
@@ -137,13 +137,13 @@ namespace HdrHistogram.NET.Test
             Assert.assertEquals(1L, histogram.GetCountAtValue((testValueLevel * 2 )/4));
             Assert.assertEquals(1L, histogram.GetCountAtValue((testValueLevel * 3 )/4));
             Assert.assertEquals(1L, histogram.GetCountAtValue((testValueLevel * 4 )/4));
-            Assert.assertEquals(4L, histogram.GetTotalCount());
+            Assert.assertEquals(4L, histogram.TotalCount);
             // But the raw data will not:
             Assert.assertEquals(0L, rawHistogram.GetCountAtValue((testValueLevel * 1 )/4));
             Assert.assertEquals(0L, rawHistogram.GetCountAtValue((testValueLevel * 2 )/4));
             Assert.assertEquals(0L, rawHistogram.GetCountAtValue((testValueLevel * 3 )/4));
             Assert.assertEquals(1L, rawHistogram.GetCountAtValue((testValueLevel * 4 )/4));
-            Assert.assertEquals(1L, rawHistogram.GetTotalCount());
+            Assert.assertEquals(1L, rawHistogram.TotalCount);
         }
 
         [Test]
@@ -153,7 +153,7 @@ namespace HdrHistogram.NET.Test
             histogram.RecordValue(testValueLevel);
             histogram.Reset();
             Assert.assertEquals(0L, histogram.GetCountAtValue(testValueLevel));
-            Assert.assertEquals(0L, histogram.GetTotalCount());
+            Assert.assertEquals(0L, histogram.TotalCount);
         }
 
         [Test]
@@ -168,7 +168,7 @@ namespace HdrHistogram.NET.Test
             histogram.Add(other);
             Assert.assertEquals(2L, histogram.GetCountAtValue(testValueLevel));
             Assert.assertEquals(2L, histogram.GetCountAtValue(testValueLevel * 1000));
-            Assert.assertEquals(4L, histogram.GetTotalCount());
+            Assert.assertEquals(4L, histogram.TotalCount);
 
             Histogram biggerOther = new Histogram(highestTrackableValue * 2, numberOfSignificantValueDigits);
             biggerOther.RecordValue(testValueLevel);
@@ -178,7 +178,7 @@ namespace HdrHistogram.NET.Test
             biggerOther.Add(histogram);
             Assert.assertEquals(3L, biggerOther.GetCountAtValue(testValueLevel));
             Assert.assertEquals(3L, biggerOther.GetCountAtValue(testValueLevel * 1000));
-            Assert.assertEquals(6L, biggerOther.GetTotalCount());
+            Assert.assertEquals(6L, biggerOther.TotalCount);
 
             // But trying to add a larger histogram into a smaller one should throw an AIOOB:
             bool thrown = false;
@@ -366,8 +366,8 @@ namespace HdrHistogram.NET.Test
                     expectedHistogram.GetCountAtValue(testValueLevel * 10),
                     actualHistogram.GetCountAtValue(testValueLevel * 10));
             Assert.assertEquals(
-                    expectedHistogram.GetTotalCount(),
-                    actualHistogram.GetTotalCount());
+                    expectedHistogram.TotalCount,
+                    actualHistogram.TotalCount);
         }
 
         //[Test]

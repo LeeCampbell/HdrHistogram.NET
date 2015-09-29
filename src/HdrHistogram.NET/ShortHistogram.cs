@@ -61,11 +61,8 @@ namespace HdrHistogram.NET
             return toHistogram;
         }
 
-        public override long GetTotalCount() 
-        {
-            return totalCount;
-        }
-
+        public override long TotalCount { get { return totalCount; } }
+        
         protected override void SetTotalCount(long totalCount) 
         {
             this.totalCount = totalCount;

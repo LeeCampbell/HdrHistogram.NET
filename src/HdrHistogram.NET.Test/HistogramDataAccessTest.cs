@@ -62,8 +62,8 @@ namespace HdrHistogram.NET.Test
                     histogram.GetMean() * 512,
                     scaledHistogram.GetMean(), scaledHistogram.GetMean() * 0.000001);
             Assert.assertEquals("total count should be the same",
-                    histogram.GetTotalCount(),
-                    scaledHistogram.GetTotalCount());
+                    histogram.TotalCount,
+                    scaledHistogram.TotalCount);
             Assert.assertEquals("99%'iles should be equivalent",
                     histogram.LowestEquivalentValue(histogram.GetValueAtPercentile(99.0)) * 512,
                     scaledHistogram.LowestEquivalentValue(scaledHistogram.GetValueAtPercentile(99.0)));
@@ -75,8 +75,8 @@ namespace HdrHistogram.NET.Test
                     histogram.GetMean() * 512,
                     scaledHistogram.GetMean(), scaledHistogram.GetMean() * 0.000001);
             Assert.assertEquals("total count should be the same",
-                    postCorrectedHistogram.GetTotalCount(),
-                    postCorrectedScaledHistogram.GetTotalCount());
+                    postCorrectedHistogram.TotalCount,
+                    postCorrectedScaledHistogram.TotalCount);
             Assert.assertEquals("99%'iles should be equivalent",
                     postCorrectedHistogram.LowestEquivalentValue(postCorrectedHistogram.GetValueAtPercentile(99.0)) * 512,
                     postCorrectedScaledHistogram.LowestEquivalentValue(postCorrectedScaledHistogram.GetValueAtPercentile(99.0)));
@@ -91,7 +91,7 @@ namespace HdrHistogram.NET.Test
             // Loop both ways (one would be enough, but good practice just for fun:
 
             Assert.assertEquals("pre and post corrected count totals ",
-                    histogram.GetTotalCount(), postCorrectedHistogram.GetTotalCount());
+                    histogram.TotalCount, postCorrectedHistogram.TotalCount);
 
             // The following comparison loops would have worked in a perfect accuracy world, but since post
             // correction is done based on the value extracted from the bucket, and the during-recording is done
@@ -117,9 +117,9 @@ namespace HdrHistogram.NET.Test
         {
             // The overflow value should count in the total count:
             Assert.assertEquals("Raw total count is 10,001",
-                    10001L, rawHistogram.GetTotalCount());
+                    10001L, rawHistogram.TotalCount);
             Assert.assertEquals("Total count is 20,000",
-                    20000L, histogram.GetTotalCount());
+                    20000L, histogram.TotalCount);
         }
 
         [Test]

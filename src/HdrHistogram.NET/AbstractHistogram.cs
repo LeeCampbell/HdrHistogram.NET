@@ -101,6 +101,8 @@ namespace HdrHistogram.NET
 
         protected abstract int WordSizeInBytes { get; }
 
+        public abstract long TotalCount { get; }
+
         // Sub-classes will typically add a totalCount field and a counts array field.
 
         //
@@ -126,7 +128,7 @@ namespace HdrHistogram.NET
         protected abstract void ClearCounts();
 
 
-        public abstract long GetTotalCount();
+        
 
         /// <summary>
         /// Provide a (conservatively high) estimate of the Histogram's total footprint in bytes
@@ -385,7 +387,7 @@ namespace HdrHistogram.NET
                 {
                     AddToCountAtIndex(i, fromHistogram.GetCountAtIndex(i));
                 }
-                SetTotalCount(GetTotalCount() + fromHistogram.GetTotalCount());
+                SetTotalCount(TotalCount + fromHistogram.TotalCount);
             }
             else
             {
@@ -461,7 +463,7 @@ namespace HdrHistogram.NET
             {
                 return false;
             }
-            if (GetTotalCount() != that.GetTotalCount())
+            if (TotalCount != that.TotalCount)
             {
                 return false;
             }
@@ -508,7 +510,7 @@ namespace HdrHistogram.NET
                 hash = hash * 23 + HighestTrackableValue.GetHashCode();
                 hash = hash * 23 + NumberOfSignificantValueDigits.GetHashCode();
                 hash = hash * 23 + CountsArrayLength.GetHashCode();
-                hash = hash * 23 + GetTotalCount().GetHashCode();
+                hash = hash * 23 + TotalCount.GetHashCode();
 
                 for (int i = 0; i < CountsArrayLength; i++)
                 {
@@ -686,7 +688,7 @@ namespace HdrHistogram.NET
                 HistogramIterationValue iterationValue = _recordedValuesIterator.Next();
                 totalValue = iterationValue.TotalValueToThisValue;
             }
-            return (totalValue * 1.0) / GetTotalCount();
+            return (totalValue * 1.0) / TotalCount;
         }
 
         /// <summary>
@@ -704,7 +706,7 @@ namespace HdrHistogram.NET
                 Double deviation = (MedianEquivalentValue(iterationValue.ValueIteratedTo) * 1.0) - mean;
                 geometric_deviation_total += (deviation * deviation) * iterationValue.CountAddedInThisIterationStep;
             }
-            double std_deviation = Math.Sqrt(geometric_deviation_total / GetTotalCount());
+            double std_deviation = Math.Sqrt(geometric_deviation_total / TotalCount);
             return std_deviation;
         }
 
@@ -716,7 +718,7 @@ namespace HdrHistogram.NET
         public long GetValueAtPercentile(double percentile)
         {
             double requestedPercentile = Math.Min(percentile, 100.0); // Truncate down to 100%
-            long countAtPercentile = (long)(((requestedPercentile / 100.0) * GetTotalCount()) + 0.5); // round to nearest
+            long countAtPercentile = (long)(((requestedPercentile / 100.0) * TotalCount) + 0.5); // round to nearest
             countAtPercentile = Math.Max(countAtPercentile, 1); // Make sure we at least reach the first recorded entry
             long totalToCurrentIJ = 0;
             for (int i = 0; i < BucketCount; i++)
@@ -760,7 +762,7 @@ namespace HdrHistogram.NET
                 }
             }
 
-            return (100.0 * totalToCurrentIJ) / GetTotalCount();
+            return (100.0 * totalToCurrentIJ) / TotalCount;
         }
 
         /// <summary>
@@ -1088,7 +1090,7 @@ namespace HdrHistogram.NET
                     printStream.Write("#[Mean    = {0,12:F" + NumberOfSignificantValueDigits + "}, " +
                                        "StdDeviation   = {1,12:F" + NumberOfSignificantValueDigits + "}]\n", mean, std_deviation);
                     printStream.Write("#[Max     = {0,12:F" + NumberOfSignificantValueDigits + "}, Total count    = {1,12}]\n",
-                                        GetMaxValue() / outputValueUnitScalingRatio, GetTotalCount());
+                                        GetMaxValue() / outputValueUnitScalingRatio, TotalCount);
                     printStream.Write("#[Buckets = {0,12}, SubBuckets     = {1,12}]\n",
                                         BucketCount, SubBucketCount);
                 }
@@ -1188,7 +1190,7 @@ namespace HdrHistogram.NET
                 buffer.putInt(NumberOfSignificantValueDigits);
                 buffer.putLong(LowestTrackableValue);
                 buffer.putLong(HighestTrackableValue);
-                buffer.putLong(GetTotalCount()); // Needed because overflow situations may lead this to differ from counts totals
+                buffer.putLong(TotalCount); // Needed because overflow situations may lead this to differ from counts totals
 
                 Debug.WriteLine("MaxValue = {0}, Buckets needed = {1}, relevantLength = {2}", maxValue, GetBucketsNeededToCoverValue(maxValue), relevantLength);
                 Debug.WriteLine("MaxValue = {0}, Buckets needed = {1}, relevantLength = {2}", maxValue, GetBucketsNeededToCoverValue(maxValue), relevantLength);
@@ -1378,7 +1380,7 @@ namespace HdrHistogram.NET
             {
                 totalCounted += GetCountAtIndex(i);
             }
-            return (totalCounted != GetTotalCount());
+            return (totalCounted != TotalCount);
         }
 
         /// <summary>

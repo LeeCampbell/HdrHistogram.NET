@@ -77,11 +77,8 @@ namespace HdrHistogram.NET
             toHistogram.AddWhileCorrectingForCoordinatedOmission(this, expectedIntervalBetweenValueSamples);
             return toHistogram;
         }
-
-        public override long GetTotalCount() 
-        {
-            return totalCount;
-        }
+                
+        public override long TotalCount { get { return totalCount; } }
 
         protected override void SetTotalCount(long totalCount) 
         {

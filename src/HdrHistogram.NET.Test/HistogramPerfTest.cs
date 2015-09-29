@@ -101,9 +101,9 @@ namespace HdrHistogram.NET.Test
                                 label, timingLoopCount, deltaUsec, rate);
             if (multiThreaded == false)
             {
-                rate = 1000000 * histogram.GetTotalCount() / deltaUsec;
+                rate = 1000000 * histogram.TotalCount / deltaUsec;
                 Console.WriteLine("{0}{1:N0} raw recorded entries completed in {2:N0} usec, rate = {3:N0} recorded values per sec.",
-                                    label, histogram.GetTotalCount(), deltaUsec, rate);
+                                    label, histogram.TotalCount, deltaUsec, rate);
             }
 
             if (assertNoGC)
@@ -129,7 +129,7 @@ namespace HdrHistogram.NET.Test
             testRawRecordingSpeedAtExpectedInterval("Histogram: ", histogram, 1000000000, rawtimingLoopCount);
 
             // Check that the histogram contains as many values are we wrote to it
-            Assert.AreEqual(rawtimingLoopCount, histogram.GetTotalCount());
+            Assert.AreEqual(rawtimingLoopCount, histogram.TotalCount);
         }
 
         [Test]
@@ -141,7 +141,7 @@ namespace HdrHistogram.NET.Test
             testRawRecordingSpeedAtExpectedInterval("SynchronizedHistogram: ", histogram, 1000000000, synchronizedTimingLoopCount);
 
             // Check that the histogram contains as many values are we wrote to it
-            Assert.AreEqual(synchronizedTimingLoopCount, histogram.GetTotalCount());
+            Assert.AreEqual(synchronizedTimingLoopCount, histogram.TotalCount);
         }
 
         //[Test]

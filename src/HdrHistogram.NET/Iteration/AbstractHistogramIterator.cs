@@ -58,7 +58,7 @@ namespace HdrHistogram.NET.Iteration
         /// <returns><c>true</c> if the iterator has more elements.</returns>
         public virtual bool HasNext()
         {
-            if (SourceHistogram.GetTotalCount() != _savedHistogramTotalRawCount)
+            if (SourceHistogram.TotalCount != _savedHistogramTotalRawCount)
             {
                 throw new InvalidOperationException();
             }
@@ -98,7 +98,7 @@ namespace HdrHistogram.NET.Iteration
                     _totalCountToPrevIndex = TotalCountToCurrentIndex;
                     // move the next iteration level forward:
                     IncrementIterationLevel();
-                    if (SourceHistogram.GetTotalCount() != _savedHistogramTotalRawCount)
+                    if (SourceHistogram.TotalCount != _savedHistogramTotalRawCount)
                     {
                         throw new InvalidOperationException();
                     }
@@ -118,8 +118,8 @@ namespace HdrHistogram.NET.Iteration
         protected virtual void ResetIterator(AbstractHistogram histogram)
         {
             SourceHistogram = histogram;
-            _savedHistogramTotalRawCount = histogram.GetTotalCount();
-            ArrayTotalCount = histogram.GetTotalCount();
+            _savedHistogramTotalRawCount = histogram.TotalCount;
+            ArrayTotalCount = histogram.TotalCount;
             CurrentBucketIndex = 0;
             CurrentSubBucketIndex = 0;
             CurrentValueAtIndex = 0;
