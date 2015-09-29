@@ -1315,7 +1315,7 @@ namespace HdrHistogram.NET
 
         private int GetBucketIndex(long value)
         {
-            int pow2ceiling = 64 - MiscUtilities.numberOfLeadingZeros(value | _subBucketMask); // smallest power of 2 containing value
+            int pow2ceiling = 64 - MiscUtilities.NumberOfLeadingZeros(value | _subBucketMask); // smallest power of 2 containing value
             return pow2ceiling - _unitMagnitude - (_subBucketHalfCountMagnitude + 1);
         }
 

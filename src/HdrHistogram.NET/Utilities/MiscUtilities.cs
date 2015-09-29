@@ -13,7 +13,7 @@ namespace HdrHistogram.NET.Utilities
     public static class MiscUtilities
     {
         // Code from http://stackoverflow.com/questions/9543410/i-dont-think-numberofleadingzeroslong-i-in-long-java-is-based-floorlog2x/9543537#9543537
-        public static int numberOfLeadingZeros(long value)
+        public static int NumberOfLeadingZeros(long value)
         {
             // HD, Figure 5-6
             if (value == 0)

@@ -18,7 +18,7 @@ namespace HdrHistogram.NET.Test.Utilities
     {
         static long[] TestNumbers = new long[]
                                         {
-                                            //-1, long.MinValue, //MiscUtilities.numberOfLeadingZeros doesn't handle -ve numbers!!!
+                                            //-1, long.MinValue, //MiscUtilities.NumberOfLeadingZeros doesn't handle -ve numbers!!!
                                             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                                             1024,
                                             int.MaxValue,
@@ -29,7 +29,7 @@ namespace HdrHistogram.NET.Test.Utilities
         [Test, TestCaseSource("TestNumbers")]
         public void testnumberOfLeadingZeros(long numberToTest)
         {
-            Assert.AreEqual(numberOfLeadingZerosSLOW(numberToTest), MiscUtilities.numberOfLeadingZeros(numberToTest));
+            Assert.AreEqual(numberOfLeadingZerosSLOW(numberToTest), MiscUtilities.NumberOfLeadingZeros(numberToTest));
         }
 
         private int numberOfLeadingZerosSLOW(long value)

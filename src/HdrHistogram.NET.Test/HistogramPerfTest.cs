@@ -50,14 +50,14 @@ namespace HdrHistogram.NET.Test
             {
                 // long val = testValueLevel + (i & 0x8000);
                 long val = testValueLevel;
-                sum += MiscUtilities.numberOfLeadingZeros(val);
-                sum += MiscUtilities.numberOfLeadingZeros(val);
-                sum += MiscUtilities.numberOfLeadingZeros(val);
-                sum += MiscUtilities.numberOfLeadingZeros(val);
-                sum += MiscUtilities.numberOfLeadingZeros(val);
-                sum += MiscUtilities.numberOfLeadingZeros(val);
-                sum += MiscUtilities.numberOfLeadingZeros(val);
-                sum += MiscUtilities.numberOfLeadingZeros(val);
+                sum += MiscUtilities.NumberOfLeadingZeros(val);
+                sum += MiscUtilities.NumberOfLeadingZeros(val);
+                sum += MiscUtilities.NumberOfLeadingZeros(val);
+                sum += MiscUtilities.NumberOfLeadingZeros(val);
+                sum += MiscUtilities.NumberOfLeadingZeros(val);
+                sum += MiscUtilities.NumberOfLeadingZeros(val);
+                sum += MiscUtilities.NumberOfLeadingZeros(val);
+                sum += MiscUtilities.NumberOfLeadingZeros(val);
             }
             return sum;
         }
@@ -213,7 +213,7 @@ namespace HdrHistogram.NET.Test
             timer.Stop();
             var gcAfter = PrintGCAndMemoryStats("GC After ");
             deltaUsec = timer.ElapsedMilliseconds * 1000L;
-            // Each time round the loop, LeadingZerosSpeedLoop calls MiscUtils.numberOfLeadingZeros(..) 8 times
+            // Each time round the loop, LeadingZerosSpeedLoop calls MiscUtils.NumberOfLeadingZeros(..) 8 times
             rate = 1000000 * loopCount / deltaUsec;
 
             Console.WriteLine("Hot code timing:");

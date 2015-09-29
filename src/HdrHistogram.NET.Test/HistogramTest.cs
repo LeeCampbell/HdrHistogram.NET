@@ -103,7 +103,7 @@ namespace HdrHistogram.NET.Test
                                      / Math.Log(2)
                             )
                            + 2)) *
-                        (1 << (64 - MiscUtilities.numberOfLeadingZeros(2 * (long)Math.Pow(10, numberOfSignificantValueDigits))))
+                        (1 << (64 - MiscUtilities.NumberOfLeadingZeros(2 * (long)Math.Pow(10, numberOfSignificantValueDigits))))
                      ) / 2);
             Assert.assertEquals(expectedSize, histogram.GetEstimatedFootprintInBytes());
         }
