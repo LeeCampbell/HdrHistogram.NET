@@ -16,7 +16,6 @@ using System.IO;
 using HdrHistogram.NET.Iteration;
 using HdrHistogram.NET.Utilities;
 using System.IO.Compression;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 
@@ -328,18 +327,6 @@ namespace HdrHistogram.NET
         public abstract HistogramBase CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples);
 
         /// <summary>
-        /// Copy this histogram into the target histogram, overwriting it's contents.
-        /// </summary>
-        /// <param name="targetHistogram">the histogram to copy into</param>
-        public void CopyInto(HistogramBase targetHistogram)
-        {
-            targetHistogram.Reset();
-            targetHistogram.Add(this);
-            targetHistogram.StartTimeStamp = this.StartTimeStamp;
-            targetHistogram.EndTimeStamp = this.EndTimeStamp;
-        }
-
-        /// <summary>
         /// Copy this histogram, corrected for coordinated omission, into the target histogram, overwriting it's contents.
         /// </summary>
         /// <param name="targetHistogram">the histogram to copy into</param>
@@ -412,10 +399,8 @@ namespace HdrHistogram.NET
         /// <exception cref="System.IndexOutOfRangeException">if values exceed highestTrackableValue.</exception>
         public void AddWhileCorrectingForCoordinatedOmission(HistogramBase fromHistogram, long expectedIntervalBetweenValueSamples)
         {
-            /*final*/
             HistogramBase toHistogram = this;
 
-            //for (HistogramIterationValue v : fromHistogram.RecordedValues()) 
             foreach (HistogramIterationValue v in fromHistogram.RecordedValues())
             {
                 toHistogram.RecordValueWithCountAndExpectedInterval(v.ValueIteratedTo,
@@ -557,16 +542,6 @@ namespace HdrHistogram.NET
             return thisValueBaseLevel;
         }
 
-        /// <summary>
-        /// Get the highest value that is equivalent to the given value within the histogram's resolution.
-        /// Where "equivalent" means that value samples recorded for any two equivalent values are counted in a common total count.
-        /// </summary>
-        /// <param name="value">The given value</param>
-        /// <returns>The highest value that is equivalent to the given value within the histogram's resolution.</returns>
-        public long HighestEquivalentValue(long value)
-        {
-            return NextNonEquivalentValue(value) - 1;
-        }
 
         /// <summary>
         /// Get a value that lies in the middle (rounded up) of the range of values equivalent the given value.
@@ -613,52 +588,6 @@ namespace HdrHistogram.NET
         //
         //
 
-        /// <summary>
-        /// Get the lowest recorded value level in the histogram
-        /// </summary>
-        /// <returns>the Min value recorded in the histogram</returns>
-        public long GetMinValue()
-        {
-            long min = RecordedValues().Select(hiv=>hiv.ValueIteratedTo).FirstOrDefault();
-            return LowestEquivalentValue(min);
-        }
-
-        /// <summary>
-        /// Get the highest recorded value level in the histogram
-        /// </summary>
-        /// <returns>the Max value recorded in the histogram</returns>
-        public long GetMaxValue()
-        {
-            long max = RecordedValues().Select(hiv=>hiv.ValueIteratedTo).LastOrDefault();
-            return LowestEquivalentValue(max);
-        }
-
-        /// <summary>
-        /// Get the computed mean value of all recorded values in the histogram
-        /// </summary>
-        /// <returns>the mean value (in value units) of the histogram data</returns>
-        public double GetMean()
-        {
-            long totalValue = RecordedValues().Select(hiv=>hiv.TotalValueToThisValue).LastOrDefault();
-            return (totalValue * 1.0) / TotalCount;
-        }
-
-        /// <summary>
-        /// Get the computed standard deviation of all recorded values in the histogram
-        /// </summary>
-        /// <returns>the standard deviation (in value units) of the histogram data</returns>
-        public double GetStdDeviation()
-        {
-            double mean = GetMean();
-            double geometricDeviationTotal = 0.0;
-            foreach (var iterationValue in RecordedValues())
-            {
-                double deviation = (MedianEquivalentValue(iterationValue.ValueIteratedTo) * 1.0) - mean;
-                geometricDeviationTotal += (deviation * deviation) * iterationValue.CountAddedInThisIterationStep;
-            }
-            double stdDeviation = Math.Sqrt(geometricDeviationTotal / TotalCount);
-            return stdDeviation;
-        }
 
         /// <summary>
         /// Get the value at a given percentile
@@ -680,7 +609,7 @@ namespace HdrHistogram.NET
                     if (totalToCurrentIJ >= countAtPercentile)
                     {
                         long valueAtIndex = ValueFromIndex(i, j);
-                        return HighestEquivalentValue(valueAtIndex);
+                        return this.HighestEquivalentValue(valueAtIndex);
                     }
                 }
             }
@@ -767,39 +696,6 @@ namespace HdrHistogram.NET
         }
 
         /// <summary>
-        /// Provide a means of iterating through histogram values according to percentile levels. 
-        /// The iteration is performed in steps that start at 0% and reduce their distance to 100% according to the <i>percentileTicksPerHalfDistance</i> parameter, ultimately reaching 100% when all recorded histogram values are exhausted.
-        /// </summary>
-        /// <param name="percentileTicksPerHalfDistance">The number of iteration steps per half-distance to 100%.</param>
-        /// <returns>An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="PercentileEnumerator"/></returns>
-        public IEnumerable<HistogramIterationValue> Percentiles(int percentileTicksPerHalfDistance)
-        {
-            return new PercentileEnumerable(this, percentileTicksPerHalfDistance);
-        }
-
-        /// <summary>
-        /// Provide a means of iterating through histogram values using linear steps. The iteration is performed in steps of <i>valueUnitsPerBucket</i> in size, terminating when all recorded histogram values are exhausted.
-        /// </summary>
-        /// <param name="valueUnitsPerBucket">The size (in value units) of the linear buckets to use</param>
-        /// <returns>An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LinearEnumerator"/></returns>
-        public IEnumerable<HistogramIterationValue> LinearBucketValues(int valueUnitsPerBucket)
-        {
-            return new LinearBucketEnumerable(this, valueUnitsPerBucket);
-        }
-
-        /// <summary>
-        /// Provide a means of iterating through histogram values at logarithmically increasing levels. 
-        /// The iteration is performed in steps that start at<i>valueUnitsInFirstBucket</i> and increase exponentially according to <i>logBase</i>, terminating when all recorded histogram values are exhausted.
-        /// </summary>
-        /// <param name="valueUnitsInFirstBucket">The size (in value units) of the first bucket in the iteration</param>
-        /// <param name="logBase">The multiplier by which bucket sizes will grow in each iteration step</param>
-        /// <returns>An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LogarithmicEnumerator"/></returns>
-        public IEnumerable<HistogramIterationValue> LogarithmicBucketValues(int valueUnitsInFirstBucket, double logBase)
-        {
-            return new LogarithmicBucketEnumerable(this, valueUnitsInFirstBucket, logBase);
-        }
-
-        /// <summary>
         /// Provide a means of iterating through all recorded histogram values using the finest granularity steps supported by the underlying representation.
         /// The iteration steps through all non-zero recorded value counts, and terminates when all recorded histogram values are exhausted.
         /// </summary>
@@ -818,130 +714,7 @@ namespace HdrHistogram.NET
         {
             return new AllValueEnumerable(this);
         }
-
         
-        //
-        //
-        //
-        // Textual percentile output support:
-        //
-        //
-        //
-
-        /// <summary>
-        /// Produce textual representation of the value distribution of histogram data by percentile. 
-        /// The distribution is output with exponentially increasing resolution, with each exponentially decreasing half-distance containing <i>dumpTicksPerHalf</i> percentile reporting tick points.
-        /// </summary>
-        /// <param name="printStream">Stream into which the distribution will be output</param>
-        /// <param name="percentileTicksPerHalfDistance">The number of reporting points per exponentially decreasing half-distance</param>
-        /// <param name="outputValueUnitScalingRatio">The scaling factor by which to divide histogram recorded values units in output</param>
-        /// <param name="useCsvFormat">Output in CSV format if <c>true</c>, else use plain text form.</param>
-        public void OutputPercentileDistribution(TextWriter printStream,
-                                                 int percentileTicksPerHalfDistance = 5,
-                                                 double outputValueUnitScalingRatio = 1000.0,
-                                                 bool useCsvFormat = false)
-        {
-            if (useCsvFormat)
-            {
-                printStream.Write("\"Value\",\"Percentile\",\"TotalCount\",\"1/(1-Percentile)\"\n");
-            }
-            else
-            {
-                printStream.Write("{0,12} {1,14} {2,10} {3,14}\n\n", "Value", "Percentile", "TotalCount", "1/(1-Percentile)");
-            }
-
-            PercentileEnumerator enumerator = new PercentileEnumerator(this, percentileTicksPerHalfDistance);
-
-            string percentileFormatString;
-            string lastLinePercentileFormatString;
-            if (useCsvFormat)
-            {
-                percentileFormatString = "{0:F" + NumberOfSignificantValueDigits + "},{1:F12},{2},{3:F2}\n";
-                lastLinePercentileFormatString = "{0:F" + NumberOfSignificantValueDigits + "},{1:F12},{2},Infinity\n";
-            }
-            else
-            {
-                percentileFormatString = "{0,12:F" + NumberOfSignificantValueDigits + "}" + " {1,2:F12} {2,10} {3,14:F2}\n";
-                lastLinePercentileFormatString = "{0,12:F" + NumberOfSignificantValueDigits + "} {1,2:F12} {2,10}\n";
-            }
-
-            try
-            {
-                while (enumerator.HasNext())
-                {
-                    HistogramIterationValue iterationValue = enumerator.Next();
-                    if (iterationValue.PercentileLevelIteratedTo != 100.0D)
-                    {
-                        printStream.Write(percentileFormatString,
-                                iterationValue.ValueIteratedTo / outputValueUnitScalingRatio,
-                                iterationValue.PercentileLevelIteratedTo / 100.0D,
-                                iterationValue.TotalCountToThisValue,
-                                1 / (1.0D - (iterationValue.PercentileLevelIteratedTo / 100.0D)));
-                    }
-                    else
-                    {
-                        printStream.Write(lastLinePercentileFormatString,
-                                iterationValue.ValueIteratedTo / outputValueUnitScalingRatio,
-                                iterationValue.PercentileLevelIteratedTo / 100.0D,
-                                iterationValue.TotalCountToThisValue);
-                    }
-                }
-
-                if (!useCsvFormat)
-                {
-                    // Calculate and output mean and std. deviation.
-                    // Note: mean/std. deviation numbers are very often completely irrelevant when
-                    // data is extremely non-normal in distribution (e.g. in cases of strong multi-modal
-                    // response time distribution associated with GC pauses). However, reporting these numbers
-                    // can be very useful for contrasting with the detailed percentile distribution
-                    // reported by outputPercentileDistribution(). It is not at all surprising to find
-                    // percentile distributions where results fall many tens or even hundreds of standard
-                    // deviations away from the mean - such results simply indicate that the data sampled
-                    // exhibits a very non-normal distribution, highlighting situations for which the std.
-                    // deviation metric is a useless indicator.
-
-                    double mean = GetMean() / outputValueUnitScalingRatio;
-                    double std_deviation = GetStdDeviation() / outputValueUnitScalingRatio;
-                    printStream.Write("#[Mean    = {0,12:F" + NumberOfSignificantValueDigits + "}, " +
-                                       "StdDeviation   = {1,12:F" + NumberOfSignificantValueDigits + "}]\n", mean, std_deviation);
-                    printStream.Write("#[Max     = {0,12:F" + NumberOfSignificantValueDigits + "}, Total count    = {1,12}]\n",
-                                        GetMaxValue() / outputValueUnitScalingRatio, TotalCount);
-                    printStream.Write("#[Buckets = {0,12}, SubBuckets     = {1,12}]\n",
-                                        BucketCount, SubBucketCount);
-                }
-            }
-            catch (ArgumentOutOfRangeException e)
-            {
-                // Overflow conditions on histograms can lead to ArrayIndexOutOfBoundsException on iterations:
-                if (HasOverflowed())
-                {
-                    //printStream.format(Locale.US, "# Histogram counts indicate OVERFLOW values");
-                    printStream.Write("# Histogram counts indicate OVERFLOW values");
-                }
-                else
-                {
-                    // Re-throw if reason is not a known overflow:
-                    throw e;
-                }
-            }
-        }
-
-        //
-        //
-        //
-        // Serialization support:
-        //
-        //
-        //
-
-        //
-        //
-        //
-        // Encoding/Decoding support:
-        //
-        //
-        //
-
         /// <summary>
         /// Get the capacity needed to encode this histogram into a <see cref="ByteBuffer"/>
         /// </summary>
@@ -991,7 +764,7 @@ namespace HdrHistogram.NET
         {
             lock (UpdateLock)
             {
-                long maxValue = GetMaxValue();
+                long maxValue = this.GetMaxValue();
                 int relevantLength = GetLengthForNumberOfBuckets(GetBucketsNeededToCoverValue(maxValue));
                 Console.WriteLine($"buffer.capacity() < getNeededByteBufferCapacity(relevantLength))");
                 Console.WriteLine($"  buffer.capacity() = {buffer.capacity()}");

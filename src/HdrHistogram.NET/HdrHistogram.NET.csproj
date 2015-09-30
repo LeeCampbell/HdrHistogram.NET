@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HistogramBase.cs" />
+    <Compile Include="HistogramExtensions.cs" />
     <Compile Include="Utilities\CountingMemoryStream.cs" />
     <Compile Include="IntHistogram.cs" />
     <Compile Include="Iteration\AbstractHistogramEnumerator.cs" />
