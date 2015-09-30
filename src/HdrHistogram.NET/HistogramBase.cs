@@ -68,10 +68,23 @@ namespace HdrHistogram.NET
         }
         public long Identity { get; private set; }
 
+        /// <summary>
+        /// Get the configured highestTrackableValue
+        /// </summary>
+        /// <returns>highestTrackableValue</returns>
+        public long HighestTrackableValue { get; }
 
-        protected long HighestTrackableValue { get; }
-        protected long LowestTrackableValue { get; }
-        protected int NumberOfSignificantValueDigits { get; }
+        /// <summary>
+        /// Get the configured lowestTrackableValue
+        /// </summary>
+        /// <returns>lowestTrackableValue</returns>
+        public long LowestTrackableValue { get; }
+
+        /// <summary>
+        /// Get the configured numberOfSignificantValueDigits
+        /// </summary>
+        /// <returns>numberOfSignificantValueDigits</returns>
+        public int NumberOfSignificantValueDigits { get; }
         protected int CountsArrayLength { get; }
 
         internal int BucketCount { get; }       //TODO: Candidate for private read-only field. -LC
@@ -513,33 +526,7 @@ namespace HdrHistogram.NET
         //
 
         //TODO: Make properties. -LC
-
-        /// <summary>
-        /// Get the configured lowestTrackableValue
-        /// </summary>
-        /// <returns>lowestTrackableValue</returns>
-        public long GetLowestTrackableValue()
-        {
-            return LowestTrackableValue;
-        }
-
-        /// <summary>
-        /// Get the configured highestTrackableValue
-        /// </summary>
-        /// <returns>highestTrackableValue</returns>
-        public long GetHighestTrackableValue()
-        {
-            return HighestTrackableValue;
-        }
-
-        /// <summary>
-        /// Get the configured numberOfSignificantValueDigits
-        /// </summary>
-        /// <returns>numberOfSignificantValueDigits</returns>
-        public int GetNumberOfSignificantValueDigits()
-        {
-            return NumberOfSignificantValueDigits;
-        }
+        
 
         /// <summary>
         /// Get the size (in value units) of the range of values that are equivalent to the given value within the histogram's resolution. 
