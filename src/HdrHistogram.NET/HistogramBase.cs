@@ -9,7 +9,6 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -58,7 +57,7 @@ namespace HdrHistogram.NET
 
         protected readonly object UpdateLock = new object();
 
-        private ByteBuffer _intermediateUncompressedByteBuffer = null;
+        private ByteBuffer _intermediateUncompressedByteBuffer;
 
 
         private static long GetNextIdentity()
@@ -338,8 +337,8 @@ namespace HdrHistogram.NET
         {
             targetHistogram.Reset();
             targetHistogram.AddWhileCorrectingForCoordinatedOmission(this, expectedIntervalBetweenValueSamples);
-            targetHistogram.StartTimeStamp = this.StartTimeStamp;
-            targetHistogram.EndTimeStamp = this.EndTimeStamp;
+            targetHistogram.StartTimeStamp = StartTimeStamp;
+            targetHistogram.EndTimeStamp = EndTimeStamp;
         }
 
         //
@@ -357,9 +356,9 @@ namespace HdrHistogram.NET
         /// <exception cref="System.IndexOutOfRangeException">if values in fromHistogram's are higher than highestTrackableValue.</exception>
         public virtual void Add(HistogramBase fromHistogram)
         {
-            if (this.HighestTrackableValue < fromHistogram.HighestTrackableValue)
+            if (HighestTrackableValue < fromHistogram.HighestTrackableValue)
             {
-                throw new ArgumentOutOfRangeException("The other histogram covers a wider range than this one.");
+                throw new ArgumentOutOfRangeException(nameof(fromHistogram), "The other histogram covers a wider range than this one.");
             }
             if ((BucketCount == fromHistogram.BucketCount) &&
                     (SubBucketCount == fromHistogram.SubBucketCount) &&
@@ -429,12 +428,8 @@ namespace HdrHistogram.NET
             {
                 return true;
             }
-            if (!(other is HistogramBase))
-            {
-                return false;
-            }
-            HistogramBase that = (HistogramBase)other;
-            if ((LowestTrackableValue != that.LowestTrackableValue) ||
+            var that = other as HistogramBase;
+            if (LowestTrackableValue != that?.LowestTrackableValue ||
                 (HighestTrackableValue != that.HighestTrackableValue) ||
                 (NumberOfSignificantValueDigits != that.NumberOfSignificantValueDigits))
             {
@@ -448,28 +443,7 @@ namespace HdrHistogram.NET
             {
                 return false;
             }
-
-            ////if (this is SynchronizedHistogram)
-            //{
-            //    var builder = new StringBuilder();
-            //    for (int i = 0; i < countsArrayLength; i++)
-            //    {
-            //        if (i % 100 == 0)
-            //            builder.AppendLine();
-            //        builder.AppendFormat("{0}, ", getCountAtIndex(i));
-            //    }
-            //    Console.WriteLine("this{0}", builder.ToString());
-
-            //    builder.Clear();
-            //    for (int i = 0; i < countsArrayLength; i++)
-            //    {
-            //        if (i % 100 == 0)
-            //            builder.AppendLine();
-            //        builder.AppendFormat("{0}, ", that.getCountAtIndex(i));
-            //    }
-            //    Console.WriteLine("that{0}\n", builder.ToString());
-            //}
-
+            
             for (int i = 0; i < CountsArrayLength; i++)
             {
                 if (GetCountAtIndex(i) != that.GetCountAtIndex(i))
@@ -613,7 +587,7 @@ namespace HdrHistogram.NET
                     }
                 }
             }
-            throw new ArgumentOutOfRangeException("percentile value not found in range"); // should not reach here.
+            throw new ArgumentOutOfRangeException(nameof(percentile), "percentile value not found in range"); // should not reach here.
         }
 
         /// <summary>
@@ -648,7 +622,7 @@ namespace HdrHistogram.NET
         /// Get the count of recorded values within a range of value levels. (inclusive to within the histogram's resolution)
         /// </summary>
         /// <param name="lowValue">The lower value bound on the range for which to provide the recorded count. Will be rounded down with <see cref="LowestEquivalentValue"/>.</param>
-        /// <param name="highValue">The higher value bound on the range for which to provide the recorded count. Will be rounded up with <see cref="HighestEquivalentValue"/>.</param>
+        /// <param name="highValue">The higher value bound on the range for which to provide the recorded count. Will be rounded up with <see cref="HistogramExtensions.HighestEquivalentValue"/>.</param>
         /// <returns>the total count of values recorded in the histogram within the value range that is &gt;= <param name="lowValue"/> &lt;= <param name="highValue"></param></returns>
         /// <exception cref="IndexOutOfRangeException">on parameters that are outside the tracked value range</exception>
         public long GetCountBetweenValues(long lowValue, long highValue)
@@ -766,7 +740,7 @@ namespace HdrHistogram.NET
             {
                 long maxValue = this.GetMaxValue();
                 int relevantLength = GetLengthForNumberOfBuckets(GetBucketsNeededToCoverValue(maxValue));
-                Console.WriteLine($"buffer.capacity() < getNeededByteBufferCapacity(relevantLength))");
+                Console.WriteLine("buffer.capacity() < getNeededByteBufferCapacity(relevantLength))");
                 Console.WriteLine($"  buffer.capacity() = {buffer.capacity()}");
                 Console.WriteLine($"  relevantLength = {relevantLength}");
                 Console.WriteLine($"  getNeededByteBufferCapacity(relevantLength) = {GetNeededByteBufferCapacity(relevantLength)}");
@@ -796,7 +770,7 @@ namespace HdrHistogram.NET
         /// <param name="targetBuffer">The buffer to encode into</param>
         /// <param name="compressionLevel">Compression level.</param>
         /// <returns>The number of bytes written to the buffer</returns>
-        public long EncodeIntoCompressedByteBuffer(ByteBuffer targetBuffer, CompressionLevel compressionLevel)
+        public long EncodeIntoCompressedByteBuffer(ByteBuffer targetBuffer, CompressionLevel compressionLevel = CompressionLevel.Optimal)
         {
             lock (UpdateLock)
             {
@@ -810,7 +784,7 @@ namespace HdrHistogram.NET
                 targetBuffer.putInt(GetCompressedEncodingCookie());
                 targetBuffer.putInt(0); // Placeholder for compressed contents length
                 byte[] targetArray = targetBuffer.array();
-                long compressedDataLength = 0;
+                long compressedDataLength;
                 using (var outputStream = new CountingMemoryStream(targetArray, 8, targetArray.Length - 8))
                 {
                     using (var compressor = new DeflateStream(outputStream, compressionLevel))
@@ -829,17 +803,6 @@ namespace HdrHistogram.NET
             }
         }
 
-        /// <summary>
-        /// Encode this histogram in compressed form into a byte array
-        /// </summary>
-        /// <param name="targetBuffer">The buffer to encode into</param>
-        /// <returns>The number of bytes written to the array</returns>
-        public long EncodeIntoCompressedByteBuffer(ByteBuffer targetBuffer)
-        {
-            return EncodeIntoCompressedByteBuffer(targetBuffer, CompressionLevel.Optimal);
-        }
-
-        
 
         static HistogramBase ConstructHistogramFromBufferHeader(ByteBuffer buffer,
                                                                     Type histogramClass,
@@ -862,16 +825,11 @@ namespace HdrHistogram.NET
             {
                 //@SuppressWarnings("unchecked")
                 ConstructorInfo constructor = histogramClass.GetConstructor(HistogramClassConstructorArgsTypes);
-                HistogramBase histogram =
-                        (HistogramBase)constructor.Invoke(new object[] { lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits });
+                HistogramBase histogram = (HistogramBase)constructor.Invoke(new object[] { lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits });
                 histogram.TotalCount = totalCount; // Restore totalCount
                 if (cookie != histogram.GetEncodingCookie())
                 {
-                    throw new ArgumentException(
-                            "The buffer's encoded value byte size (" +
-                                    GetWordSizeInBytesFromCookie(cookie) +
-                                    ") does not match the Histogram's (" +
-                                    histogram.WordSizeInBytes + ")");
+                    throw new ArgumentException($"The buffer's encoded value byte size ({GetWordSizeInBytesFromCookie(cookie)}) does not match the Histogram's ({histogram.WordSizeInBytes})");
                 }
                 return histogram;
             }
@@ -922,7 +880,7 @@ namespace HdrHistogram.NET
             int lengthOfCompressedContents = buffer.getInt();
             HistogramBase histogram;
             ByteBuffer countsBuffer;
-            int numOfBytesDecompressed = 0;
+            int numOfBytesDecompressed;
             using (var inputStream = new MemoryStream(buffer.array(), 8, lengthOfCompressedContents))
             using (var decompressor = new DeflateStream(inputStream, CompressionMode.Decompress))
             {
