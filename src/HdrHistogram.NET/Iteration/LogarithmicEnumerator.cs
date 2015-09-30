@@ -66,7 +66,7 @@ namespace HdrHistogram.NET.Iteration
             _nextValueReportingLevelLowestEquivalent = histogram.LowestEquivalentValue(_nextValueReportingLevel);
         }
 
-        public override bool HasNext()
+        protected override bool HasNext()
         {
             if (base.HasNext())
             {

@@ -68,12 +68,11 @@ namespace HdrHistogram.NET.Iteration
         }
 
 
-
         /// <summary>
         ///  Returns <c>true</c> if the iteration has more elements. (In other words, returns true if next would return an element rather than throwing an exception.)
         /// </summary>
         /// <returns><c>true</c> if the iterator has more elements.</returns>
-        public virtual bool HasNext()
+        protected virtual bool HasNext()
         {
             if (SourceHistogram.TotalCount != _savedHistogramTotalRawCount)
             {
@@ -82,11 +81,25 @@ namespace HdrHistogram.NET.Iteration
             return (TotalCountToCurrentIndex < ArrayTotalCount);
         }
 
+        protected abstract void IncrementIterationLevel();
+
+        protected abstract bool ReachedIterationLevel();
+
+        protected virtual double GetPercentileIteratedTo()
+        {
+            return (100.0 * TotalCountToCurrentIndex) / ArrayTotalCount;
+        }
+
+        protected virtual long GetValueIteratedTo()
+        {
+            return SourceHistogram.HighestEquivalentValue(CurrentValueAtIndex);
+        }
+
         /// <summary>
         /// Returns the next element in the iteration.
         /// </summary>
         /// <returns>the <see cref="HistogramIterationValue"/> associated with the next element in the iteration.</returns>
-        public HistogramIterationValue Next()
+        private HistogramIterationValue Next()
         {
             // Move through the sub buckets and buckets until we hit the next reporting level:
             while (!ExhaustedSubBuckets())
@@ -125,21 +138,6 @@ namespace HdrHistogram.NET.Iteration
             }
             // Should not reach here. But possible for overflowed histograms under certain conditions
             throw new ArgumentOutOfRangeException();
-        }
-
-
-        protected abstract void IncrementIterationLevel();
-
-        protected abstract bool ReachedIterationLevel();
-
-        protected virtual double GetPercentileIteratedTo()
-        {
-            return (100.0 * TotalCountToCurrentIndex) / ArrayTotalCount;
-        }
-
-        protected virtual long GetValueIteratedTo()
-        {
-            return SourceHistogram.HighestEquivalentValue(CurrentValueAtIndex);
         }
 
         private bool ExhaustedSubBuckets()

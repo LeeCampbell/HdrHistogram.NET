@@ -63,7 +63,7 @@ namespace HdrHistogram.NET.Iteration
             _reachedLastRecordedValue = false;
         }
 
-        public override bool HasNext() 
+        protected override bool HasNext() 
         {
             if (base.HasNext())
                 return true;

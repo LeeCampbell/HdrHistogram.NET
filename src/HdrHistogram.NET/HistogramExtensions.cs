@@ -92,7 +92,6 @@ namespace HdrHistogram.NET
                 printStream.Write("{0,12} {1,14} {2,10} {3,14}\n\n", "Value", "Percentile", "TotalCount", "1/(1-Percentile)");
             }
 
-            PercentileEnumerator enumerator = new PercentileEnumerator(histogram, percentileTicksPerHalfDistance);
 
             string percentileFormatString;
             string lastLinePercentileFormatString;
@@ -109,9 +108,8 @@ namespace HdrHistogram.NET
 
             try
             {
-                while (enumerator.HasNext())
+                foreach (var iterationValue in histogram.Percentiles(percentileTicksPerHalfDistance))
                 {
-                    HistogramIterationValue iterationValue = enumerator.Next();
                     if (iterationValue.PercentileLevelIteratedTo != 100.0D)
                     {
                         printStream.Write(percentileFormatString,
@@ -215,7 +213,7 @@ namespace HdrHistogram.NET
         /// <returns>The highest value that is equivalent to the given value within the histogram's resolution.</returns>
         public static long HighestEquivalentValue(this HistogramBase histogram, long value)
         {
-            return histogram. NextNonEquivalentValue(value) - 1;
+            return histogram.NextNonEquivalentValue(value) - 1;
         }
     }
 }
