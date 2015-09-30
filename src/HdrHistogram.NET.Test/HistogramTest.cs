@@ -321,7 +321,7 @@ namespace HdrHistogram.NET.Test
             Assert.assertNotSame(null, histogram);
         }
 
-        //void testAbstractSerialization(AbstractHistogram histogram) throws Exception {
+        //void testAbstractSerialization(HistogramBase histogram) throws Exception {
         //    histogram.recordValue(testValueLevel);
         //    histogram.recordValue(testValueLevel * 10);
         //    histogram.recordValueWithExpectedInterval(histogram.getHighestTrackableValue() - 1, 31);
@@ -329,7 +329,7 @@ namespace HdrHistogram.NET.Test
         //    ObjectOutput out = null;
         //    ByteArrayInputStream bis = null;
         //    ObjectInput in = null;
-        //    AbstractHistogram newHistogram = null;
+        //    HistogramBase newHistogram = null;
         //    try {
         //        out = new ObjectOutputStream(bos);
         //        out.writeObject(histogram);
@@ -345,7 +345,7 @@ namespace HdrHistogram.NET.Test
         //        Console.WriteLine("   (estimated footprint was " + histogram.getEstimatedFootprintInBytes() + " bytes)");
         //        bis = new ByteArrayInputStream(bos.toByteArray());
         //        in = new ObjectInputStream(bis);
-        //        newHistogram = (AbstractHistogram) in.readObject();
+        //        newHistogram = (HistogramBase) in.readObject();
         //    } finally {
         //        if (out != null) out.close();
         //        bos.close();
@@ -356,7 +356,7 @@ namespace HdrHistogram.NET.Test
         //    assertEqual(histogram, newHistogram);
         //}
 
-        private void assertEqual(AbstractHistogram expectedHistogram, AbstractHistogram actualHistogram)
+        private void assertEqual(HistogramBase expectedHistogram, HistogramBase actualHistogram)
         {
             Assert.assertEquals(expectedHistogram, actualHistogram);
             Assert.assertEquals(

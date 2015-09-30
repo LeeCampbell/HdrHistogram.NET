@@ -17,7 +17,7 @@ namespace HdrHistogram.NET
     /// <summary>
     /// A High Dynamic Range (HDR) Histogram using an <c>int</c> count type.
     /// </summary>
-    public class IntHistogram : AbstractHistogram
+    public class IntHistogram : HistogramBase
     {
         private readonly int[] _counts;
 
@@ -57,14 +57,14 @@ namespace HdrHistogram.NET
 
         protected override int WordSizeInBytes => 4;
 
-        public override AbstractHistogram Copy()
+        public override HistogramBase Copy()
         {
             IntHistogram copy = new IntHistogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
             copy.Add(this);
             return copy;
         }
 
-        public override AbstractHistogram CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples)
+        public override HistogramBase CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples)
         {
             IntHistogram toHistogram = new IntHistogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
             toHistogram.AddWhileCorrectingForCoordinatedOmission(this, expectedIntervalBetweenValueSamples);

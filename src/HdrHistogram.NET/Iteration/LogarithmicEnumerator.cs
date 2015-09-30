@@ -18,11 +18,11 @@ namespace HdrHistogram.NET.Iteration
     /// </summary>
     sealed class LogarithmicBucketEnumerable : IEnumerable<HistogramIterationValue>
     {
-        private readonly AbstractHistogram _histogram;
+        private readonly HistogramBase _histogram;
         private readonly int _valueUnitsInFirstBucket;
         private readonly double _logBase;
 
-        public LogarithmicBucketEnumerable(AbstractHistogram histogram, int valueUnitsInFirstBucket, double logBase)
+        public LogarithmicBucketEnumerable(HistogramBase histogram, int valueUnitsInFirstBucket, double logBase)
         {
             _histogram = histogram;
             _valueUnitsInFirstBucket = valueUnitsInFirstBucket;
@@ -58,7 +58,7 @@ namespace HdrHistogram.NET.Iteration
         /// <param name="histogram">The histogram this iterator will operate on</param>
         /// <param name="valueUnitsInFirstBucket">the size (in value units) of the first value bucket step</param>
         /// <param name="logBase">the multiplier by which the bucket size is expanded in each iteration step.</param>
-        public LogarithmicEnumerator(AbstractHistogram histogram, int valueUnitsInFirstBucket, double logBase)
+        public LogarithmicEnumerator(HistogramBase histogram, int valueUnitsInFirstBucket, double logBase)
         {
             _logBase = logBase;
 

@@ -18,9 +18,9 @@ namespace HdrHistogram.NET.Iteration
     /// </summary>
     sealed class AllValueEnumerable : IEnumerable<HistogramIterationValue>
     {
-        private readonly AbstractHistogram _histogram;
+        private readonly HistogramBase _histogram;
 
-        public AllValueEnumerable(AbstractHistogram histogram)
+        public AllValueEnumerable(HistogramBase histogram)
         {
             _histogram = histogram;
         }
@@ -49,12 +49,12 @@ namespace HdrHistogram.NET.Iteration
         /// Constructor for the <see cref="AllValuesEnumerator"/>.
         /// </summary>
         /// <param name="histogram">The histogram this iterator will operate on</param>
-        public AllValuesEnumerator(AbstractHistogram histogram)
+        public AllValuesEnumerator(HistogramBase histogram)
         {
             ResetIterator(histogram);
         }
 
-        protected override void ResetIterator(AbstractHistogram histogram)
+        protected override void ResetIterator(HistogramBase histogram)
         {
             base.ResetIterator(histogram);
             _visitedSubBucketIndex = -1;

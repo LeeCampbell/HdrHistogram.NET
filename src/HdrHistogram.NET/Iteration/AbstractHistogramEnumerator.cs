@@ -25,7 +25,7 @@ namespace HdrHistogram.NET.Iteration
         private bool _freshSubBucket;
         private HistogramIterationValue _currentIterationValue;
 
-        protected AbstractHistogram SourceHistogram { get; private set; }
+        protected HistogramBase SourceHistogram { get; private set; }
         protected int CurrentBucketIndex { get; private set; }
         protected int CurrentSubBucketIndex { get; private set; }
         protected long CurrentValueAtIndex { get; private set; }
@@ -115,7 +115,7 @@ namespace HdrHistogram.NET.Iteration
             //throw new NotImplementedException();
         }
 
-        protected virtual void ResetIterator(AbstractHistogram histogram)
+        protected virtual void ResetIterator(HistogramBase histogram)
         {
             SourceHistogram = histogram;
             _savedHistogramTotalRawCount = histogram.TotalCount;

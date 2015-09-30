@@ -37,7 +37,7 @@ namespace HdrHistogram.NET.Test
         /// <summary> 80,000,000 or 1/5th the regular count </summary>
         static readonly long atomicTimingLoopCount = 80 * 1000 * 1000L;
 
-        void recordLoopWithExpectedInterval(AbstractHistogram histogram, long loopCount, long expectedInterval)
+        void recordLoopWithExpectedInterval(HistogramBase histogram, long loopCount, long expectedInterval)
         {
             for (long i = 0; i < loopCount; i++)
                 histogram.RecordValueWithExpectedInterval(testValueLevel + (i & 0x8000), expectedInterval);
@@ -62,7 +62,7 @@ namespace HdrHistogram.NET.Test
             return sum;
         }
 
-        private void testRawRecordingSpeedAtExpectedInterval(String label, AbstractHistogram histogram,
+        private void testRawRecordingSpeedAtExpectedInterval(String label, HistogramBase histogram,
                                                             long expectedInterval, long timingLoopCount,
                                                             bool assertNoGC = true, bool multiThreaded = false)
         {
@@ -123,7 +123,7 @@ namespace HdrHistogram.NET.Test
         [Test]
         public void testRawRecordingSpeed()
         {
-            AbstractHistogram histogram;
+            HistogramBase histogram;
             histogram = new Histogram(highestTrackableValue, numberOfSignificantValueDigits);
             Console.WriteLine("\n\nTiming Histogram:");
             testRawRecordingSpeedAtExpectedInterval("Histogram: ", histogram, 1000000000, rawtimingLoopCount);
@@ -135,7 +135,7 @@ namespace HdrHistogram.NET.Test
         [Test]
         public void testRawSyncronizedRecordingSpeed()
         {
-            AbstractHistogram histogram;
+            HistogramBase histogram;
             histogram = new SynchronizedHistogram(highestTrackableValue, numberOfSignificantValueDigits);
             Console.WriteLine("\n\nTiming SynchronizedHistogram:");
             testRawRecordingSpeedAtExpectedInterval("SynchronizedHistogram: ", histogram, 1000000000, synchronizedTimingLoopCount);
@@ -147,7 +147,7 @@ namespace HdrHistogram.NET.Test
         //[Test]
         //public void testRawSyncronizedRecordingSpeedMultithreaded()
         //{
-        //    AbstractHistogram histogram;
+        //    HistogramBase histogram;
         //    histogram = new SynchronizedHistogram(highestTrackableValue, numberOfSignificantValueDigits);
         //    Console.WriteLine("\n\nTiming SynchronizedHistogram - Multithreaded:");
 
@@ -167,7 +167,7 @@ namespace HdrHistogram.NET.Test
         //[Test]
         //public void testRawAtomicRecordingSpeedMultithreaded()
         //{
-        //    AbstractHistogram histogram;
+        //    HistogramBase histogram;
         //    histogram = new AtomicHistogram(highestTrackableValue, numberOfSignificantValueDigits);
         //    Console.WriteLine("\n\nTiming AtomicHistogram - Multithreaded:");
 

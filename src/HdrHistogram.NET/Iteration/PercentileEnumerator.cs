@@ -19,10 +19,10 @@ namespace HdrHistogram.NET.Iteration
     /// </summary>
     sealed class PercentileEnumerable : IEnumerable<HistogramIterationValue>
     {
-        private readonly AbstractHistogram _histogram;
+        private readonly HistogramBase _histogram;
         private readonly int _percentileTicksPerHalfDistance;
 
-        public PercentileEnumerable(AbstractHistogram histogram, int percentileTicksPerHalfDistance)
+        public PercentileEnumerable(HistogramBase histogram, int percentileTicksPerHalfDistance)
         {
             _histogram = histogram;
             _percentileTicksPerHalfDistance = percentileTicksPerHalfDistance;
@@ -56,7 +56,7 @@ namespace HdrHistogram.NET.Iteration
         /// </summary>
         /// <param name="histogram">The histogram this iterator will operate on</param>
         /// <param name="percentileTicksPerHalfDistance">The number of iteration steps per half-distance to 100%.</param>
-        public PercentileEnumerator(AbstractHistogram histogram, int percentileTicksPerHalfDistance) 
+        public PercentileEnumerator(HistogramBase histogram, int percentileTicksPerHalfDistance) 
         {
             Reset(histogram, percentileTicksPerHalfDistance);
         }
@@ -105,7 +105,7 @@ namespace HdrHistogram.NET.Iteration
             return _percentileLevelToIterateTo;
         }
 
-        private void Reset(AbstractHistogram histogram, int percentileTicksPerHalfDistance)
+        private void Reset(HistogramBase histogram, int percentileTicksPerHalfDistance)
         {
             ResetIterator(histogram);
             _percentileTicksPerHalfDistance = percentileTicksPerHalfDistance;

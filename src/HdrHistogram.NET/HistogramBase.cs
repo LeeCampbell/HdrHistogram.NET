@@ -26,7 +26,7 @@ namespace HdrHistogram.NET
     /// Base class for High Dynamic Range (HDR) Histograms
     /// </summary>
     /// <remarks>
-    /// <see cref="AbstractHistogram"/> supports the recording and analyzing sampled data value counts across a configurable
+    /// <see cref="HistogramBase"/> supports the recording and analyzing sampled data value counts across a configurable
     /// integer value range with configurable value precision within the range.
     /// Value precision is expressed as the number of significant digits in the value recording, and provides control over 
     /// value quantization behavior across the value range and the subsequent value resolution at any given level.
@@ -41,7 +41,7 @@ namespace HdrHistogram.NET
     /// At it's maximum tracked value(1 hour), it would still maintain a resolution of 3.6 seconds(or better).
     /// </para>
     /// </remarks>
-    public abstract class AbstractHistogram
+    public abstract class HistogramBase
     {
         private static long _nextIdentity = -1L;
         private const int EncodingCookieBase = 0x1c849308;
@@ -105,7 +105,7 @@ namespace HdrHistogram.NET
         /// smaller that the minimal accuracy required. E.g. when tracking time values stated in nanosecond units, where the 
         /// minimal accuracy required is a microsecond, the proper value for lowestTrackableValue would be 1000.
         /// </remarks>
-        protected AbstractHistogram(long lowestTrackableValue, long highestTrackableValue, int numberOfSignificantValueDigits)
+        protected HistogramBase(long lowestTrackableValue, long highestTrackableValue, int numberOfSignificantValueDigits)
         {
             if (lowestTrackableValue < 1) throw new ArgumentException("lowestTrackableValue must be >= 1");
             if (highestTrackableValue < 2 * lowestTrackableValue) throw new ArgumentException("highestTrackableValue must be >= 2 * lowestTrackableValue");
@@ -295,7 +295,7 @@ namespace HdrHistogram.NET
         /// Create a copy of this histogram, complete with data and everything.
         /// </summary>
         /// <returns>A distinct copy of this histogram.</returns>
-        public abstract AbstractHistogram Copy();
+        public abstract HistogramBase Copy();
 
         /// <summary>
         /// Get a copy of this histogram, corrected for coordinated omission.
@@ -312,13 +312,13 @@ namespace HdrHistogram.NET
         /// </para>
         /// See notes in the description of the Histogram calls for an illustration of why this corrective behavior is important.
         /// </remarks>
-        public abstract AbstractHistogram CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples);
+        public abstract HistogramBase CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples);
 
         /// <summary>
         /// Copy this histogram into the target histogram, overwriting it's contents.
         /// </summary>
         /// <param name="targetHistogram">the histogram to copy into</param>
-        public void CopyInto(AbstractHistogram targetHistogram)
+        public void CopyInto(HistogramBase targetHistogram)
         {
             targetHistogram.Reset();
             targetHistogram.Add(this);
@@ -334,7 +334,7 @@ namespace HdrHistogram.NET
         /// <remarks>
         /// See <see cref="CopyCorrectedForCoordinatedOmission"/> for more detailed explanation about how correction is applied
         /// </remarks>
-        public void CopyIntoCorrectedForCoordinatedOmission(AbstractHistogram targetHistogram, long expectedIntervalBetweenValueSamples)
+        public void CopyIntoCorrectedForCoordinatedOmission(HistogramBase targetHistogram, long expectedIntervalBetweenValueSamples)
         {
             targetHistogram.Reset();
             targetHistogram.AddWhileCorrectingForCoordinatedOmission(this, expectedIntervalBetweenValueSamples);
@@ -355,7 +355,7 @@ namespace HdrHistogram.NET
         /// </summary>
         /// <param name="fromHistogram">The other histogram.</param>
         /// <exception cref="System.IndexOutOfRangeException">if values in fromHistogram's are higher than highestTrackableValue.</exception>
-        public virtual void Add(AbstractHistogram fromHistogram)
+        public virtual void Add(HistogramBase fromHistogram)
         {
             if (this.HighestTrackableValue < fromHistogram.HighestTrackableValue)
             {
@@ -397,10 +397,10 @@ namespace HdrHistogram.NET
         /// See notes in the description of the Histogram calls for an illustration of why this corrective behavior is important.
         /// </remarks>
         /// <exception cref="System.IndexOutOfRangeException">if values exceed highestTrackableValue.</exception>
-        public void AddWhileCorrectingForCoordinatedOmission(AbstractHistogram fromHistogram, long expectedIntervalBetweenValueSamples)
+        public void AddWhileCorrectingForCoordinatedOmission(HistogramBase fromHistogram, long expectedIntervalBetweenValueSamples)
         {
             /*final*/
-            AbstractHistogram toHistogram = this;
+            HistogramBase toHistogram = this;
 
             //for (HistogramIterationValue v : fromHistogram.RecordedValues()) 
             foreach (HistogramIterationValue v in fromHistogram.RecordedValues())
@@ -431,11 +431,11 @@ namespace HdrHistogram.NET
             {
                 return true;
             }
-            if (!(other is AbstractHistogram))
+            if (!(other is HistogramBase))
             {
                 return false;
             }
-            AbstractHistogram that = (AbstractHistogram)other;
+            HistogramBase that = (HistogramBase)other;
             if ((LowestTrackableValue != that.LowestTrackableValue) ||
                 (HighestTrackableValue != that.HighestTrackableValue) ||
                 (NumberOfSignificantValueDigits != that.NumberOfSignificantValueDigits))
@@ -1081,7 +1081,7 @@ namespace HdrHistogram.NET
 
         
 
-        static AbstractHistogram ConstructHistogramFromBufferHeader(ByteBuffer buffer,
+        static HistogramBase ConstructHistogramFromBufferHeader(ByteBuffer buffer,
                                                                     Type histogramClass,
                                                                     long minBarForHighestTrackableValue)
         {
@@ -1102,8 +1102,8 @@ namespace HdrHistogram.NET
             {
                 //@SuppressWarnings("unchecked")
                 ConstructorInfo constructor = histogramClass.GetConstructor(HistogramClassConstructorArgsTypes);
-                AbstractHistogram histogram =
-                        (AbstractHistogram)constructor.Invoke(new object[] { lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits });
+                HistogramBase histogram =
+                        (HistogramBase)constructor.Invoke(new object[] { lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits });
                 histogram.TotalCount = totalCount; // Restore totalCount
                 if (cookie != histogram.GetEncodingCookie())
                 {
@@ -1131,9 +1131,9 @@ namespace HdrHistogram.NET
             //}
         }
 
-        protected static AbstractHistogram DecodeFromByteBuffer(ByteBuffer buffer, Type histogramClass, long minBarForHighestTrackableValue)
+        protected static HistogramBase DecodeFromByteBuffer(ByteBuffer buffer, Type histogramClass, long minBarForHighestTrackableValue)
         {
-            AbstractHistogram histogram = ConstructHistogramFromBufferHeader(buffer, histogramClass,
+            HistogramBase histogram = ConstructHistogramFromBufferHeader(buffer, histogramClass,
                     minBarForHighestTrackableValue);
 
             int expectedCapacity = histogram.GetNeededByteBufferCapacity(histogram.CountsArrayLength);
@@ -1152,7 +1152,7 @@ namespace HdrHistogram.NET
             return histogram;
         }
 
-        protected static AbstractHistogram DecodeFromCompressedByteBuffer(ByteBuffer buffer, Type histogramClass, long minBarForHighestTrackableValue)
+        protected static HistogramBase DecodeFromCompressedByteBuffer(ByteBuffer buffer, Type histogramClass, long minBarForHighestTrackableValue)
         {
             int cookie = buffer.getInt();
             if (GetCookieBase(cookie) != CompressedEncodingCookieBase)
@@ -1160,7 +1160,7 @@ namespace HdrHistogram.NET
                 throw new ArgumentException("The buffer does not contain a compressed Histogram");
             }
             int lengthOfCompressedContents = buffer.getInt();
-            AbstractHistogram histogram;
+            HistogramBase histogram;
             ByteBuffer countsBuffer;
             int numOfBytesDecompressed = 0;
             using (var inputStream = new MemoryStream(buffer.array(), 8, lengthOfCompressedContents))
@@ -1215,7 +1215,7 @@ namespace HdrHistogram.NET
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Implementations of AbstractHistogram may maintain a separately tracked notion of totalCount, which is useful for concurrent modification tracking, overflow detection, and speed of execution in iteration.
+        /// Implementations of HistogramBase may maintain a separately tracked notion of totalCount, which is useful for concurrent modification tracking, overflow detection, and speed of execution in iteration.
         /// This separately tracked totalCount can get into a state that is inconsistent with the currently recorded value counts under various concurrent modification and overflow conditions.
         /// </para>
         /// <para>

@@ -19,7 +19,7 @@ namespace HdrHistogram.NET
      * <p>
      * See package description for {@link org.HdrHistogram} for details.
      */
-    public sealed class ShortHistogram : AbstractHistogram 
+    public sealed class ShortHistogram : HistogramBase 
     {
         private readonly short[] _counts;
 
@@ -61,14 +61,14 @@ namespace HdrHistogram.NET
 
         protected override int WordSizeInBytes => 2;
         
-        public override AbstractHistogram Copy() 
+        public override HistogramBase Copy() 
         {
           var copy = new ShortHistogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
           copy.Add(this);
           return copy;
         }
 
-        public override AbstractHistogram CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples) 
+        public override HistogramBase CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples) 
         {
             var toHistogram = new ShortHistogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
             toHistogram.AddWhileCorrectingForCoordinatedOmission(this, expectedIntervalBetweenValueSamples);

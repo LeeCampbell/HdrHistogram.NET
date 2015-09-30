@@ -40,7 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AbstractHistogram.cs" />
+    <Compile Include="HistogramBase.cs" />
     <Compile Include="Utilities\CountingMemoryStream.cs" />
     <Compile Include="IntHistogram.cs" />
     <Compile Include="Iteration\AbstractHistogramEnumerator.cs" />

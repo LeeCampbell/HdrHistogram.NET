@@ -32,9 +32,9 @@ namespace HdrHistogram.NET
     /// At it's maximum tracked value(1 hour), it would still maintain a resolution of 3.6 seconds (or better).
     /// </para>
     /// Histogram tracks value counts in <c>long</c> fields.
-    /// Smaller field types are available in the <see cref="IntHistogram"/> and <see cref="ShortHistogram"/> implementations of <see cref="AbstractHistogram"/>.
+    /// Smaller field types are available in the <see cref="IntHistogram"/> and <see cref="ShortHistogram"/> implementations of <see cref="HistogramBase"/>.
     /// </remarks>
-    public class Histogram : AbstractHistogram
+    public class Histogram : HistogramBase
     {
         private readonly long[] _counts;
 
@@ -79,14 +79,14 @@ namespace HdrHistogram.NET
 
         protected override int WordSizeInBytes => 8;
 
-        public override AbstractHistogram Copy()
+        public override HistogramBase Copy()
         {
             var copy = new Histogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
             copy.Add(this);
             return copy;
         }
 
-        public override AbstractHistogram CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples)
+        public override HistogramBase CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples)
         {
             var toHistogram = new Histogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
             toHistogram.AddWhileCorrectingForCoordinatedOmission(this, expectedIntervalBetweenValueSamples);
@@ -106,7 +106,7 @@ namespace HdrHistogram.NET
         /// <returns>The newly constructed histogram</returns>
         public static Histogram DecodeFromByteBuffer(ByteBuffer buffer, long minBarForHighestTrackableValue)
         {
-            return (Histogram)AbstractHistogram.DecodeFromByteBuffer(buffer, typeof(Histogram), minBarForHighestTrackableValue);
+            return (Histogram)HistogramBase.DecodeFromByteBuffer(buffer, typeof(Histogram), minBarForHighestTrackableValue);
         }
 
         /// <summary>

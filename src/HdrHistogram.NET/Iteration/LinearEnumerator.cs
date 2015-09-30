@@ -18,10 +18,10 @@ namespace HdrHistogram.NET.Iteration
     /// </summary>
     sealed class LinearBucketEnumerable : IEnumerable<HistogramIterationValue>
     {
-        private readonly AbstractHistogram _histogram;
+        private readonly HistogramBase _histogram;
         private readonly int _valueUnitsPerBucket;
 
-        public LinearBucketEnumerable(AbstractHistogram histogram, int valueUnitsPerBucket)
+        public LinearBucketEnumerable(HistogramBase histogram, int valueUnitsPerBucket)
         {
             this._histogram = histogram;
             this._valueUnitsPerBucket = valueUnitsPerBucket;
@@ -55,7 +55,7 @@ namespace HdrHistogram.NET.Iteration
         /// </summary>
         /// <param name="histogram">The histogram this iterator will operate on</param>
         /// <param name="valueUnitsPerBucket">The size (in value units) of each bucket iteration.</param>
-        public LinearEnumerator(AbstractHistogram histogram, int valueUnitsPerBucket)
+        public LinearEnumerator(HistogramBase histogram, int valueUnitsPerBucket)
         {
             _valueUnitsPerBucket = valueUnitsPerBucket;
             _nextValueReportingLevel = valueUnitsPerBucket;
@@ -73,7 +73,7 @@ namespace HdrHistogram.NET.Iteration
             return (_nextValueReportingLevelLowestEquivalent < NextValueAtIndex);
         }
 
-        protected override void ResetIterator(AbstractHistogram histogram)
+        protected override void ResetIterator(HistogramBase histogram)
         {
             base.ResetIterator(histogram);
             _nextValueReportingLevelLowestEquivalent = histogram.LowestEquivalentValue(_nextValueReportingLevel);

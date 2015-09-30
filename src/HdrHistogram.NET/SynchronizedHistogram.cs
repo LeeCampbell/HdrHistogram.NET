@@ -16,7 +16,7 @@ namespace HdrHistogram.NET
     /// <summary>
     /// An internally synchronized High Dynamic Range (HDR) Histogram using a <c>long</c> count type.
     /// </summary>
-    public class SynchronizedHistogram : AbstractHistogram
+    public class SynchronizedHistogram : HistogramBase
     {
         private readonly long[] _counts;
         private long _totalCount;
@@ -71,7 +71,7 @@ namespace HdrHistogram.NET
             }
         }
 
-        public override void Add(AbstractHistogram other)
+        public override void Add(HistogramBase other)
         {
             // Synchronize add(). Avoid deadlocks by synchronizing in order of construction identity count.
             if (Identity < other.Identity)
@@ -96,14 +96,14 @@ namespace HdrHistogram.NET
             }
         }
 
-        public override AbstractHistogram Copy()
+        public override HistogramBase Copy()
         {
             SynchronizedHistogram copy = new SynchronizedHistogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
             copy.Add(this);
             return copy;
         }
 
-        public override AbstractHistogram CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples)
+        public override HistogramBase CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples)
         {
             SynchronizedHistogram toHistogram = new SynchronizedHistogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
             toHistogram.AddWhileCorrectingForCoordinatedOmission(this, expectedIntervalBetweenValueSamples);

@@ -26,8 +26,8 @@ namespace HdrHistogram.NET.Test
         static readonly Histogram scaledHistogram;
         static readonly Histogram rawHistogram;
         static readonly Histogram scaledRawHistogram;
-        static readonly /*Histogram*/ AbstractHistogram postCorrectedHistogram;
-        static readonly /*Histogram*/ AbstractHistogram postCorrectedScaledHistogram;
+        static readonly /*Histogram*/ HistogramBase postCorrectedHistogram;
+        static readonly /*Histogram*/ HistogramBase postCorrectedScaledHistogram;
 
         static HistogramDataAccessTest()
         {
