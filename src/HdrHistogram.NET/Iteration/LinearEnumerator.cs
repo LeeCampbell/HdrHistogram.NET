@@ -8,6 +8,7 @@
  * https://github.com/HdrHistogram/HdrHistogram
  */
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -55,11 +56,11 @@ namespace HdrHistogram.NET.Iteration
         /// </summary>
         /// <param name="histogram">The histogram this iterator will operate on</param>
         /// <param name="valueUnitsPerBucket">The size (in value units) of each bucket iteration.</param>
-        public LinearEnumerator(HistogramBase histogram, int valueUnitsPerBucket)
+        public LinearEnumerator(HistogramBase histogram, int valueUnitsPerBucket) :base(histogram)
         {
             _valueUnitsPerBucket = valueUnitsPerBucket;
             _nextValueReportingLevel = valueUnitsPerBucket;
-            ResetIterator(histogram);
+            _nextValueReportingLevelLowestEquivalent = histogram.LowestEquivalentValue(_nextValueReportingLevel);
         }
 
         public override bool HasNext()
@@ -71,12 +72,6 @@ namespace HdrHistogram.NET.Iteration
             // If next iterate does not move to the next sub bucket index (which is empty if
             // if we reached this point), then we are not done iterating... Otherwise we're done.
             return (_nextValueReportingLevelLowestEquivalent < NextValueAtIndex);
-        }
-
-        protected override void ResetIterator(HistogramBase histogram)
-        {
-            base.ResetIterator(histogram);
-            _nextValueReportingLevelLowestEquivalent = histogram.LowestEquivalentValue(_nextValueReportingLevel);
         }
 
         protected override void IncrementIterationLevel()

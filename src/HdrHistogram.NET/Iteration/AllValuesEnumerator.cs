@@ -8,6 +8,7 @@
  * https://github.com/HdrHistogram/HdrHistogram
  */
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -49,14 +50,8 @@ namespace HdrHistogram.NET.Iteration
         /// Constructor for the <see cref="AllValuesEnumerator"/>.
         /// </summary>
         /// <param name="histogram">The histogram this iterator will operate on</param>
-        public AllValuesEnumerator(HistogramBase histogram)
+        public AllValuesEnumerator(HistogramBase histogram):base(histogram)
         {
-            ResetIterator(histogram);
-        }
-
-        protected override void ResetIterator(HistogramBase histogram)
-        {
-            base.ResetIterator(histogram);
             _visitedSubBucketIndex = -1;
             _visitedBucketIndex = -1;
         }

@@ -16,27 +16,47 @@ namespace HdrHistogram.NET.Iteration
 {
     public abstract class AbstractHistogramEnumerator : IEnumerator<HistogramIterationValue>
     {
-        private long _savedHistogramTotalRawCount;
+        private readonly long _savedHistogramTotalRawCount;
+        private readonly HistogramIterationValue _currentIterationValue;
         private int _nextBucketIndex;
         private int _nextSubBucketIndex;
         private long _prevValueIteratedTo;
         private long _totalCountToPrevIndex;
         private long _totalValueToCurrentIndex;
         private bool _freshSubBucket;
-        private HistogramIterationValue _currentIterationValue;
 
-        protected HistogramBase SourceHistogram { get; private set; }
+        protected HistogramBase SourceHistogram { get; }
+        protected long ArrayTotalCount { get; }
         protected int CurrentBucketIndex { get; private set; }
         protected int CurrentSubBucketIndex { get; private set; }
         protected long CurrentValueAtIndex { get; private set; }
         protected long NextValueAtIndex { get; private set; }
         protected long TotalCountToCurrentIndex { get; private set; }
-        protected long ArrayTotalCount { get; private set; }
         protected long CountAtThisValue { get; private set; }
 
         public HistogramIterationValue Current { get; private set; }
-        object IEnumerator.Current => Current;
-        
+
+
+        protected AbstractHistogramEnumerator(HistogramBase histogram)
+        {
+            SourceHistogram = histogram;
+            _savedHistogramTotalRawCount = histogram.TotalCount;
+            ArrayTotalCount = histogram.TotalCount;
+            CurrentBucketIndex = 0;
+            CurrentSubBucketIndex = 0;
+            CurrentValueAtIndex = 0;
+            _nextBucketIndex = 0;
+            _nextSubBucketIndex = 1;
+            NextValueAtIndex = 1;
+            _prevValueIteratedTo = 0;
+            _totalCountToPrevIndex = 0;
+            TotalCountToCurrentIndex = 0;
+            _totalValueToCurrentIndex = 0;
+            CountAtThisValue = 0;
+            _freshSubBucket = true;
+            _currentIterationValue = new HistogramIterationValue();
+        }
+
         public bool MoveNext()
         {
             var canMove = HasNext();
@@ -47,10 +67,7 @@ namespace HdrHistogram.NET.Iteration
             return canMove;
         }
 
-        public void Reset()
-        {
-            ResetIterator(SourceHistogram);
-        }
+
 
         /// <summary>
         ///  Returns <c>true</c> if the iteration has more elements. (In other words, returns true if next would return an element rather than throwing an exception.)
@@ -110,32 +127,6 @@ namespace HdrHistogram.NET.Iteration
             throw new ArgumentOutOfRangeException();
         }
 
-        public void Dispose()
-        {
-            //throw new NotImplementedException();
-        }
-
-        protected virtual void ResetIterator(HistogramBase histogram)
-        {
-            SourceHistogram = histogram;
-            _savedHistogramTotalRawCount = histogram.TotalCount;
-            ArrayTotalCount = histogram.TotalCount;
-            CurrentBucketIndex = 0;
-            CurrentSubBucketIndex = 0;
-            CurrentValueAtIndex = 0;
-            _nextBucketIndex = 0;
-            _nextSubBucketIndex = 1;
-            NextValueAtIndex = 1;
-            _prevValueIteratedTo = 0;
-            _totalCountToPrevIndex = 0;
-            TotalCountToCurrentIndex = 0;
-            _totalValueToCurrentIndex = 0;
-            CountAtThisValue = 0;
-            _freshSubBucket = true;
-            if (_currentIterationValue == null)
-                _currentIterationValue = new HistogramIterationValue();
-            _currentIterationValue.Reset();
-        }
 
         protected abstract void IncrementIterationLevel();
 
@@ -171,6 +162,17 @@ namespace HdrHistogram.NET.Iteration
                 _nextBucketIndex++;
             }
             NextValueAtIndex = SourceHistogram.ValueFromIndex(_nextBucketIndex, _nextSubBucketIndex);
+        }
+
+        object IEnumerator.Current => Current;
+
+        void IEnumerator.Reset()
+        {
+            //throw new NotImplementedException();
+        }
+        void IDisposable.Dispose()
+        {
+            //throw new NotImplementedException();
         }
     }
 }

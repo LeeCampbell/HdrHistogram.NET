@@ -56,18 +56,11 @@ namespace HdrHistogram.NET.Iteration
         /// </summary>
         /// <param name="histogram">The histogram this iterator will operate on</param>
         /// <param name="percentileTicksPerHalfDistance">The number of iteration steps per half-distance to 100%.</param>
-        public PercentileEnumerator(HistogramBase histogram, int percentileTicksPerHalfDistance) 
+        public PercentileEnumerator(HistogramBase histogram, int percentileTicksPerHalfDistance) : base(histogram) 
         {
-            Reset(histogram, percentileTicksPerHalfDistance);
-        }
-
-        /// <summary>
-        /// Reset iterator for re-use in a fresh iteration over the same histogram data set.
-        /// </summary>
-        /// <param name="percentileTicksPerHalfDistance">The number of iteration steps per half-distance to 100%.</param>
-        public void Reset(int percentileTicksPerHalfDistance)
-        {
-            Reset(SourceHistogram, percentileTicksPerHalfDistance);
+            _percentileTicksPerHalfDistance = percentileTicksPerHalfDistance;
+            _percentileLevelToIterateTo = 0.0;
+            _reachedLastRecordedValue = false;
         }
 
         public override bool HasNext() 
@@ -103,14 +96,6 @@ namespace HdrHistogram.NET.Iteration
         protected override double GetPercentileIteratedTo() 
         {
             return _percentileLevelToIterateTo;
-        }
-
-        private void Reset(HistogramBase histogram, int percentileTicksPerHalfDistance)
-        {
-            ResetIterator(histogram);
-            _percentileTicksPerHalfDistance = percentileTicksPerHalfDistance;
-            _percentileLevelToIterateTo = 0.0;
-            _reachedLastRecordedValue = false;
         }
     }
 }

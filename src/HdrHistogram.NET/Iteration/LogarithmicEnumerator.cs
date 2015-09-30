@@ -58,11 +58,10 @@ namespace HdrHistogram.NET.Iteration
         /// <param name="histogram">The histogram this iterator will operate on</param>
         /// <param name="valueUnitsInFirstBucket">the size (in value units) of the first value bucket step</param>
         /// <param name="logBase">the multiplier by which the bucket size is expanded in each iteration step.</param>
-        public LogarithmicEnumerator(HistogramBase histogram, int valueUnitsInFirstBucket, double logBase)
+        public LogarithmicEnumerator(HistogramBase histogram, int valueUnitsInFirstBucket, double logBase) : base(histogram)
         {
             _logBase = logBase;
 
-            ResetIterator(histogram);
             _nextValueReportingLevel = valueUnitsInFirstBucket;
             _nextValueReportingLevelLowestEquivalent = histogram.LowestEquivalentValue(_nextValueReportingLevel);
         }
