@@ -41,30 +41,19 @@ namespace HdrHistogram.NET
     /// </remarks>
     public abstract class HistogramBase
     {
-        private static long _nextIdentity = -1L;
         private const int EncodingCookieBase = 0x1c849308;
         private const int CompressedEncodingCookieBase = 0x1c849309;
+
         private static readonly Type[] HistogramClassConstructorArgsTypes = { typeof(long), typeof(long), typeof(int) };
+        private static long _nextIdentity = -1L;
 
-        // "Cold" accessed fields. Not used in the recording code path:
-
-        // "Hot" accessed fields (used in the the value recording code path) are bunched here, such
-        // that they will have a good chance of ending up in the same cache line as the totalCounts and
-        // counts array reference fields that subclass implementations will typically add.
         private readonly int _subBucketHalfCountMagnitude;
         private readonly int _unitMagnitude;
         private readonly long _subBucketMask;
 
-        protected readonly object UpdateLock = new object();
-
         private ByteBuffer _intermediateUncompressedByteBuffer;
 
-
-        private static long GetNextIdentity()
-        {
-            return Interlocked.Increment(ref _nextIdentity);
-        }
-        public long Identity { get; private set; }
+        protected readonly object UpdateLock = new object();
 
         /// <summary>
         /// Get the configured highestTrackableValue
@@ -83,20 +72,32 @@ namespace HdrHistogram.NET
         /// </summary>
         /// <returns>numberOfSignificantValueDigits</returns>
         public int NumberOfSignificantValueDigits { get; }
-        protected int CountsArrayLength { get; }
 
+        public long Identity { get; private set; }
+
+        /// <summary>
+        /// Gets or Sets the start time stamp value associated with this histogram to a given value.
+        /// By convention in msec since the epoch.
+        /// </summary>
+        public long StartTimeStamp { get; set; }
+
+        /// <summary>
+        /// Gets or Sets the end time stamp value associated with this histogram to a given value.
+        /// By convention in msec since the epoch.
+        /// </summary>
+        public long EndTimeStamp { get; set; }
+
+        public abstract long TotalCount { get; protected set; }
+
+        
         internal int BucketCount { get; }       //TODO: Candidate for private read-only field. -LC
         internal int SubBucketCount { get; }    //TODO: Candidate for private read-only field. -LC
         internal int SubBucketHalfCount { get; }//TODO: Candidate for private read-only field. -LC
 
+        protected int CountsArrayLength { get; }
 
-        //
-        //
-        //
-        // Construction:
-        //
-        //
-        //
+        protected abstract int WordSizeInBytes { get; }
+
 
         /// <summary>
         /// Construct a histogram given the Lowest and Highest values to be tracked and a number of significant decimal digits.
@@ -122,7 +123,7 @@ namespace HdrHistogram.NET
             if (highestTrackableValue < 2 * lowestTrackableValue) throw new ArgumentException("highestTrackableValue must be >= 2 * lowestTrackableValue");
             if ((numberOfSignificantValueDigits < 0) || (numberOfSignificantValueDigits > 5)) throw new ArgumentException("numberOfSignificantValueDigits must be between 0 and 6");
 
-            Identity = GetNextIdentity();
+            Identity = Interlocked.Increment(ref _nextIdentity);
             LowestTrackableValue = lowestTrackableValue;
             HighestTrackableValue = highestTrackableValue;
             NumberOfSignificantValueDigits = numberOfSignificantValueDigits;
@@ -144,61 +145,7 @@ namespace HdrHistogram.NET
             BucketCount = GetBucketsNeededToCoverValue(HighestTrackableValue);
 
             CountsArrayLength = GetLengthForNumberOfBuckets(BucketCount);
-
-            TotalCount = 0;
         }
-
-        //
-        //
-        //
-        // Timestamp support:
-        //
-        //
-        //
-
-        /// <summary>
-        /// Gets or Sets the start time stamp value associated with this histogram to a given value.
-        /// By convention in msec since the epoch.
-        /// </summary>
-        public long StartTimeStamp { get; set; }
-
-        /// <summary>
-        /// Gets or Sets the end time stamp value associated with this histogram to a given value.
-        /// By convention in msec since the epoch.
-        /// </summary>
-        public long EndTimeStamp { get; set; }
-
-        public abstract long TotalCount { get; protected set; }
-
-        protected abstract int WordSizeInBytes { get; }
-
-        protected abstract long GetCountAtIndex(int index);
-
-        protected abstract void IncrementCountAtIndex(int index);
-
-        protected abstract void AddToCountAtIndex(int index, long value);
-
-        protected abstract void IncrementTotalCount();
-
-        protected abstract void AddToTotalCount(long value);
-
-        protected abstract void ClearCounts();
-        
-
-        /// <summary>
-        /// Provide a (conservatively high) estimate of the Histogram's total footprint in bytes
-        /// </summary>
-        /// <returns>a (conservatively high) estimate of the Histogram's total footprint in bytes</returns>
-        public abstract int GetEstimatedFootprintInBytes();
-
-
-        //
-        //
-        //
-        // Value recording support:
-        //
-        //
-        //
 
         /// <summary>
         /// Records a value in the histogram
@@ -216,7 +163,7 @@ namespace HdrHistogram.NET
         /// <param name="value">The value to be recorded</param>
         /// <param name="count">The number of occurrences of this value to record</param>
         /// <exception cref="System.IndexOutOfRangeException">if value is exceeds highestTrackableValue</exception>
-        public void RecordValueWithCount(long value, long count) 
+        public void RecordValueWithCount(long value, long count)
         {
             RecordCountAtValue(count, value);
         }
@@ -237,54 +184,10 @@ namespace HdrHistogram.NET
         /// </para>
         /// See notes in the description of the Histogram calls for an illustration of why this corrective behavior is important.
         /// </remarks>
-        public void RecordValueWithExpectedInterval(long value, long expectedIntervalBetweenValueSamples) 
+        public void RecordValueWithExpectedInterval(long value, long expectedIntervalBetweenValueSamples)
         {
             RecordValueWithCountAndExpectedInterval(value, 1, expectedIntervalBetweenValueSamples);
         }
-
-
-        private void RecordCountAtValue(long count, long value)
-        {
-            // Dissect the value into bucket and sub-bucket parts, and derive index into counts array:
-            int bucketIndex = GetBucketIndex(value);
-            int subBucketIndex = GetSubBucketIndex(value, bucketIndex);
-            int countsIndex = CountsArrayIndex(bucketIndex, subBucketIndex);
-            AddToCountAtIndex(countsIndex, count);
-            AddToTotalCount(count);
-        }
-
-        private void RecordSingleValue(long value)
-        {
-            // Dissect the value into bucket and sub-bucket parts, and derive index into counts array:
-            int bucketIndex = GetBucketIndex(value);
-            int subBucketIndex = GetSubBucketIndex(value, bucketIndex);
-            int countsIndex = CountsArrayIndex(bucketIndex, subBucketIndex);
-            IncrementCountAtIndex(countsIndex);
-            IncrementTotalCount();
-        }
-
-        private void RecordValueWithCountAndExpectedInterval(long value, long count,
-                                                             long expectedIntervalBetweenValueSamples)
-        {
-            RecordCountAtValue(count, value);
-            if (expectedIntervalBetweenValueSamples <= 0)
-                return;
-            for (long missingValue = value - expectedIntervalBetweenValueSamples;
-                 missingValue >= expectedIntervalBetweenValueSamples;
-                 missingValue -= expectedIntervalBetweenValueSamples)
-            {
-                RecordCountAtValue(count, missingValue);
-            }
-        }
-
-
-        //
-        //
-        //
-        // Clearing support:
-        //
-        //
-        //
 
         /// <summary>
         /// Reset the contents and stats of this histogram
@@ -293,37 +196,6 @@ namespace HdrHistogram.NET
         {
             ClearCounts();
         }
-
-        //
-        //
-        //
-        // Copy support:
-        //
-        //
-        //
-
-        /// <summary>
-        /// Create a copy of this histogram, complete with data and everything.
-        /// </summary>
-        /// <returns>A distinct copy of this histogram.</returns>
-        public abstract HistogramBase Copy();
-
-        /// <summary>
-        /// Get a copy of this histogram, corrected for coordinated omission.
-        /// </summary>
-        /// <param name="expectedIntervalBetweenValueSamples">If <param name="expectedIntervalBetweenValueSamples"/> is larger than 0, add auto-generated value records as appropriate if value is larger than <param name="expectedIntervalBetweenValueSamples"/></param>
-        /// <returns>a copy of this histogram, corrected for coordinated omission.</returns>
-        /// <remarks>
-        /// To compensate for the loss of sampled values when a recorded value is larger than the expected interval between value samples, 
-        /// the new histogram will include an auto-generated additional series of decreasingly-smaller(down to the <param name="expectedIntervalBetweenValueSamples"/>) 
-        /// value records for each count found in the current histogram that is larger than the expectedIntervalBetweenValueSamples.
-        /// <para>
-        /// Note: This is a post-correction method, as opposed to the at-recording correction method provided by <seealso cref="RecordValueWithExpectedInterval"/>. 
-        /// The two methods are mutually exclusive, and only one of the two should be be used on a given data set to correct for the same coordinated omission issue.
-        /// </para>
-        /// See notes in the description of the Histogram calls for an illustration of why this corrective behavior is important.
-        /// </remarks>
-        public abstract HistogramBase CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples);
 
         /// <summary>
         /// Copy this histogram, corrected for coordinated omission, into the target histogram, overwriting it's contents.
@@ -340,14 +212,6 @@ namespace HdrHistogram.NET
             targetHistogram.StartTimeStamp = StartTimeStamp;
             targetHistogram.EndTimeStamp = EndTimeStamp;
         }
-
-        //
-        //
-        //
-        // Add support:
-        //
-        //
-        //
 
         /// <summary>
         /// Add the contents of another histogram to this one.
@@ -407,85 +271,6 @@ namespace HdrHistogram.NET
             }
         }
 
-        //
-        //
-        //
-        // Comparison support:
-        //
-        //
-        //
-
-
-        //TODO: Implement IEquatable? -LC
-        /// <summary>
-        /// Determine if this histogram is equivalent to another.
-        /// </summary>
-        /// <param name="other">the other histogram to compare to</param>
-        /// <returns><c>true</c> if this histogram are equivalent with the other.</returns>
-        public override bool Equals(object other)
-        {
-            if (this == other)
-            {
-                return true;
-            }
-            var that = other as HistogramBase;
-            if (LowestTrackableValue != that?.LowestTrackableValue ||
-                (HighestTrackableValue != that.HighestTrackableValue) ||
-                (NumberOfSignificantValueDigits != that.NumberOfSignificantValueDigits))
-            {
-                return false;
-            }
-            if (CountsArrayLength != that.CountsArrayLength)
-            {
-                return false;
-            }
-            if (TotalCount != that.TotalCount)
-            {
-                return false;
-            }
-            
-            for (int i = 0; i < CountsArrayLength; i++)
-            {
-                if (GetCountAtIndex(i) != that.GetCountAtIndex(i))
-                {
-                    Debug.WriteLine("Error at position {0}, this[{0}] = {1}, that[{0}] = {2}", i, GetCountAtIndex(i), that.GetCountAtIndex(i));
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        public override int GetHashCode()
-        {
-            // From http://stackoverflow.com/questions/263400/what-is-the-best-algorithm-for-an-overridden-system-object-gethashcode/263416#263416
-            unchecked // Overflow is fine, just wrap
-            {
-                int hash = 17;
-                // Suitable nullity checks etc, of course :)
-                hash = hash * 23 + HighestTrackableValue.GetHashCode();
-                hash = hash * 23 + NumberOfSignificantValueDigits.GetHashCode();
-                hash = hash * 23 + CountsArrayLength.GetHashCode();
-                hash = hash * 23 + TotalCount.GetHashCode();
-
-                for (int i = 0; i < CountsArrayLength; i++)
-                {
-                    hash = hash * 23 + GetCountAtIndex(i).GetHashCode();
-                }
-
-                return hash;
-            }
-        }
-
-        //
-        //
-        //
-        // Histogram structure querying support:
-        //
-        //
-        //
-
-        //TODO: Make properties. -LC
-        
 
         /// <summary>
         /// Get the size (in value units) of the range of values that are equivalent to the given value within the histogram's resolution. 
@@ -515,7 +300,6 @@ namespace HdrHistogram.NET
             long thisValueBaseLevel = ValueFromIndex(bucketIndex, subBucketIndex);
             return thisValueBaseLevel;
         }
-
 
         /// <summary>
         /// Get a value that lies in the middle (rounded up) of the range of values equivalent the given value.
@@ -550,18 +334,6 @@ namespace HdrHistogram.NET
         {
             return (LowestEquivalentValue(value1) == LowestEquivalentValue(value2));
         }
-
-        
-
-
-        //
-        //
-        //
-        // Histogram Data access support:
-        //
-        //
-        //
-
 
         /// <summary>
         /// Get the value at a given percentile
@@ -688,7 +460,7 @@ namespace HdrHistogram.NET
         {
             return new AllValueEnumerable(this);
         }
-        
+
         /// <summary>
         /// Get the capacity needed to encode this histogram into a <see cref="ByteBuffer"/>
         /// </summary>
@@ -696,37 +468,6 @@ namespace HdrHistogram.NET
         public int GetNeededByteBufferCapacity()
         {
             return GetNeededByteBufferCapacity(CountsArrayLength);
-        }
-
-        private int GetNeededByteBufferCapacity(int relevantLength)
-        {
-            return (relevantLength * WordSizeInBytes) + 32;
-        }
-
-        protected abstract void FillCountsArrayFromBuffer(ByteBuffer buffer, int length);
-
-        protected abstract void FillBufferFromCountsArray(ByteBuffer buffer, int length);
-
-        
-
-        private int GetEncodingCookie()
-        {
-            return EncodingCookieBase + (WordSizeInBytes << 4);
-        }
-
-        private int GetCompressedEncodingCookie()
-        {
-            return CompressedEncodingCookieBase + (WordSizeInBytes << 4);
-        }
-
-        private static int GetCookieBase(int cookie)
-        {
-            return (cookie & ~0xf0);
-        }
-
-        private static int GetWordSizeInBytesFromCookie(int cookie)
-        {
-            return (cookie & 0xf0) >> 4;
         }
 
         /// <summary>
@@ -803,51 +544,173 @@ namespace HdrHistogram.NET
             }
         }
 
-
-        static HistogramBase ConstructHistogramFromBufferHeader(ByteBuffer buffer,
-                                                                    Type histogramClass,
-                                                                    long minBarForHighestTrackableValue)
+        /// <summary>
+        /// Determine if this histogram had any of it's value counts overflow.
+        /// </summary>
+        /// <returns><c>true</c> if this histogram has had a count value overflow, else <c>false</c>.</returns>
+        /// <remarks>
+        /// Since counts are kept in fixed integer form with potentially limited range (e.g. int and short), a specific value range count could potentially overflow, leading to an inaccurate and misleading histogram representation.
+        /// This method accurately determines whether or not an overflow condition has happened in an IntHistogram or ShortHistogram.
+        /// </remarks>
+        public bool HasOverflowed()
         {
-            int cookie = buffer.getInt();
-            if (GetCookieBase(cookie) != EncodingCookieBase)
+            // On overflow, the totalCount accumulated counter will (always) not match the total of counts
+            long totalCounted = 0;
+            for (int i = 0; i < CountsArrayLength; i++)
             {
-                throw new ArgumentException("The buffer does not contain a Histogram");
+                totalCounted += GetCountAtIndex(i);
             }
-
-            int numberOfSignificantValueDigits = buffer.getInt();
-            long lowestTrackableValue = buffer.getLong();
-            long highestTrackableValue = buffer.getLong();
-            long totalCount = buffer.getLong();
-
-            highestTrackableValue = Math.Max(highestTrackableValue, minBarForHighestTrackableValue);
-
-            try
-            {
-                //@SuppressWarnings("unchecked")
-                ConstructorInfo constructor = histogramClass.GetConstructor(HistogramClassConstructorArgsTypes);
-                HistogramBase histogram = (HistogramBase)constructor.Invoke(new object[] { lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits });
-                histogram.TotalCount = totalCount; // Restore totalCount
-                if (cookie != histogram.GetEncodingCookie())
-                {
-                    throw new ArgumentException($"The buffer's encoded value byte size ({GetWordSizeInBytesFromCookie(cookie)}) does not match the Histogram's ({histogram.WordSizeInBytes})");
-                }
-                return histogram;
-            }
-            // TODO fix this, find out what Exceptions can actually be thrown!!!!
-            catch (Exception ex)
-            {
-                throw new ArgumentException("Unable to create histogram of Type " + histogramClass.Name + ": " + ex.Message, ex);
-            }
-            //} catch (IllegalAccessException ex) {
-            //    throw new ArgumentException(ex);
-            //} catch (NoSuchMethodException ex) {
-            //    throw new ArgumentException(ex);
-            //} catch (InstantiationException ex) {
-            //    throw new ArgumentException(ex);
-            //} catch (InvocationTargetException ex) {
-            //    throw new ArgumentException(ex);
-            //}
+            return (totalCounted != TotalCount);
         }
+
+        /// <summary>
+        /// Reestablish the internal notion of totalCount by recalculating it from recorded values.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Implementations of HistogramBase may maintain a separately tracked notion of totalCount, which is useful for concurrent modification tracking, overflow detection, and speed of execution in iteration.
+        /// This separately tracked totalCount can get into a state that is inconsistent with the currently recorded value counts under various concurrent modification and overflow conditions.
+        /// </para>
+        /// <para>
+        /// Applying this method will override internal indications of potential overflows and concurrent modification, and will reestablish a self-consistent representation of the histogram data based purely on the current internal representation of recorded counts.
+        /// </para>
+        /// <para>
+        /// In cases of concurrent modifications such as during copying, or due to racy multi-threaded updates on non-atomic or non-synchronized variants, which can result in potential loss of counts and an inconsistent (indicating potential overflow) internal state, calling this method on a histogram will reestablish a consistent internal state based on the potentially lossy counts representations.
+        /// </para>
+        /// <para>
+        /// Note that this method is not synchronized against concurrent modification in any way, and will only reliably reestablish consistent internal state when no concurrent modification of the histogram is performed while it executes.
+        /// </para>
+        /// Note that in the cases of actual overflow conditions (which can result in negative counts) this self consistent view may be very wrong, and not just slightly lossy.
+        /// </remarks>
+        public void ReestablishTotalCount()
+        {
+            // On overflow, the totalCount accumulated counter will (always) not match the total of counts
+            long totalCounted = 0;
+            for (int i = 0; i < CountsArrayLength; i++)
+            {
+                totalCounted += GetCountAtIndex(i);
+            }
+            TotalCount = totalCounted;
+        }
+
+
+        //TODO: Implement IEquatable? -LC
+        /// <summary>
+        /// Determine if this histogram is equivalent to another.
+        /// </summary>
+        /// <param name="other">the other histogram to compare to</param>
+        /// <returns><c>true</c> if this histogram are equivalent with the other.</returns>
+        public override bool Equals(object other)
+        {
+            if (this == other)
+            {
+                return true;
+            }
+            var that = other as HistogramBase;
+            if (LowestTrackableValue != that?.LowestTrackableValue ||
+                (HighestTrackableValue != that.HighestTrackableValue) ||
+                (NumberOfSignificantValueDigits != that.NumberOfSignificantValueDigits))
+            {
+                return false;
+            }
+            if (CountsArrayLength != that.CountsArrayLength)
+            {
+                return false;
+            }
+            if (TotalCount != that.TotalCount)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < CountsArrayLength; i++)
+            {
+                if (GetCountAtIndex(i) != that.GetCountAtIndex(i))
+                {
+                    Debug.WriteLine("Error at position {0}, this[{0}] = {1}, that[{0}] = {2}", i, GetCountAtIndex(i), that.GetCountAtIndex(i));
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public override int GetHashCode()
+        {
+            // From http://stackoverflow.com/questions/263400/what-is-the-best-algorithm-for-an-overridden-system-object-gethashcode/263416#263416
+            unchecked // Overflow is fine, just wrap
+            {
+                int hash = 17;
+                // Suitable nullity checks etc, of course :)
+                hash = hash * 23 + HighestTrackableValue.GetHashCode();
+                hash = hash * 23 + NumberOfSignificantValueDigits.GetHashCode();
+                hash = hash * 23 + CountsArrayLength.GetHashCode();
+                hash = hash * 23 + TotalCount.GetHashCode();
+
+                for (int i = 0; i < CountsArrayLength; i++)
+                {
+                    hash = hash * 23 + GetCountAtIndex(i).GetHashCode();
+                }
+
+                return hash;
+            }
+        }
+
+        /// <summary>
+        /// Create a copy of this histogram, complete with data and everything.
+        /// </summary>
+        /// <returns>A distinct copy of this histogram.</returns>
+        public abstract HistogramBase Copy();
+
+        /// <summary>
+        /// Get a copy of this histogram, corrected for coordinated omission.
+        /// </summary>
+        /// <param name="expectedIntervalBetweenValueSamples">If <param name="expectedIntervalBetweenValueSamples"/> is larger than 0, add auto-generated value records as appropriate if value is larger than <param name="expectedIntervalBetweenValueSamples"/></param>
+        /// <returns>a copy of this histogram, corrected for coordinated omission.</returns>
+        /// <remarks>
+        /// To compensate for the loss of sampled values when a recorded value is larger than the expected interval between value samples, 
+        /// the new histogram will include an auto-generated additional series of decreasingly-smaller(down to the <param name="expectedIntervalBetweenValueSamples"/>) 
+        /// value records for each count found in the current histogram that is larger than the expectedIntervalBetweenValueSamples.
+        /// <para>
+        /// Note: This is a post-correction method, as opposed to the at-recording correction method provided by <seealso cref="RecordValueWithExpectedInterval"/>. 
+        /// The two methods are mutually exclusive, and only one of the two should be be used on a given data set to correct for the same coordinated omission issue.
+        /// </para>
+        /// See notes in the description of the Histogram calls for an illustration of why this corrective behavior is important.
+        /// </remarks>
+        public abstract HistogramBase CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples);
+
+        /// <summary>
+        /// Provide a (conservatively high) estimate of the Histogram's total footprint in bytes
+        /// </summary>
+        /// <returns>a (conservatively high) estimate of the Histogram's total footprint in bytes</returns>
+        public abstract int GetEstimatedFootprintInBytes();
+
+
+
+        internal long GetCountAt(int bucketIndex, int subBucketIndex)
+        {
+            return GetCountAtIndex(CountsArrayIndex(bucketIndex, subBucketIndex));
+        }
+
+        internal long ValueFromIndex(int bucketIndex, int subBucketIndex)
+        {
+            return ((long)subBucketIndex) << (bucketIndex + _unitMagnitude);
+        }
+
+
+        protected abstract void FillCountsArrayFromBuffer(ByteBuffer buffer, int length);
+
+        protected abstract void FillBufferFromCountsArray(ByteBuffer buffer, int length);
+
+        protected abstract long GetCountAtIndex(int index);
+
+        protected abstract void IncrementCountAtIndex(int index);
+
+        protected abstract void AddToCountAtIndex(int index, long value);
+
+        protected abstract void IncrementTotalCount();
+
+        protected abstract void AddToTotalCount(long value);
+
+        protected abstract void ClearCounts();
 
         protected static HistogramBase DecodeFromByteBuffer(ByteBuffer buffer, Type histogramClass, long minBarForHighestTrackableValue)
         {
@@ -901,70 +764,44 @@ namespace HdrHistogram.NET
             return histogram;
         }
 
-        //
-        //
-        //
-        // Support for overflow detection and re-establishing a proper totalCount:
-        //
-        //
-        //
 
-        /// <summary>
-        /// Determine if this histogram had any of it's value counts overflow.
-        /// </summary>
-        /// <returns><c>true</c> if this histogram has had a count value overflow, else <c>false</c>.</returns>
-        /// <remarks>
-        /// Since counts are kept in fixed integer form with potentially limited range (e.g. int and short), a specific value range count could potentially overflow, leading to an inaccurate and misleading histogram representation.
-        /// This method accurately determines whether or not an overflow condition has happened in an IntHistogram or ShortHistogram.
-        /// </remarks>
-        public bool HasOverflowed()
+        private void RecordCountAtValue(long count, long value)
         {
-            // On overflow, the totalCount accumulated counter will (always) not match the total of counts
-            long totalCounted = 0;
-            for (int i = 0; i < CountsArrayLength; i++)
-            {
-                totalCounted += GetCountAtIndex(i);
-            }
-            return (totalCounted != TotalCount);
+            // Dissect the value into bucket and sub-bucket parts, and derive index into counts array:
+            int bucketIndex = GetBucketIndex(value);
+            int subBucketIndex = GetSubBucketIndex(value, bucketIndex);
+            int countsIndex = CountsArrayIndex(bucketIndex, subBucketIndex);
+            AddToCountAtIndex(countsIndex, count);
+            AddToTotalCount(count);
         }
 
-        /// <summary>
-        /// Reestablish the internal notion of totalCount by recalculating it from recorded values.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Implementations of HistogramBase may maintain a separately tracked notion of totalCount, which is useful for concurrent modification tracking, overflow detection, and speed of execution in iteration.
-        /// This separately tracked totalCount can get into a state that is inconsistent with the currently recorded value counts under various concurrent modification and overflow conditions.
-        /// </para>
-        /// <para>
-        /// Applying this method will override internal indications of potential overflows and concurrent modification, and will reestablish a self-consistent representation of the histogram data based purely on the current internal representation of recorded counts.
-        /// </para>
-        /// <para>
-        /// In cases of concurrent modifications such as during copying, or due to racy multi-threaded updates on non-atomic or non-synchronized variants, which can result in potential loss of counts and an inconsistent (indicating potential overflow) internal state, calling this method on a histogram will reestablish a consistent internal state based on the potentially lossy counts representations.
-        /// </para>
-        /// <para>
-        /// Note that this method is not synchronized against concurrent modification in any way, and will only reliably reestablish consistent internal state when no concurrent modification of the histogram is performed while it executes.
-        /// </para>
-        /// Note that in the cases of actual overflow conditions (which can result in negative counts) this self consistent view may be very wrong, and not just slightly lossy.
-        /// </remarks>
-        public void ReestablishTotalCount()
+        private void RecordSingleValue(long value)
         {
-            // On overflow, the totalCount accumulated counter will (always) not match the total of counts
-            long totalCounted = 0;
-            for (int i = 0; i < CountsArrayLength; i++)
-            {
-                totalCounted += GetCountAtIndex(i);
-            }
-            TotalCount = totalCounted;
+            // Dissect the value into bucket and sub-bucket parts, and derive index into counts array:
+            int bucketIndex = GetBucketIndex(value);
+            int subBucketIndex = GetSubBucketIndex(value, bucketIndex);
+            int countsIndex = CountsArrayIndex(bucketIndex, subBucketIndex);
+            IncrementCountAtIndex(countsIndex);
+            IncrementTotalCount();
         }
 
-        //
-        //
-        //
-        // Internal helper methods:
-        //
-        //
-        //
+        private void RecordValueWithCountAndExpectedInterval(long value, long count, long expectedIntervalBetweenValueSamples)
+        {
+            RecordCountAtValue(count, value);
+            if (expectedIntervalBetweenValueSamples <= 0)
+                return;
+            for (long missingValue = value - expectedIntervalBetweenValueSamples;
+                 missingValue >= expectedIntervalBetweenValueSamples;
+                 missingValue -= expectedIntervalBetweenValueSamples)
+            {
+                RecordCountAtValue(count, missingValue);
+            }
+        }
+
+        private int GetNeededByteBufferCapacity(int relevantLength)
+        {
+            return (relevantLength * WordSizeInBytes) + 32;
+        }
 
         private int GetBucketsNeededToCoverValue(long value)
         {
@@ -997,11 +834,6 @@ namespace HdrHistogram.NET
             return bucketBaseIndex + offsetInBucket;
         }
 
-        internal long GetCountAt(int bucketIndex, int subBucketIndex)
-        {
-            return GetCountAtIndex(CountsArrayIndex(bucketIndex, subBucketIndex));
-        }
-
         private int GetBucketIndex(long value)
         {
             int pow2ceiling = 64 - MiscUtilities.NumberOfLeadingZeros(value | _subBucketMask); // smallest power of 2 containing value
@@ -1011,11 +843,6 @@ namespace HdrHistogram.NET
         private int GetSubBucketIndex(long value, int bucketIndex)
         {
             return (int)(value >> (bucketIndex + _unitMagnitude));
-        }
-
-        internal long ValueFromIndex(int bucketIndex, int subBucketIndex)
-        {
-            return ((long)subBucketIndex) << (bucketIndex + _unitMagnitude);
         }
 
         private long ValueFromIndex(int index)
@@ -1029,5 +856,69 @@ namespace HdrHistogram.NET
             }
             return ValueFromIndex(bucketIndex, subBucketIndex);
         }
+
+        private int GetEncodingCookie()
+        {
+            return EncodingCookieBase + (WordSizeInBytes << 4);
+        }
+
+        private int GetCompressedEncodingCookie()
+        {
+            return CompressedEncodingCookieBase + (WordSizeInBytes << 4);
+        }
+
+        private static HistogramBase ConstructHistogramFromBufferHeader(ByteBuffer buffer, Type histogramClass, long minBarForHighestTrackableValue)
+        {
+            int cookie = buffer.getInt();
+            if (GetCookieBase(cookie) != EncodingCookieBase)
+            {
+                throw new ArgumentException("The buffer does not contain a Histogram");
+            }
+
+            int numberOfSignificantValueDigits = buffer.getInt();
+            long lowestTrackableValue = buffer.getLong();
+            long highestTrackableValue = buffer.getLong();
+            long totalCount = buffer.getLong();
+
+            highestTrackableValue = Math.Max(highestTrackableValue, minBarForHighestTrackableValue);
+
+            try
+            {
+                //@SuppressWarnings("unchecked")
+                ConstructorInfo constructor = histogramClass.GetConstructor(HistogramClassConstructorArgsTypes);
+                HistogramBase histogram = (HistogramBase)constructor.Invoke(new object[] { lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits });
+                histogram.TotalCount = totalCount; // Restore totalCount
+                if (cookie != histogram.GetEncodingCookie())
+                {
+                    throw new ArgumentException($"The buffer's encoded value byte size ({GetWordSizeInBytesFromCookie(cookie)}) does not match the Histogram's ({histogram.WordSizeInBytes})");
+                }
+                return histogram;
+            }
+            // TODO fix this, find out what Exceptions can actually be thrown!!!!
+            catch (Exception ex)
+            {
+                throw new ArgumentException("Unable to create histogram of Type " + histogramClass.Name + ": " + ex.Message, ex);
+            }
+            //} catch (IllegalAccessException ex) {
+            //    throw new ArgumentException(ex);
+            //} catch (NoSuchMethodException ex) {
+            //    throw new ArgumentException(ex);
+            //} catch (InstantiationException ex) {
+            //    throw new ArgumentException(ex);
+            //} catch (InvocationTargetException ex) {
+            //    throw new ArgumentException(ex);
+            //}
+        }
+
+        private static int GetCookieBase(int cookie)
+        {
+            return (cookie & ~0xf0);
+        }
+
+        private static int GetWordSizeInBytesFromCookie(int cookie)
+        {
+            return (cookie & 0xf0) >> 4;
+        }
+
     }
 }
