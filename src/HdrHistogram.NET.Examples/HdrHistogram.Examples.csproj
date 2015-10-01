@@ -8,8 +8,8 @@
     <ProjectGuid>{E210C748-4792-4658-9345-CC073C29EC0B}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>HdrHistogram.NET.Examples</RootNamespace>
-    <AssemblyName>HdrHistogram.NET.Examples</AssemblyName>
+    <RootNamespace>HdrHistogram.Examples</RootNamespace>
+    <AssemblyName>HdrHistogram.Examples</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>

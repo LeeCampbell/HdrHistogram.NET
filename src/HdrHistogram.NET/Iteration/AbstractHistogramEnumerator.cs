@@ -12,7 +12,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace HdrHistogram.NET.Iteration
+namespace HdrHistogram.Iteration
 {
     public abstract class AbstractHistogramEnumerator : IEnumerator<HistogramIterationValue>
     {

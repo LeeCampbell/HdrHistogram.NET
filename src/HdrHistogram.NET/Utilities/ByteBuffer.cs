@@ -11,7 +11,7 @@
 using System;
 using System.Diagnostics;
 
-namespace HdrHistogram.NET.Utilities
+namespace HdrHistogram.Utilities
 {
     // See http://stackoverflow.com/questions/1261543/equivalent-of-javas-bytebuffer-puttype-in-c-sharp
     // and http://stackoverflow.com/questions/18040012/what-is-the-equivalent-of-javas-bytebuffer-wrap-in-c

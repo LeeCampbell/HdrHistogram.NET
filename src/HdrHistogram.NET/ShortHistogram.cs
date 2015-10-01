@@ -9,10 +9,10 @@
  */
 
 using System;
-using HdrHistogram.NET.Utilities;
-using ShortBuffer = HdrHistogram.NET.Utilities.WrappedBuffer<short>;
+using HdrHistogram.Utilities;
+using ShortBuffer = HdrHistogram.Utilities.WrappedBuffer<short>;
 
-namespace HdrHistogram.NET
+namespace HdrHistogram
 {
     /**
      * <h3>A High Dynamic Range (HDR) Histogram using a <b><code>short</code></b> count type </h3>

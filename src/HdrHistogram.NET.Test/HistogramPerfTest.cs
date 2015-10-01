@@ -11,10 +11,10 @@
 using System;
 using System.Diagnostics;
 using System.Threading;
-using HdrHistogram.NET.Utilities;
+using HdrHistogram.Utilities;
 using NUnit.Framework;
 
-namespace HdrHistogram.NET.Test
+namespace HdrHistogram.Test
 {
     /**
      * JUnit test for {@link Histogram}

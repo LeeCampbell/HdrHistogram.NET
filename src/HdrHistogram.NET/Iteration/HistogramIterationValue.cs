@@ -8,7 +8,7 @@
  * https://github.com/HdrHistogram/HdrHistogram
  */
 
-namespace HdrHistogram.NET.Iteration
+namespace HdrHistogram.Iteration
 {
     /// <summary>
     /// Represents a value point iterated through in a Histogram, with associated stats.

@@ -9,10 +9,10 @@
  */
 
 using System;
-using HdrHistogram.NET.Utilities;
-using LongBuffer = HdrHistogram.NET.Utilities.WrappedBuffer<long>;
+using HdrHistogram.Utilities;
+using LongBuffer = HdrHistogram.Utilities.WrappedBuffer<long>;
 
-namespace HdrHistogram.NET
+namespace HdrHistogram
 {
     /// <summary>
     /// A High Dynamic Range (HDR) Histogram

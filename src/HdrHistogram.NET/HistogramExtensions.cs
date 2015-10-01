@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using HdrHistogram.NET.Iteration;
+using HdrHistogram.Iteration;
 
-namespace HdrHistogram.NET
+namespace HdrHistogram
 {
     public static class HistogramExtensions
     {

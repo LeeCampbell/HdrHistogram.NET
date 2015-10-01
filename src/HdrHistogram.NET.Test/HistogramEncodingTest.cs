@@ -8,12 +8,12 @@
  * https://github.com/HdrHistogram/HdrHistogram
  */
 
-using HdrHistogram.NET.Utilities;
-using NUnit.Framework;
 using System;
-using Assert = HdrHistogram.NET.Test.AssertEx;
+using HdrHistogram.Utilities;
+using NUnit.Framework;
+using Assert = HdrHistogram.Test.AssertEx;
 
-namespace HdrHistogram.NET.Test
+namespace HdrHistogram.Test
 {
     /**
      * JUnit test for {@link org.HdrHistogram.Histogram}

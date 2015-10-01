@@ -14,7 +14,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
-namespace HdrHistogram.NET.Examples
+namespace HdrHistogram.Examples
 {
     /**
      * A simple example of using HdrHistogram: run for 20 seconds collecting the

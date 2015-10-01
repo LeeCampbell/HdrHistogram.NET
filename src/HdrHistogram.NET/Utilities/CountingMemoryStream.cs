@@ -10,7 +10,7 @@
 
 using System.IO;
 
-namespace HdrHistogram.NET.Utilities
+namespace HdrHistogram.Utilities
 {
     internal class CountingMemoryStream : MemoryStream
     {

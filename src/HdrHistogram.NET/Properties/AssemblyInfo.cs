@@ -5,8 +5,8 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("HdrHistogram.NET")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("HdrHistogram")]
+[assembly: AssemblyDescription("High Dynamic Range Histogram for .NET")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("HdrHistogram.NET")]
@@ -35,4 +35,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("1.2.1.0")]
 [assembly: AssemblyFileVersion("1.2.1.0")]
 
-[assembly: InternalsVisibleTo("HdrHistogram.Net.Test")]
+[assembly: InternalsVisibleTo("HdrHistogram.Test")]

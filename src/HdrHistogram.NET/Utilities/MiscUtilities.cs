@@ -8,7 +8,7 @@
  * https://github.com/HdrHistogram/HdrHistogram
  */
 
-namespace HdrHistogram.NET.Utilities
+namespace HdrHistogram.Utilities
 {
     public static class MiscUtilities
     {

@@ -9,11 +9,11 @@
  */
 
 using System;
-using HdrHistogram.NET.Iteration;
+using HdrHistogram.Iteration;
 using NUnit.Framework;
-using Assert = HdrHistogram.NET.Test.AssertEx;
+using Assert = HdrHistogram.Test.AssertEx;
 
-namespace HdrHistogram.NET.Test
+namespace HdrHistogram.Test
 {
     /**
      * JUnit test for {@link HistogramData}

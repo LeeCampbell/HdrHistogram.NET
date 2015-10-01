@@ -11,7 +11,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace HdrHistogram.NET.Iteration
+namespace HdrHistogram.Iteration
 {
     /// <summary>
     /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LogarithmicEnumerator"/>

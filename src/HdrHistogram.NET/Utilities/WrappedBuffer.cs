@@ -8,7 +8,7 @@
  * https://github.com/HdrHistogram/HdrHistogram
  */
 
-namespace HdrHistogram.NET.Utilities
+namespace HdrHistogram.Utilities
 {
     // This needs to be a view on-top of a byte array
     class WrappedBuffer<T> where T : struct

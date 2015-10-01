@@ -8,7 +8,7 @@
  * https://github.com/HdrHistogram/HdrHistogram
  */
 
-namespace HdrHistogram.NET.Examples
+namespace HdrHistogram.Examples
 {
     class Program
     {

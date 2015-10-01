@@ -9,10 +9,10 @@
  */
 
 using System;
-using HdrHistogram.NET.Utilities;
-using IntBuffer = HdrHistogram.NET.Utilities.WrappedBuffer<int>;
+using HdrHistogram.Utilities;
+using IntBuffer = HdrHistogram.Utilities.WrappedBuffer<int>;
 
-namespace HdrHistogram.NET
+namespace HdrHistogram
 {
     /// <summary>
     /// A High Dynamic Range (HDR) Histogram using an <c>int</c> count type.

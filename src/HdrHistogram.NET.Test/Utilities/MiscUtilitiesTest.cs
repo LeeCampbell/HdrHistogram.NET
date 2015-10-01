@@ -8,11 +8,11 @@
  * https://github.com/HdrHistogram/HdrHistogram
  */
 
-using HdrHistogram.NET.Utilities;
-using NUnit.Framework;
 using System;
+using HdrHistogram.Utilities;
+using NUnit.Framework;
 
-namespace HdrHistogram.NET.Test.Utilities
+namespace HdrHistogram.Test.Utilities
 {
     public class MiscUtilitiesTest
     {

@@ -12,13 +12,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using HdrHistogram.NET.Iteration;
-using HdrHistogram.NET.Utilities;
 using System.IO.Compression;
 using System.Reflection;
 using System.Threading;
+using HdrHistogram.Iteration;
+using HdrHistogram.Utilities;
 
-namespace HdrHistogram.NET
+namespace HdrHistogram
 {
     /// <summary>
     /// Base class for High Dynamic Range (HDR) Histograms

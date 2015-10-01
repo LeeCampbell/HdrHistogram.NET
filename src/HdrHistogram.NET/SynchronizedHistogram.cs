@@ -9,9 +9,9 @@
  */
 
 using System;
-using HdrHistogram.NET.Utilities;
+using HdrHistogram.Utilities;
 
-namespace HdrHistogram.NET
+namespace HdrHistogram
 {
     /// <summary>
     /// An internally synchronized High Dynamic Range (HDR) Histogram using a <c>long</c> count type.
