@@ -23,125 +23,34 @@ namespace HdrHistogram.Test
     public class HistogramPerfTest
     {
         /// <summary> 3,600,000,000 (3600L * 1000 * 1000, e.g. for 1 hr in usec units) </summary>
-        static readonly long highestTrackableValue = 3600L * 1000 * 1000; // e.g. for 1 hr in usec units
-        /// <summary> 3 </summary>
-        static readonly int numberOfSignificantValueDigits = 3;
-        /// <summary> 12340 </summary>
-        static readonly long testValueLevel = 12340;
-        /// <summary> 50,000 </summary>
-        static readonly long warmupLoopLength = 50 * 1000;
-        /// <summary> 400,000,000 </summary>
-        static readonly long rawtimingLoopCount = 400 * 1000 * 1000L;
-        /// <summary> 40,000,000 or 1/10th the regular count </summary>
-        static readonly long synchronizedTimingLoopCount = 40 * 1000 * 1000L;
-        /// <summary> 80,000,000 or 1/5th the regular count </summary>
-        static readonly long atomicTimingLoopCount = 80 * 1000 * 1000L;
-
-        void recordLoopWithExpectedInterval(HistogramBase histogram, long loopCount, long expectedInterval)
-        {
-            for (long i = 0; i < loopCount; i++)
-                histogram.RecordValueWithExpectedInterval(testValueLevel + (i & 0x8000), expectedInterval);
-        }
-
-        long LeadingZerosSpeedLoop(long loopCount)
-        {
-            long sum = 0;
-            for (long i = 0; i < loopCount; i++)
-            {
-                // long val = testValueLevel + (i & 0x8000);
-                long val = testValueLevel;
-                sum += MiscUtilities.NumberOfLeadingZeros(val);
-                sum += MiscUtilities.NumberOfLeadingZeros(val);
-                sum += MiscUtilities.NumberOfLeadingZeros(val);
-                sum += MiscUtilities.NumberOfLeadingZeros(val);
-                sum += MiscUtilities.NumberOfLeadingZeros(val);
-                sum += MiscUtilities.NumberOfLeadingZeros(val);
-                sum += MiscUtilities.NumberOfLeadingZeros(val);
-                sum += MiscUtilities.NumberOfLeadingZeros(val);
-            }
-            return sum;
-        }
-
-        private void testRawRecordingSpeedAtExpectedInterval(String label, HistogramBase histogram,
-                                                            long expectedInterval, long timingLoopCount,
-                                                            bool assertNoGC = true, bool multiThreaded = false)
-        {
-            Console.WriteLine("\nTiming recording speed with expectedInterval = " + expectedInterval + " :");
-            // Warm up:
-            var timer = Stopwatch.StartNew();
-            recordLoopWithExpectedInterval(histogram, warmupLoopLength, expectedInterval);
-            timer.Stop();
-            // 1 millisecond (ms) = 1000 microsoecond (µs or usec)
-            // 1 microsecond (µs or usec) = 1000 nanosecond (ns or nsec)
-            // 1 second = 1,000,000 usec or 1,000 ms
-            long deltaUsec = timer.ElapsedMilliseconds * 1000L;
-            long rate = 1000000 * warmupLoopLength / deltaUsec;
-            Console.WriteLine("{0}Warmup:\n{1:N0} value recordings completed in {2:N0} usec, rate = {3:N0} value recording calls per sec.",
-                                label, warmupLoopLength, deltaUsec, rate);
-            histogram.Reset();
-            // Wait a bit to make sure compiler had a chance to do it's stuff:
-            try
-            {
-                Thread.Sleep(1000);
-            }
-            catch (Exception)
-            {
-            }
-
-            var gcBefore = PrintGCAndMemoryStats("GC Before");
-            timer = Stopwatch.StartNew();
-            recordLoopWithExpectedInterval(histogram, timingLoopCount, expectedInterval);
-            timer.Stop();
-            var gcAfter = PrintGCAndMemoryStats("GC After ");
-            deltaUsec = timer.ElapsedMilliseconds * 1000L;
-            rate = 1000000 * timingLoopCount / deltaUsec;
-
-            Console.WriteLine(label + "Hot code timing:");
-            Console.WriteLine("{0}{1:N0} value recordings completed in {2:N0} usec, rate = {3:N0} value recording calls per sec.",
-                                label, timingLoopCount, deltaUsec, rate);
-            if (multiThreaded == false)
-            {
-                rate = 1000000 * histogram.TotalCount / deltaUsec;
-                Console.WriteLine("{0}{1:N0} raw recorded entries completed in {2:N0} usec, rate = {3:N0} recorded values per sec.",
-                                    label, histogram.TotalCount, deltaUsec, rate);
-            }
-
-            if (assertNoGC)
-            {
-                //// TODO work out why we always seems to get at least 1 GC here, maybe it's due to the length of the test run??
-                //Assert.LessOrEqual(gcAfter.Item1 - gcBefore.Item1, 1, "There should be at MOST 1 Gen1 GC Collections");
-                //Assert.LessOrEqual(gcAfter.Item2 - gcBefore.Item2, 1, "There should be at MOST 1 Gen2 GC Collections");
-                //Assert.LessOrEqual(gcAfter.Item3 - gcBefore.Item3, 1, "There should be at MOST 1 Gen3 GC Collections");
-
-                // TODO work out why we always seems to get at least 1 GC here, maybe it's due to the length of the test run??
-                Assert.LessOrEqual(gcAfter.Gen1 - gcBefore.Gen1, 1, "There should be at MOST 1 Gen1 GC Collections");
-                Assert.LessOrEqual(gcAfter.Gen1 - gcBefore.Gen1, 1, "There should be at MOST 1 Gen2 GC Collections");
-                Assert.LessOrEqual(gcAfter.Gen3 - gcBefore.Gen3, 1, "There should be at MOST 1 Gen3 GC Collections");
-            }
-        }
+        private const long HighestTrackableValue = 3600L * 1000 * 1000; // e.g. for 1 hr in usec units
+        private const int NumberOfSignificantValueDigits = 3;
+        private const long TestValueLevel = 12340;
+        private const long WarmupLoopLength = 50 * 1000;
+        private const long RawtimingLoopCount = 400 * 1000 * 1000L;
+        private const long SynchronizedTimingLoopCount = 40 * 1000 * 1000L;
+        private const long TicksPerMicrosecond = TimeSpan.TicksPerMillisecond / 1000;
 
         [Test]
-        public void testRawRecordingSpeed()
+        public void TestRawRecordingSpeed()
         {
-            HistogramBase histogram;
-            histogram = new Histogram(highestTrackableValue, numberOfSignificantValueDigits);
+            HistogramBase histogram = new Histogram(HighestTrackableValue, NumberOfSignificantValueDigits);
             Console.WriteLine("\n\nTiming Histogram:");
-            testRawRecordingSpeedAtExpectedInterval("Histogram: ", histogram, 1000000000, rawtimingLoopCount);
+            TestRawRecordingSpeedAtExpectedInterval("Histogram: ", histogram, 1000000000, RawtimingLoopCount);
 
             // Check that the histogram contains as many values are we wrote to it
-            Assert.AreEqual(rawtimingLoopCount, histogram.TotalCount);
+            Assert.AreEqual(RawtimingLoopCount, histogram.TotalCount);
         }
 
         [Test]
-        public void testRawSyncronizedRecordingSpeed()
+        public void TestRawSyncronizedRecordingSpeed()
         {
-            HistogramBase histogram;
-            histogram = new SynchronizedHistogram(highestTrackableValue, numberOfSignificantValueDigits);
+            HistogramBase histogram = new SynchronizedHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
             Console.WriteLine("\n\nTiming SynchronizedHistogram:");
-            testRawRecordingSpeedAtExpectedInterval("SynchronizedHistogram: ", histogram, 1000000000, synchronizedTimingLoopCount);
+            TestRawRecordingSpeedAtExpectedInterval("SynchronizedHistogram: ", histogram, 1000000000, SynchronizedTimingLoopCount);
 
             // Check that the histogram contains as many values are we wrote to it
-            Assert.AreEqual(synchronizedTimingLoopCount, histogram.TotalCount);
+            Assert.AreEqual(SynchronizedTimingLoopCount, histogram.TotalCount);
         }
 
         //[Test]
@@ -163,7 +72,7 @@ namespace HdrHistogram.Test
         //    // Check that the histogram contains as many values are we wrote to it
         //    Assert.AreEqual(synchronizedTimingLoopCount * 3L, histogram.getTotalCount());
         //}
-        
+
         //[Test]
         //public void testRawAtomicRecordingSpeedMultithreaded()
         //{
@@ -185,18 +94,12 @@ namespace HdrHistogram.Test
         //}
 
         [Test]
-        public void testLeadingZerosSpeed()
+        public void TestLeadingZerosSpeed()
         {
             Console.WriteLine("\nTiming LeadingZerosSpeed :");
-            var timer = Stopwatch.StartNew();
-            LeadingZerosSpeedLoop(warmupLoopLength);
-            timer.Stop();
-            // 1 millisecond (ms) = 1000 microsoecond (µs or usec)
-            // 1 microsecond (µs or usec) = 1000 nanosecond (ns or nsec)
-            // 1 second = 1,000,000 usec or 1,000 ms
-            long deltaUsec = timer.ElapsedMilliseconds * 1000L;
-            long rate = 1000000 * warmupLoopLength / deltaUsec;
-            Console.WriteLine("Warmup:\n{0:N0} Leading Zero loops completed in {1:N0} usec, rate = {2:N0} value recording calls per sec.", warmupLoopLength, deltaUsec, rate);
+            long deltaUsec = MicrosecondsToExecute(() => LeadingZerosSpeedLoop(WarmupLoopLength));
+            long rate = 1000000 * WarmupLoopLength / deltaUsec;
+            Console.WriteLine("Warmup:\n{0:N0} Leading Zero loops completed in {1:N0} usec, rate = {2:N0} value recording calls per sec.", WarmupLoopLength, deltaUsec, rate);
             // Wait a bit to make sure compiler had a chance to do it's stuff:
             try
             {
@@ -206,13 +109,10 @@ namespace HdrHistogram.Test
             {
             }
 
-            var gcBefore = PrintGCAndMemoryStats("GC Before");
-            var loopCount = rawtimingLoopCount;
-            timer = Stopwatch.StartNew();
-            LeadingZerosSpeedLoop(loopCount);
-            timer.Stop();
-            var gcAfter = PrintGCAndMemoryStats("GC After ");
-            deltaUsec = timer.ElapsedMilliseconds * 1000L;
+            var gcBefore = PrintGcAndMemoryStats("GC Before");
+            var loopCount = RawtimingLoopCount;
+            deltaUsec = MicrosecondsToExecute(() => LeadingZerosSpeedLoop(loopCount));
+            var gcAfter = PrintGcAndMemoryStats("GC After ");
             // Each time round the loop, LeadingZerosSpeedLoop calls MiscUtils.NumberOfLeadingZeros(..) 8 times
             rate = 1000000 * loopCount / deltaUsec;
 
@@ -225,7 +125,57 @@ namespace HdrHistogram.Test
             Assert.LessOrEqual(gcAfter.Gen3 - gcBefore.Gen3, 1, "There should be at MOST 1 Gen3 GC Collections");
         }
 
-        private GCInfo PrintGCAndMemoryStats(string label)
+
+        private static void TestRawRecordingSpeedAtExpectedInterval(String label, HistogramBase histogram,
+                                                            long expectedInterval, long timingLoopCount,
+                                                            bool assertNoGc = true, bool multiThreaded = false)
+        {
+            Console.WriteLine("\nTiming recording speed with expectedInterval = " + expectedInterval + " :");
+            // Warm up:
+            long deltaUsec = MicrosecondsToExecute(
+                    () => RecordLoopWithExpectedInterval(histogram, WarmupLoopLength, expectedInterval));
+
+
+            long rate = 1000000 * WarmupLoopLength / deltaUsec;
+            Console.WriteLine("{0}Warmup:\n{1:N0} value recordings completed in {2:N0} usec, rate = {3:N0} value recording calls per sec.",
+                                label, WarmupLoopLength, deltaUsec, rate);
+            histogram.Reset();
+            // Wait a bit to make sure compiler had a chance to do it's stuff:
+            try
+            {
+                Thread.Sleep(1000);
+            }
+            catch (Exception)
+            {
+            }
+
+            var gcBefore = PrintGcAndMemoryStats("GC Before");
+            deltaUsec = MicrosecondsToExecute(
+                () => RecordLoopWithExpectedInterval(histogram, timingLoopCount, expectedInterval));
+            var gcAfter = PrintGcAndMemoryStats("GC After ");
+
+            rate = 1000000 * timingLoopCount / deltaUsec;
+
+            Console.WriteLine(label + "Hot code timing:");
+            Console.WriteLine("{0}{1:N0} value recordings completed in {2:N0} usec, rate = {3:N0} value recording calls per sec.",
+                                label, timingLoopCount, deltaUsec, rate);
+            if (multiThreaded == false)
+            {
+                rate = 1000000 * histogram.TotalCount / deltaUsec;
+                Console.WriteLine("{0}{1:N0} raw recorded entries completed in {2:N0} usec, rate = {3:N0} recorded values per sec.",
+                                    label, histogram.TotalCount, deltaUsec, rate);
+            }
+
+            if (assertNoGc)
+            {
+                // TODO work out why we always seems to get at least 1 GC here, maybe it's due to the length of the test run??
+                Assert.LessOrEqual(gcAfter.Gen1 - gcBefore.Gen1, 1, "There should be at MOST 1 Gen1 GC Collections");
+                Assert.LessOrEqual(gcAfter.Gen2 - gcBefore.Gen2, 1, "There should be at MOST 1 Gen2 GC Collections");
+                Assert.LessOrEqual(gcAfter.Gen3 - gcBefore.Gen3, 1, "There should be at MOST 1 Gen3 GC Collections");
+            }
+        }
+
+        private static GcInfo PrintGcAndMemoryStats(string label)
         {
             var bytesUsed = GC.GetTotalMemory(forceFullCollection: false);
             var gen1 = GC.CollectionCount(0);
@@ -234,16 +184,52 @@ namespace HdrHistogram.Test
             Console.WriteLine("{0}: {1:0.00} MB ({2:N0} bytes), Gen0 {3}, Gen1 {4}, Gen2 {5}",
                                 label, bytesUsed / 1024.0 / 1024.0, bytesUsed, gen1, gen2, gen3);
 
-            return new GCInfo(gen1, gen2, gen3);
+            return new GcInfo(gen1, gen2, gen3);
         }
 
-        private class GCInfo
+        private static void RecordLoopWithExpectedInterval(HistogramBase histogram, long loopCount, long expectedInterval)
         {
-            public int Gen1 { get; private set; }
-            public int Gen2 { get; private set; }
-            public int Gen3 { get; private set; }
+            for (long i = 0; i < loopCount; i++)
+                histogram.RecordValueWithExpectedInterval(TestValueLevel + (i & 0x8000), expectedInterval);
+        }
 
-            public GCInfo(int gen1, int gen2, int gen3)
+        private static long LeadingZerosSpeedLoop(long loopCount)
+        {
+            long sum = 0;
+            for (long i = 0; i < loopCount; i++)
+            {
+                long val = TestValueLevel;
+                sum += MiscUtilities.NumberOfLeadingZeros(val);
+                sum += MiscUtilities.NumberOfLeadingZeros(val);
+                sum += MiscUtilities.NumberOfLeadingZeros(val);
+                sum += MiscUtilities.NumberOfLeadingZeros(val);
+                sum += MiscUtilities.NumberOfLeadingZeros(val);
+                sum += MiscUtilities.NumberOfLeadingZeros(val);
+                sum += MiscUtilities.NumberOfLeadingZeros(val);
+                sum += MiscUtilities.NumberOfLeadingZeros(val);
+            }
+            return sum;
+        }
+
+        private static long MicrosecondsToExecute(Action action)
+        {
+            // 1 millisecond (ms) = 1000 microsoecond (µs or usec)
+            // 1 microsecond (µs or usec) = 1000 nanosecond (ns or nsec)
+            // 1 second = 1,000,000 usec or 1,000 ms
+
+            var startTs = Stopwatch.GetTimestamp();
+            action();
+            var deltaTicks = Stopwatch.GetTimestamp() - startTs;
+            return deltaTicks * TicksPerMicrosecond;
+        }
+
+        private class GcInfo
+        {
+            public int Gen1 { get; }
+            public int Gen2 { get; }
+            public int Gen3 { get; }
+
+            public GcInfo(int gen1, int gen2, int gen3)
             {
                 Gen1 = gen1;
                 Gen2 = gen2;
@@ -256,11 +242,11 @@ namespace HdrHistogram.Test
             try
             {
                 HistogramPerfTest test = new HistogramPerfTest();
-                test.testRawRecordingSpeed();
+                test.TestRawRecordingSpeed();
                 Console.WriteLine("");
-                test.testRawSyncronizedRecordingSpeed();
+                test.TestRawSyncronizedRecordingSpeed();
                 Console.WriteLine("");
-                test.testLeadingZerosSpeed();
+                test.TestLeadingZerosSpeed();
                 Console.WriteLine("");
 
                 //Thread.sleep(1000000);
