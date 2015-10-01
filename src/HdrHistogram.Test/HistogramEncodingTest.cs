@@ -15,25 +15,19 @@ using Assert = HdrHistogram.Test.AssertEx;
 
 namespace HdrHistogram.Test
 {
-    /**
-     * JUnit test for {@link org.HdrHistogram.Histogram}
-     */
     public class HistogramEncodingTest 
     {
-        static readonly long highestTrackableValue = 3600L * 1000 * 1000; // e.g. for 1 hr in usec units
-        static readonly int numberOfSignificantValueDigits = 3;
-        // static readonly long testValueLevel = 12340;
-        static readonly long testValueLevel = 4;
+        private const long HighestTrackableValue = 3600L*1000*1000; // e.g. for 1 hr in usec units
 
         [Test]
-        public void testHistogramEncoding() //throws Exception 
+        public void TestHistogramEncoding()
         {
-            ShortHistogram shortHistogram = new ShortHistogram(highestTrackableValue, 3);
-            IntHistogram intHistogram = new IntHistogram(highestTrackableValue, 3);
-            LongHistogram longHistogram = new LongHistogram(highestTrackableValue, 3);
-            SynchronizedHistogram synchronizedHistogram = new SynchronizedHistogram(highestTrackableValue, 3);
+            var shortHistogram = new ShortHistogram(HighestTrackableValue, 3);
+            var intHistogram = new IntHistogram(HighestTrackableValue, 3);
+            var longHistogram = new LongHistogram(HighestTrackableValue, 3);
+            var synchronizedHistogram = new SynchronizedHistogram(HighestTrackableValue, 3);
 
-            for (int i = 0; i < 10000; i++) {
+            for (var i = 0; i < 10000; i++) {
                 shortHistogram.RecordValueWithExpectedInterval(1000 /* 1 msec */, 10000 /* 10 msec expected interval */);
                 intHistogram.RecordValueWithExpectedInterval(2000 /* 1 msec */, 10000 /* 10 msec expected interval */);
                 longHistogram.RecordValueWithExpectedInterval(3000 /* 1 msec */, 10000 /* 10 msec expected interval */);
@@ -41,20 +35,20 @@ namespace HdrHistogram.Test
             }
 
             Console.WriteLine("\n\nTesting encoding of a ShortHistogram:");
-            ByteBuffer targetBuffer = ByteBuffer.allocate(shortHistogram.GetNeededByteBufferCapacity());
+            var targetBuffer = ByteBuffer.allocate(shortHistogram.GetNeededByteBufferCapacity());
             shortHistogram.EncodeIntoByteBuffer(targetBuffer);
             //Console.WriteLine("After ENCODING TargetBuffer length = {0} (position {1}), shortHistogram size = {2}",
             //                targetBuffer.capacity(), targetBuffer.position(), shortHistogram.getTotalCount());
             targetBuffer.rewind();
 
-            ShortHistogram shortHistogram2 = ShortHistogram.DecodeFromByteBuffer(targetBuffer, 0);
+            var shortHistogram2 = ShortHistogram.DecodeFromByteBuffer(targetBuffer, 0);
             Assert.assertEquals(shortHistogram, shortHistogram2);
 
-            ByteBuffer targetCompressedBuffer = ByteBuffer.allocate(shortHistogram.GetNeededByteBufferCapacity());
+            var targetCompressedBuffer = ByteBuffer.allocate(shortHistogram.GetNeededByteBufferCapacity());
             shortHistogram.EncodeIntoCompressedByteBuffer(targetCompressedBuffer);
             targetCompressedBuffer.rewind();
 
-            ShortHistogram shortHistogram3 = ShortHistogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
+            var shortHistogram3 = ShortHistogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
             Assert.assertEquals(shortHistogram, shortHistogram3);
 
             Console.WriteLine("\n\nTesting encoding of a IntHistogram:");
@@ -64,14 +58,14 @@ namespace HdrHistogram.Test
             //                targetBuffer.capacity(), targetBuffer.position(), intHistogram.getTotalCount());
             targetBuffer.rewind();
 
-            IntHistogram intHistogram2 = IntHistogram.DecodeFromByteBuffer(targetBuffer, 0);
+            var intHistogram2 = IntHistogram.DecodeFromByteBuffer(targetBuffer, 0);
             Assert.assertEquals(intHistogram, intHistogram2);
 
             targetCompressedBuffer = ByteBuffer.allocate(intHistogram.GetNeededByteBufferCapacity());
             intHistogram.EncodeIntoCompressedByteBuffer(targetCompressedBuffer);
             targetCompressedBuffer.rewind();
 
-            IntHistogram intHistogram3 = IntHistogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
+            var intHistogram3 = IntHistogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
             Assert.assertEquals(intHistogram, intHistogram3);
 
             Console.WriteLine("\n\nTesting encoding of a Histogram (long):");
@@ -81,14 +75,14 @@ namespace HdrHistogram.Test
             //                targetBuffer.capacity(), targetBuffer.position(), histogram.getTotalCount());
             targetBuffer.rewind();
 
-            LongHistogram histogram2 = LongHistogram.DecodeFromByteBuffer(targetBuffer, 0);
+            var histogram2 = LongHistogram.DecodeFromByteBuffer(targetBuffer, 0);
             Assert.assertEquals(longHistogram, histogram2);
 
             targetCompressedBuffer = ByteBuffer.allocate(longHistogram.GetNeededByteBufferCapacity());
             longHistogram.EncodeIntoCompressedByteBuffer(targetCompressedBuffer);
             targetCompressedBuffer.rewind();
 
-            LongHistogram histogram3 = LongHistogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
+            var histogram3 = LongHistogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
             Assert.assertEquals(longHistogram, histogram3);
 
             targetBuffer.rewind();
@@ -103,41 +97,41 @@ namespace HdrHistogram.Test
             //                targetBuffer.capacity(), targetBuffer.position(), synchronizedHistogram.getTotalCount());
             targetBuffer.rewind();
 
-            SynchronizedHistogram synchronizedHistogram2 = SynchronizedHistogram.DecodeFromByteBuffer(targetBuffer, 0);
+            var synchronizedHistogram2 = SynchronizedHistogram.DecodeFromByteBuffer(targetBuffer, 0);
             Assert.assertEquals(synchronizedHistogram, synchronizedHistogram2);
 
             targetCompressedBuffer = ByteBuffer.allocate(synchronizedHistogram.GetNeededByteBufferCapacity());
             synchronizedHistogram.EncodeIntoCompressedByteBuffer(targetCompressedBuffer);
             targetCompressedBuffer.rewind();
 
-            SynchronizedHistogram synchronizedHistogram3 = SynchronizedHistogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
+            var synchronizedHistogram3 = SynchronizedHistogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
             Assert.assertEquals(synchronizedHistogram, synchronizedHistogram3);
         }
 
         [Test]
-        public void testHistogramEncodingFullRangeOfValues() //throws Exception 
+        public void TestHistogramEncodingFullRangeOfValues()
         {
-            LongHistogram longHistogram = new LongHistogram(highestTrackableValue, 3);
+            var longHistogram = new LongHistogram(HighestTrackableValue, 3);
 
-            for (long i = 0; i < highestTrackableValue; i += 100) 
+            for (long i = 0; i < HighestTrackableValue; i += 100) 
             {
                 longHistogram.RecordValue(i);
             }
-            longHistogram.RecordValue(highestTrackableValue);
+            longHistogram.RecordValue(HighestTrackableValue);
 
             Console.WriteLine("\n\nTesting encoding of a Histogram (long):");
             var targetBuffer = ByteBuffer.allocate(longHistogram.GetNeededByteBufferCapacity());
             longHistogram.EncodeIntoByteBuffer(targetBuffer);
             targetBuffer.rewind();
 
-            LongHistogram histogram2 = LongHistogram.DecodeFromByteBuffer(targetBuffer, 0);
+            var histogram2 = LongHistogram.DecodeFromByteBuffer(targetBuffer, 0);
             Assert.assertEquals(longHistogram, histogram2);
 
             var targetCompressedBuffer = ByteBuffer.allocate(longHistogram.GetNeededByteBufferCapacity());
             longHistogram.EncodeIntoCompressedByteBuffer(targetCompressedBuffer);
             targetCompressedBuffer.rewind();
 
-            LongHistogram histogram3 = LongHistogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
+            var histogram3 = LongHistogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
             Assert.assertEquals(longHistogram, histogram3);
 
             Console.WriteLine();
