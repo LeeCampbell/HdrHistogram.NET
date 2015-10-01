@@ -710,8 +710,10 @@ namespace HdrHistogram
         protected abstract void ClearCounts();
 
         //TODO: Can I make this Generic, or at least more .NET idomatic -LC
-        protected static HistogramBase DecodeFromByteBuffer(ByteBuffer buffer, Type histogramClass, long minBarForHighestTrackableValue)
+        protected static T DecodeFromByteBuffer<T>(ByteBuffer buffer, long minBarForHighestTrackableValue)
+            where T : HistogramBase
         {
+            Type histogramClass = typeof (T);
             HistogramBase histogram = ConstructHistogramFromBufferHeader(buffer, histogramClass,
                     minBarForHighestTrackableValue);
 
@@ -728,7 +730,7 @@ namespace HdrHistogram
 
             histogram.FillCountsArrayFromBuffer(buffer, histogram.CountsArrayLength * histogram.WordSizeInBytes);
 
-            return histogram;
+            return (T)histogram;
         }
 
         protected static HistogramBase DecodeFromCompressedByteBuffer(ByteBuffer buffer, Type histogramClass, long minBarForHighestTrackableValue)

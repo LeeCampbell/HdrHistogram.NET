@@ -123,7 +123,7 @@ namespace HdrHistogram
         /// <returns>The newly constructed histogram</returns>
         public static SynchronizedHistogram DecodeFromByteBuffer(ByteBuffer buffer, long minBarForHighestTrackableValue)
         {
-            return (SynchronizedHistogram)DecodeFromByteBuffer(buffer, typeof(SynchronizedHistogram), minBarForHighestTrackableValue);
+            return DecodeFromByteBuffer<SynchronizedHistogram>(buffer, minBarForHighestTrackableValue);
         }
 
         /// <summary>
@@ -185,7 +185,7 @@ namespace HdrHistogram
                 _totalCount += value;
             }
         }
-        
+
         protected override void FillCountsArrayFromBuffer(ByteBuffer buffer, int length)
         {
             lock (UpdateLock)

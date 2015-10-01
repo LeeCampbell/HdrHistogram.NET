@@ -39,9 +39,9 @@ namespace HdrHistogram
         private readonly long[] _counts;
 
         // We try to cache the LongBuffer used in output cases, as repeated output from the same histogram using the same buffer is likely.
-        private LongBuffer _cachedDstLongBuffer = null;
-        private ByteBuffer _cachedDstByteBuffer = null;
-        private int _cachedDstByteBufferPosition = 0;
+        private LongBuffer _cachedDstLongBuffer;
+        private ByteBuffer _cachedDstByteBuffer;
+        private int _cachedDstByteBufferPosition;
 
         /// <summary>
         /// Construct a Histogram given the Highest value to be tracked and a number of significant decimal digits. 
@@ -97,7 +97,7 @@ namespace HdrHistogram
         {
             return (512 + (8 * _counts.Length));
         }
-        
+
         /// <summary>
         /// Construct a new histogram by decoding it from a ByteBuffer.
         /// </summary>
@@ -106,7 +106,7 @@ namespace HdrHistogram
         /// <returns>The newly constructed histogram</returns>
         public static Histogram DecodeFromByteBuffer(ByteBuffer buffer, long minBarForHighestTrackableValue)
         {
-            return (Histogram)HistogramBase.DecodeFromByteBuffer(buffer, typeof(Histogram), minBarForHighestTrackableValue);
+            return DecodeFromByteBuffer<Histogram>(buffer, minBarForHighestTrackableValue);
         }
 
         /// <summary>
@@ -121,17 +121,17 @@ namespace HdrHistogram
         }
 
 
-        protected override long GetCountAtIndex(int index) 
+        protected override long GetCountAtIndex(int index)
         {
             return _counts[index];
         }
 
-        protected override void IncrementCountAtIndex(int index) 
+        protected override void IncrementCountAtIndex(int index)
         {
             _counts[index]++;
         }
 
-        protected override void AddToCountAtIndex(int index, long value) 
+        protected override void AddToCountAtIndex(int index, long value)
         {
             _counts[index] += value;
         }
@@ -141,17 +141,17 @@ namespace HdrHistogram
             Array.Clear(_counts, 0, _counts.Length);
             TotalCount = 0;
         }
-        
-        protected override void IncrementTotalCount() 
+
+        protected override void IncrementTotalCount()
         {
             TotalCount++;
         }
 
-        protected override void AddToTotalCount(long value) 
+        protected override void AddToTotalCount(long value)
         {
             TotalCount += value;
         }
-        
+
         protected override void FillCountsArrayFromBuffer(ByteBuffer buffer, int length)
         {
             lock (UpdateLock)

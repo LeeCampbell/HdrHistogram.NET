@@ -84,7 +84,7 @@ namespace HdrHistogram
         /// <returns>The newly constructed histogram</returns>
         public static IntHistogram DecodeFromByteBuffer(ByteBuffer buffer, long minBarForHighestTrackableValue)
         {
-            return (IntHistogram)DecodeFromByteBuffer(buffer, typeof(IntHistogram), minBarForHighestTrackableValue);
+            return DecodeFromByteBuffer<IntHistogram>(buffer, minBarForHighestTrackableValue);
         }
 
         /// <summary>

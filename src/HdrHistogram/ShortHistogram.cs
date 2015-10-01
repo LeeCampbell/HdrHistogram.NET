@@ -19,7 +19,7 @@ namespace HdrHistogram
      * <p>
      * See package description for {@link org.HdrHistogram} for details.
      */
-    public sealed class ShortHistogram : HistogramBase 
+    public sealed class ShortHistogram : HistogramBase
     {
         private readonly short[] _counts;
 
@@ -27,7 +27,7 @@ namespace HdrHistogram
         private ShortBuffer _cachedDstShortBuffer;
         private ByteBuffer _cachedDstByteBuffer;
         private int _cachedDstByteBufferPosition;
-        
+
         /// <summary>
         /// Construct a ShortHistogram given the Highest value to be tracked and a number of significant decimal digits. 
         /// The histogram will be constructed to implicitly track (distinguish from 0) values as low as 1. 
@@ -38,7 +38,7 @@ namespace HdrHistogram
             : this(1, highestTrackableValue, numberOfSignificantValueDigits)
         {
         }
-        
+
         /// <summary>
         /// Construct a ShortHistogram given the Lowest and Highest values to be tracked and a number of significant
         /// decimal digits.Providing a lowestTrackableValue is useful is situations where the units used
@@ -60,15 +60,15 @@ namespace HdrHistogram
         public override long TotalCount { get; protected set; }
 
         protected override int WordSizeInBytes => 2;
-        
-        public override HistogramBase Copy() 
+
+        public override HistogramBase Copy()
         {
-          var copy = new ShortHistogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
-          copy.Add(this);
-          return copy;
+            var copy = new ShortHistogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
+            copy.Add(this);
+            return copy;
         }
 
-        public override HistogramBase CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples) 
+        public override HistogramBase CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples)
         {
             var toHistogram = new ShortHistogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
             toHistogram.AddWhileCorrectingForCoordinatedOmission(this, expectedIntervalBetweenValueSamples);
@@ -79,17 +79,16 @@ namespace HdrHistogram
         {
             return (512 + (2 * _counts.Length));
         }
-        
+
         /// <summary>
         /// Construct a new histogram by decoding it from a <see cref="ByteBuffer"/>.
         /// </summary>
         /// <param name="buffer">The buffer to decode from</param>
         /// <param name="minBarForHighestTrackableValue">Force highestTrackableValue to be set at least this high</param>
         /// <returns>The newly constructed histogram</returns>
-        public static ShortHistogram DecodeFromByteBuffer(ByteBuffer buffer,
-                                                          long minBarForHighestTrackableValue)
+        public static ShortHistogram DecodeFromByteBuffer(ByteBuffer buffer, long minBarForHighestTrackableValue)
         {
-            return (ShortHistogram)DecodeFromByteBuffer(buffer, typeof(ShortHistogram), minBarForHighestTrackableValue);
+            return DecodeFromByteBuffer<ShortHistogram>(buffer, minBarForHighestTrackableValue);
         }
 
         /// <summary>
@@ -125,24 +124,24 @@ namespace HdrHistogram
             TotalCount = 0;
         }
 
-        protected override void IncrementTotalCount() 
+        protected override void IncrementTotalCount()
         {
             TotalCount++;
         }
 
-        protected override void AddToTotalCount(long value) 
+        protected override void AddToTotalCount(long value)
         {
             TotalCount += value;
         }
-        
-        protected override void FillCountsArrayFromBuffer(ByteBuffer buffer, int length) 
+
+        protected override void FillCountsArrayFromBuffer(ByteBuffer buffer, int length)
         {
             lock (UpdateLock)
             {
                 buffer.asShortBuffer().get(_counts, 0, length);
             }
         }
-        
+
         protected override void FillBufferFromCountsArray(ByteBuffer buffer, int length)
         {
             lock (UpdateLock)
