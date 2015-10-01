@@ -270,8 +270,7 @@ namespace HdrHistogram
                         v.CountAtValueIteratedTo, expectedIntervalBetweenValueSamples);
             }
         }
-
-
+        
         /// <summary>
         /// Get the size (in value units) of the range of values that are equivalent to the given value within the histogram's resolution. 
         /// Where "equivalent" means that value samples recorded for any two equivalent values are counted in a common total count.
@@ -592,8 +591,7 @@ namespace HdrHistogram
             }
             TotalCount = totalCounted;
         }
-
-
+        
         //TODO: Implement IEquatable? -LC
         /// <summary>
         /// Determine if this histogram is equivalent to another.
@@ -683,8 +681,7 @@ namespace HdrHistogram
         /// <returns>a (conservatively high) estimate of the Histogram's total footprint in bytes</returns>
         public abstract int GetEstimatedFootprintInBytes();
 
-
-
+        
         internal long GetCountAt(int bucketIndex, int subBucketIndex)
         {
             return GetCountAtIndex(CountsArrayIndex(bucketIndex, subBucketIndex));
@@ -712,6 +709,7 @@ namespace HdrHistogram
 
         protected abstract void ClearCounts();
 
+        //TODO: Can I make this Generic, or at least more .NET idomatic -LC
         protected static HistogramBase DecodeFromByteBuffer(ByteBuffer buffer, Type histogramClass, long minBarForHighestTrackableValue)
         {
             HistogramBase histogram = ConstructHistogramFromBufferHeader(buffer, histogramClass,
@@ -919,6 +917,5 @@ namespace HdrHistogram
         {
             return (cookie & 0xf0) >> 4;
         }
-
     }
 }

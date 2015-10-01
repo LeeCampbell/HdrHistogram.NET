@@ -22,9 +22,9 @@ namespace HdrHistogram
         private readonly int[] _counts;
 
         // We try to cache the LongBuffer used in output cases, as repeated output from the same histogram using the same buffer is likely.
-        private IntBuffer _cachedDstIntBuffer = null;
-        private ByteBuffer _cachedDstByteBuffer = null;
-        private int _cachedDstByteBufferPosition = 0;
+        private IntBuffer _cachedDstIntBuffer;
+        private ByteBuffer _cachedDstByteBuffer;
+        private int _cachedDstByteBufferPosition;
 
         /// <summary>
         /// Construct a IntHistogram given the Highest value to be tracked and a number of significant decimal digits. 
@@ -59,14 +59,14 @@ namespace HdrHistogram
 
         public override HistogramBase Copy()
         {
-            IntHistogram copy = new IntHistogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
+            var copy = new IntHistogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
             copy.Add(this);
             return copy;
         }
 
         public override HistogramBase CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples)
         {
-            IntHistogram toHistogram = new IntHistogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
+            var toHistogram = new IntHistogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
             toHistogram.AddWhileCorrectingForCoordinatedOmission(this, expectedIntervalBetweenValueSamples);
             return toHistogram;
         }

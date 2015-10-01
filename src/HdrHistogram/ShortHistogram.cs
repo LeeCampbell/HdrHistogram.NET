@@ -24,9 +24,9 @@ namespace HdrHistogram
         private readonly short[] _counts;
 
         // We try to cache the LongBuffer used in output cases, as repeated output from the same histogram using the same buffer is likely.
-        private ShortBuffer _cachedDstShortBuffer = null;
-        private ByteBuffer _cachedDstByteBuffer = null;
-        private int _cachedDstByteBufferPosition = 0;
+        private ShortBuffer _cachedDstShortBuffer;
+        private ByteBuffer _cachedDstByteBuffer;
+        private int _cachedDstByteBufferPosition;
         
         /// <summary>
         /// Construct a ShortHistogram given the Highest value to be tracked and a number of significant decimal digits. 

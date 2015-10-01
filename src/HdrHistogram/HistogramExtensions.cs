@@ -14,7 +14,7 @@ namespace HdrHistogram
         /// <returns>the Min value recorded in the histogram</returns>
         public static long GetMinValue(this HistogramBase histogram)
         {
-            long min = histogram.RecordedValues().Select(hiv => hiv.ValueIteratedTo).FirstOrDefault();
+            var min = histogram.RecordedValues().Select(hiv => hiv.ValueIteratedTo).FirstOrDefault();
             return histogram.LowestEquivalentValue(min);
         }
 
@@ -24,7 +24,7 @@ namespace HdrHistogram
         /// <returns>the Max value recorded in the histogram</returns>
         public static long GetMaxValue(this HistogramBase histogram)
         {
-            long max = histogram.RecordedValues().Select(hiv => hiv.ValueIteratedTo).LastOrDefault();
+            var max = histogram.RecordedValues().Select(hiv => hiv.ValueIteratedTo).LastOrDefault();
             return histogram.LowestEquivalentValue(max);
         }
 
@@ -34,7 +34,7 @@ namespace HdrHistogram
         /// <returns>the mean value (in value units) of the histogram data</returns>
         public static double GetMean(this HistogramBase histogram)
         {
-            long totalValue = histogram.RecordedValues().Select(hiv => hiv.TotalValueToThisValue).LastOrDefault();
+            var totalValue = histogram.RecordedValues().Select(hiv => hiv.TotalValueToThisValue).LastOrDefault();
             return (totalValue * 1.0) / histogram.TotalCount;
         }
 
@@ -44,14 +44,14 @@ namespace HdrHistogram
         /// <returns>the standard deviation (in value units) of the histogram data</returns>
         public static double GetStdDeviation(this HistogramBase histogram)
         {
-            double mean = histogram.GetMean();
-            double geometricDeviationTotal = 0.0;
+            var mean = histogram.GetMean();
+            var geometricDeviationTotal = 0.0;
             foreach (var iterationValue in histogram.RecordedValues())
             {
                 double deviation = (histogram.MedianEquivalentValue(iterationValue.ValueIteratedTo) * 1.0) - mean;
                 geometricDeviationTotal += (deviation * deviation) * iterationValue.CountAddedInThisIterationStep;
             }
-            double stdDeviation = Math.Sqrt(geometricDeviationTotal / histogram.TotalCount);
+            var stdDeviation = Math.Sqrt(geometricDeviationTotal / histogram.TotalCount);
             return stdDeviation;
         }
 
@@ -140,10 +140,10 @@ namespace HdrHistogram
                     // exhibits a very non-normal distribution, highlighting situations for which the std.
                     // deviation metric is a useless indicator.
 
-                    double mean = histogram.GetMean() / outputValueUnitScalingRatio;
-                    double std_deviation = histogram.GetStdDeviation() / outputValueUnitScalingRatio;
+                    var mean = histogram.GetMean() / outputValueUnitScalingRatio;
+                    var stdDeviation = histogram.GetStdDeviation() / outputValueUnitScalingRatio;
                     printStream.Write("#[Mean    = {0,12:F" + histogram.NumberOfSignificantValueDigits + "}, " +
-                                       "StdDeviation   = {1,12:F" + histogram.NumberOfSignificantValueDigits + "}]\n", mean, std_deviation);
+                                       "StdDeviation   = {1,12:F" + histogram.NumberOfSignificantValueDigits + "}]\n", mean, stdDeviation);
                     printStream.Write("#[Max     = {0,12:F" + histogram.NumberOfSignificantValueDigits + "}, Total count    = {1,12}]\n",
                                         histogram.GetMaxValue() / outputValueUnitScalingRatio, histogram.TotalCount);
                     printStream.Write("#[Buckets = {0,12}, SubBuckets     = {1,12}]\n",
