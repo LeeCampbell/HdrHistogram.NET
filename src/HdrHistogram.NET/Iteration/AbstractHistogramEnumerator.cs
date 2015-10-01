@@ -57,17 +57,6 @@ namespace HdrHistogram.NET.Iteration
             _currentIterationValue = new HistogramIterationValue();
         }
 
-        public bool MoveNext()
-        {
-            var canMove = HasNext();
-            if (canMove)
-            {
-                Current = Next();
-            }
-            return canMove;
-        }
-
-
         /// <summary>
         ///  Returns <c>true</c> if the iteration has more elements. (In other words, returns true if next would return an element rather than throwing an exception.)
         /// </summary>
@@ -164,6 +153,15 @@ namespace HdrHistogram.NET.Iteration
 
         object IEnumerator.Current => Current;
 
+        bool IEnumerator.MoveNext()
+        {
+            var canMove = HasNext();
+            if (canMove)
+            {
+                Current = Next();
+            }
+            return canMove;
+        }
         void IEnumerator.Reset()
         {
             //throw new NotImplementedException();

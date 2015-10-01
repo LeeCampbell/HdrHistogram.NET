@@ -47,7 +47,7 @@ namespace HdrHistogram.NET.Iteration
     /// </summary>
     sealed class PercentileEnumerator : AbstractHistogramEnumerator
     {
-        private int _percentileTicksPerHalfDistance;
+        private readonly int _percentileTicksPerHalfDistance;
         private double _percentileLevelToIterateTo;
         private bool _reachedLastRecordedValue;
         

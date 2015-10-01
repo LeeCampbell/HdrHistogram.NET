@@ -33,7 +33,7 @@ namespace HdrHistogram.NET.Iteration
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
     }
 
