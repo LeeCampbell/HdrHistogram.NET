@@ -17,57 +17,20 @@ namespace HdrHistogram.Test
 {
     public class HistogramTest
     {
-        private const long HighestTrackableValue = 3600L*1000*1000; // e.g. for 1 hr in usec units
+        private const long HighestTrackableValue = 3600L * 1000 * 1000; // e.g. for 1 hr in usec units
         private const int NumberOfSignificantValueDigits = 3;
         private const long TestValueLevel = 4;
 
         [Test]
-        public void TestConstructionArgumentRanges()  
+        public void TestConstructionArgumentRanges()
         {
-            var thrown = false;
-            LongHistogram longHistogram = null;
-
-            try
-            {
-                // This should throw:
-                longHistogram = new LongHistogram(1, NumberOfSignificantValueDigits);
-            }
-            catch (ArgumentException) 
-            {
-                thrown = true;
-            }
-            Assert.assertTrue(thrown);
-            Assert.assertEquals(longHistogram, null);
-
-            thrown = false;
-            try 
-            {
-                // This should throw:
-                longHistogram = new LongHistogram(HighestTrackableValue, 6);
-            }
-            catch (ArgumentException) 
-            {
-                thrown = true;
-            }
-            Assert.assertTrue(thrown);
-            Assert.assertEquals(longHistogram, null);
-
-            thrown = false;
-            try 
-            {
-                // This should throw:
-                longHistogram = new LongHistogram(HighestTrackableValue, -1);
-            }
-            catch (ArgumentException) 
-            {
-                thrown = true;
-            }
-            Assert.assertTrue(thrown);
-            Assert.assertEquals(longHistogram, null);
+            NUnit.Framework.Assert.Throws<ArgumentException>(() => { new LongHistogram(1, NumberOfSignificantValueDigits); });
+            NUnit.Framework.Assert.Throws<ArgumentException>(() => { new LongHistogram(HighestTrackableValue, 6); });
+            NUnit.Framework.Assert.Throws<ArgumentException>(() => { new LongHistogram(HighestTrackableValue, -1); });
         }
 
         [Test]
-        public void TestConstructionArgumentGets()  
+        public void TestConstructionArgumentGets()
         {
             var longHistogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
             Assert.assertEquals(1, longHistogram.LowestTrackableValue);
@@ -78,12 +41,12 @@ namespace HdrHistogram.Test
         }
 
         [Test]
-        public void TestGetEstimatedFootprintInBytes()  
+        public void TestGetEstimatedFootprintInBytes()
         {
             var longHistogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
-            var largestValueWithSingleUnitResolution = 2 * (long) Math.Pow(10, NumberOfSignificantValueDigits);
+            var largestValueWithSingleUnitResolution = 2 * (long)Math.Pow(10, NumberOfSignificantValueDigits);
             var subBucketCountMagnitude = (int)Math.Ceiling(Math.Log(largestValueWithSingleUnitResolution) / Math.Log(2));
-            var subBucketSize = (int) Math.Pow(2, (subBucketCountMagnitude));
+            var subBucketSize = (int)Math.Pow(2, (subBucketCountMagnitude));
 
             long expectedSize = 512 +
                     ((8 *
@@ -99,7 +62,7 @@ namespace HdrHistogram.Test
         }
 
         [Test]
-        public void TestRecordValue()  
+        public void TestRecordValue()
         {
             var longHistogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
             longHistogram.RecordValue(TestValueLevel);
@@ -109,35 +72,35 @@ namespace HdrHistogram.Test
 
         [Test]
         [ExpectedException(typeof(IndexOutOfRangeException))]
-        public void testRecordValue_Overflow_ShouldThrowException()  
+        public void testRecordValue_Overflow_ShouldThrowException()
         {
             var longHistogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
             longHistogram.RecordValue(HighestTrackableValue * 3);
         }
 
         [Test]
-        public void TestRecordValueWithExpectedInterval()  
+        public void TestRecordValueWithExpectedInterval()
         {
             var longHistogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
-            longHistogram.RecordValueWithExpectedInterval(TestValueLevel, TestValueLevel/4);
+            longHistogram.RecordValueWithExpectedInterval(TestValueLevel, TestValueLevel / 4);
             var rawHistogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
             rawHistogram.RecordValue(TestValueLevel);
             // The data will include corrected samples:
-            Assert.assertEquals(1L, longHistogram.GetCountAtValue((TestValueLevel * 1 )/4));
-            Assert.assertEquals(1L, longHistogram.GetCountAtValue((TestValueLevel * 2 )/4));
-            Assert.assertEquals(1L, longHistogram.GetCountAtValue((TestValueLevel * 3 )/4));
-            Assert.assertEquals(1L, longHistogram.GetCountAtValue((TestValueLevel * 4 )/4));
+            Assert.assertEquals(1L, longHistogram.GetCountAtValue((TestValueLevel * 1) / 4));
+            Assert.assertEquals(1L, longHistogram.GetCountAtValue((TestValueLevel * 2) / 4));
+            Assert.assertEquals(1L, longHistogram.GetCountAtValue((TestValueLevel * 3) / 4));
+            Assert.assertEquals(1L, longHistogram.GetCountAtValue((TestValueLevel * 4) / 4));
             Assert.assertEquals(4L, longHistogram.TotalCount);
             // But the raw data will not:
-            Assert.assertEquals(0L, rawHistogram.GetCountAtValue((TestValueLevel * 1 )/4));
-            Assert.assertEquals(0L, rawHistogram.GetCountAtValue((TestValueLevel * 2 )/4));
-            Assert.assertEquals(0L, rawHistogram.GetCountAtValue((TestValueLevel * 3 )/4));
-            Assert.assertEquals(1L, rawHistogram.GetCountAtValue((TestValueLevel * 4 )/4));
+            Assert.assertEquals(0L, rawHistogram.GetCountAtValue((TestValueLevel * 1) / 4));
+            Assert.assertEquals(0L, rawHistogram.GetCountAtValue((TestValueLevel * 2) / 4));
+            Assert.assertEquals(0L, rawHistogram.GetCountAtValue((TestValueLevel * 3) / 4));
+            Assert.assertEquals(1L, rawHistogram.GetCountAtValue((TestValueLevel * 4) / 4));
             Assert.assertEquals(1L, rawHistogram.TotalCount);
         }
 
         [Test]
-        public void TestReset()  
+        public void TestReset()
         {
             var longHistogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
             longHistogram.RecordValue(TestValueLevel);
@@ -147,7 +110,7 @@ namespace HdrHistogram.Test
         }
 
         [Test]
-        public void TestAdd()  
+        public void TestAdd()
         {
             var longHistogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
             var other = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
@@ -171,21 +134,11 @@ namespace HdrHistogram.Test
             Assert.assertEquals(6L, biggerOther.TotalCount);
 
             // But trying to add a larger histogram into a smaller one should throw an AIOOB:
-            bool thrown = false;
-            try 
-            {
-                // This should throw:
-                longHistogram.Add(biggerOther);
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                thrown = true;
-            }
-            Assert.assertTrue(thrown);
+            NUnit.Framework.Assert.Throws<ArgumentOutOfRangeException>(() => { longHistogram.Add(biggerOther); });
         }
 
         [Test]
-        public void TestSizeOfEquivalentValueRange() 
+        public void TestSizeOfEquivalentValueRange()
         {
             var longHistogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
             Assert.assertEquals("Size of equivalent range for value 1 is 1",
@@ -201,7 +154,7 @@ namespace HdrHistogram.Test
         }
 
         [Test]
-        public void TestScaledSizeOfEquivalentValueRange() 
+        public void TestScaledSizeOfEquivalentValueRange()
         {
             var longHistogram = new LongHistogram(1024, HighestTrackableValue, NumberOfSignificantValueDigits);
             Assert.assertEquals("Size of equivalent range for value 1 * 1024 is 1 * 1024",
@@ -217,7 +170,7 @@ namespace HdrHistogram.Test
         }
 
         [Test]
-        public void TestLowestEquivalentValue() 
+        public void TestLowestEquivalentValue()
         {
             var longHistogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
             Assert.assertEquals("The lowest equivalent value to 10007 is 10000",
@@ -227,7 +180,7 @@ namespace HdrHistogram.Test
         }
 
         [Test]
-        public void TestScaledLowestEquivalentValue() 
+        public void TestScaledLowestEquivalentValue()
         {
             var longHistogram = new LongHistogram(1024, HighestTrackableValue, NumberOfSignificantValueDigits);
             Assert.assertEquals("The lowest equivalent value to 10007 * 1024 is 10000 * 1024",
@@ -237,7 +190,7 @@ namespace HdrHistogram.Test
         }
 
         [Test]
-        public void TestHighestEquivalentValue() 
+        public void TestHighestEquivalentValue()
         {
             var longHistogram = new LongHistogram(1024, HighestTrackableValue, NumberOfSignificantValueDigits);
             Assert.assertEquals("The highest equivalent value to 8180 * 1024 is 8183 * 1024 + 1023",
@@ -255,7 +208,7 @@ namespace HdrHistogram.Test
         }
 
         [Test]
-        public void TestScaledHighestEquivalentValue() 
+        public void TestScaledHighestEquivalentValue()
         {
             var longHistogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
             Assert.assertEquals("The highest equivalent value to 8180 is 8183",
@@ -273,7 +226,7 @@ namespace HdrHistogram.Test
         }
 
         [Test]
-        public void TestMedianEquivalentValue() 
+        public void TestMedianEquivalentValue()
         {
             var longHistogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
             Assert.assertEquals("The median equivalent value to 4 is 4",
@@ -289,7 +242,7 @@ namespace HdrHistogram.Test
         }
 
         [Test]
-        public void TestScaledMedianEquivalentValue() 
+        public void TestScaledMedianEquivalentValue()
         {
             var longHistogram = new LongHistogram(1024, HighestTrackableValue, NumberOfSignificantValueDigits);
             Assert.assertEquals("The median equivalent value to 4 * 1024 is 4 * 1024 + 512",
@@ -305,7 +258,7 @@ namespace HdrHistogram.Test
         }
 
         [Test]
-        public void TestNextNonEquivalentValue() 
+        public void TestNextNonEquivalentValue()
         {
             var longHistogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
             Assert.assertNotSame(null, longHistogram);
@@ -324,9 +277,9 @@ namespace HdrHistogram.Test
                     expectedHistogram.TotalCount,
                     actualHistogram.TotalCount);
         }
-        
+
         [Test]
-        public void TestOverflow()  
+        public void TestOverflow()
         {
             var histogram = new ShortHistogram(HighestTrackableValue, 2);
             histogram.RecordValue(TestValueLevel);
@@ -343,7 +296,7 @@ namespace HdrHistogram.Test
         }
 
         [Test]
-        public void TestReestablishTotalCount()  
+        public void TestReestablishTotalCount()
         {
             var histogram = new ShortHistogram(HighestTrackableValue, 2);
             histogram.RecordValue(TestValueLevel);
@@ -393,7 +346,7 @@ namespace HdrHistogram.Test
         }
 
         [Test]
-        public void TestScaledCopy()  
+        public void TestScaledCopy()
         {
             var longHistogram = new LongHistogram(1000, HighestTrackableValue, NumberOfSignificantValueDigits);
             longHistogram.RecordValue(TestValueLevel);
@@ -429,7 +382,7 @@ namespace HdrHistogram.Test
         }
 
         [Test]
-        public void TestCopyInto()  
+        public void TestCopyInto()
         {
             var longHistogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
             var targetLongHistogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
@@ -495,7 +448,7 @@ namespace HdrHistogram.Test
         }
 
         [Test]
-        public void TestScaledCopyInto()  
+        public void TestScaledCopyInto()
         {
             var longHistogram = new LongHistogram(1000, HighestTrackableValue, NumberOfSignificantValueDigits);
             var targetLongHistogram = new LongHistogram(1000, HighestTrackableValue, NumberOfSignificantValueDigits);
