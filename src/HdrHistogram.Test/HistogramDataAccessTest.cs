@@ -9,89 +9,84 @@
  */
 
 using System;
-using HdrHistogram.Iteration;
 using NUnit.Framework;
 using Assert = HdrHistogram.Test.AssertEx;
 
 namespace HdrHistogram.Test
 {
-    /**
-     * JUnit test for {@link HistogramData}
-     */
     public class HistogramDataAccessTest 
     {
-        static readonly long highestTrackableValue = 3600L * 1000 * 1000; // 1 hour in usec units
-        static readonly int numberOfSignificantValueDigits = 3; // Maintain at least 3 decimal points of accuracy
-        static readonly LongHistogram longHistogram;
-        static readonly LongHistogram scaledHistogram;
-        static readonly LongHistogram rawHistogram;
-        static readonly LongHistogram scaledRawHistogram;
-        static readonly /*Histogram*/ HistogramBase postCorrectedHistogram;
-        static readonly /*Histogram*/ HistogramBase postCorrectedScaledHistogram;
+        private const long HighestTrackableValue = 3600L*1000*1000; // 1 hour in usec units
+        private const int NumberOfSignificantValueDigits = 3; // Maintain at least 3 decimal points of accuracy
+        private static readonly LongHistogram LongHistogram;
+        private static readonly LongHistogram ScaledHistogram;
+        private static readonly LongHistogram RawHistogram;
+        private static readonly HistogramBase PostCorrectedHistogram;
+        private static readonly HistogramBase PostCorrectedScaledHistogram;
 
         static HistogramDataAccessTest()
         {
-            longHistogram = new LongHistogram(highestTrackableValue, numberOfSignificantValueDigits);
-            scaledHistogram = new LongHistogram(1000, highestTrackableValue * 512, numberOfSignificantValueDigits);
-            rawHistogram = new LongHistogram(highestTrackableValue, numberOfSignificantValueDigits);
-            scaledRawHistogram = new LongHistogram(1000, highestTrackableValue * 512, numberOfSignificantValueDigits);
+            LongHistogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
+            ScaledHistogram = new LongHistogram(1000, HighestTrackableValue * 512, NumberOfSignificantValueDigits);
+            RawHistogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
+            var scaledRawHistogram = new LongHistogram(1000, HighestTrackableValue * 512, NumberOfSignificantValueDigits);
             // Log hypothetical scenario: 100 seconds of "perfect" 1msec results, sampled
             // 100 times per second (10,000 results), followed by a 100 second pause with
             // a single (100 second) recorded result. Recording is done indicating an expected
             // interval between samples of 10 msec:
-            for (int i = 0; i < 10000; i++) 
+            for (var i = 0; i < 10000; i++) 
             {
-                longHistogram.RecordValueWithExpectedInterval(1000 /* 1 msec */, 10000 /* 10 msec expected interval */);
-                scaledHistogram.RecordValueWithExpectedInterval(1000 * 512 /* 1 msec */, 10000 * 512 /* 10 msec expected interval */);
-                rawHistogram.RecordValue(1000 /* 1 msec */);
+                LongHistogram.RecordValueWithExpectedInterval(1000 /* 1 msec */, 10000 /* 10 msec expected interval */);
+                ScaledHistogram.RecordValueWithExpectedInterval(1000 * 512 /* 1 msec */, 10000 * 512 /* 10 msec expected interval */);
+                RawHistogram.RecordValue(1000 /* 1 msec */);
                 scaledRawHistogram.RecordValue(1000 * 512/* 1 msec */);
             }
-            longHistogram.RecordValueWithExpectedInterval(100000000L /* 100 sec */, 10000 /* 10 msec expected interval */);
-            scaledHistogram.RecordValueWithExpectedInterval(100000000L * 512 /* 100 sec */, 10000 * 512 /* 10 msec expected interval */);
-            rawHistogram.RecordValue(100000000L /* 100 sec */);
+            LongHistogram.RecordValueWithExpectedInterval(100000000L /* 100 sec */, 10000 /* 10 msec expected interval */);
+            ScaledHistogram.RecordValueWithExpectedInterval(100000000L * 512 /* 100 sec */, 10000 * 512 /* 10 msec expected interval */);
+            RawHistogram.RecordValue(100000000L /* 100 sec */);
             scaledRawHistogram.RecordValue(100000000L * 512 /* 100 sec */);
 
-            postCorrectedHistogram = rawHistogram.CopyCorrectedForCoordinatedOmission(10000 /* 10 msec expected interval */);
-            postCorrectedScaledHistogram = scaledRawHistogram.CopyCorrectedForCoordinatedOmission(10000 * 512 /* 10 msec expected interval */);
+            PostCorrectedHistogram = RawHistogram.CopyCorrectedForCoordinatedOmission(10000 /* 10 msec expected interval */);
+            PostCorrectedScaledHistogram = scaledRawHistogram.CopyCorrectedForCoordinatedOmission(10000 * 512 /* 10 msec expected interval */);
         }
 
         [Test]
-        public void testScalingEquivalence() 
+        public void TestScalingEquivalence() 
         {
             Assert.assertEquals("averages should be equivalent",
-                    longHistogram.GetMean() * 512,
-                    scaledHistogram.GetMean(), scaledHistogram.GetMean() * 0.000001);
+                    LongHistogram.GetMean() * 512,
+                    ScaledHistogram.GetMean(), ScaledHistogram.GetMean() * 0.000001);
             Assert.assertEquals("total count should be the same",
-                    longHistogram.TotalCount,
-                    scaledHistogram.TotalCount);
+                    LongHistogram.TotalCount,
+                    ScaledHistogram.TotalCount);
             Assert.assertEquals("99%'iles should be equivalent",
-                    longHistogram.LowestEquivalentValue(longHistogram.GetValueAtPercentile(99.0)) * 512,
-                    scaledHistogram.LowestEquivalentValue(scaledHistogram.GetValueAtPercentile(99.0)));
+                    LongHistogram.LowestEquivalentValue(LongHistogram.GetValueAtPercentile(99.0)) * 512,
+                    ScaledHistogram.LowestEquivalentValue(ScaledHistogram.GetValueAtPercentile(99.0)));
             Assert.assertEquals("Max should be equivalent",
-                    longHistogram.GetMaxValue() * 512,
-                    scaledHistogram.GetMaxValue());
+                    LongHistogram.GetMaxValue() * 512,
+                    ScaledHistogram.GetMaxValue());
             // Same for post-corrected:
             Assert.assertEquals("averages should be equivalent",
-                    longHistogram.GetMean() * 512,
-                    scaledHistogram.GetMean(), scaledHistogram.GetMean() * 0.000001);
+                    LongHistogram.GetMean() * 512,
+                    ScaledHistogram.GetMean(), ScaledHistogram.GetMean() * 0.000001);
             Assert.assertEquals("total count should be the same",
-                    postCorrectedHistogram.TotalCount,
-                    postCorrectedScaledHistogram.TotalCount);
+                    PostCorrectedHistogram.TotalCount,
+                    PostCorrectedScaledHistogram.TotalCount);
             Assert.assertEquals("99%'iles should be equivalent",
-                    postCorrectedHistogram.LowestEquivalentValue(postCorrectedHistogram.GetValueAtPercentile(99.0)) * 512,
-                    postCorrectedScaledHistogram.LowestEquivalentValue(postCorrectedScaledHistogram.GetValueAtPercentile(99.0)));
+                    PostCorrectedHistogram.LowestEquivalentValue(PostCorrectedHistogram.GetValueAtPercentile(99.0)) * 512,
+                    PostCorrectedScaledHistogram.LowestEquivalentValue(PostCorrectedScaledHistogram.GetValueAtPercentile(99.0)));
             Assert.assertEquals("Max should be equivalent",
-                    postCorrectedHistogram.GetMaxValue() * 512,
-                    postCorrectedScaledHistogram.GetMaxValue());
+                    PostCorrectedHistogram.GetMaxValue() * 512,
+                    PostCorrectedScaledHistogram.GetMaxValue());
         }
 
         [Test]
-        public void testPreVsPostCorrectionValues()  
+        public void TestPreVsPostCorrectionValues()  
         {
             // Loop both ways (one would be enough, but good practice just for fun:
 
             Assert.assertEquals("pre and post corrected count totals ",
-                    longHistogram.TotalCount, postCorrectedHistogram.TotalCount);
+                    LongHistogram.TotalCount, PostCorrectedHistogram.TotalCount);
 
             // The following comparison loops would have worked in a perfect accuracy world, but since post
             // correction is done based on the value extracted from the bucket, and the during-recording is done
@@ -113,186 +108,186 @@ namespace HdrHistogram.Test
         }
 
         [Test]
-        public void testGetTotalCount()  
+        public void TestGetTotalCount()  
         {
             // The overflow value should count in the total count:
             Assert.assertEquals("Raw total count is 10,001",
-                    10001L, rawHistogram.TotalCount);
+                    10001L, RawHistogram.TotalCount);
             Assert.assertEquals("Total count is 20,000",
-                    20000L, longHistogram.TotalCount);
+                    20000L, LongHistogram.TotalCount);
         }
 
         [Test]
-        public void testGetMaxValue()  
+        public void TestGetMaxValue()  
         {
             Assert.assertTrue(
-                    longHistogram.ValuesAreEquivalent(100L * 1000 * 1000,
-                            longHistogram.GetMaxValue()));
+                    LongHistogram.ValuesAreEquivalent(100L * 1000 * 1000,
+                            LongHistogram.GetMaxValue()));
         }
 
         [Test]
-        public void testGetMinValue()  
+        public void TestGetMinValue()  
         {
             Assert.assertTrue(
-                    longHistogram.ValuesAreEquivalent(1000,
-                            longHistogram.GetMinValue()));
+                    LongHistogram.ValuesAreEquivalent(1000,
+                            LongHistogram.GetMinValue()));
         }
 
         [Test]
-        public void testGetMean()  
+        public void TestGetMean()  
         {
-            double expectedRawMean = ((10000.0 * 1000) + (1.0 * 100000000))/10001; /* direct avg. of raw results */
-            double expectedMean = (1000.0 + 50000000.0)/2; /* avg. 1 msec for half the time, and 50 sec for other half */
+            var expectedRawMean = ((10000.0 * 1000) + (1.0 * 100000000))/10001; /* direct avg. of raw results */
+            var expectedMean = (1000.0 + 50000000.0)/2; /* avg. 1 msec for half the time, and 50 sec for other half */
             // We expect to see the mean to be accurate to ~3 decimal points (~0.1%):
             Assert.assertEquals("Raw mean is " + expectedRawMean + " +/- 0.1%",
-                    expectedRawMean, rawHistogram.GetMean(), expectedRawMean * 0.001);
+                    expectedRawMean, RawHistogram.GetMean(), expectedRawMean * 0.001);
             Assert.assertEquals("Mean is " + expectedMean + " +/- 0.1%",
-                    expectedMean, longHistogram.GetMean(), expectedMean * 0.001);
+                    expectedMean, LongHistogram.GetMean(), expectedMean * 0.001);
         }
 
         [Test]
-        public void testGetStdDeviation()  
+        public void TestGetStdDeviation()  
         {
-            double expectedRawMean = ((10000.0 * 1000) + (1.0 * 100000000))/10001; /* direct avg. of raw results */
-            double expectedRawStdDev =
+            var expectedRawMean = ((10000.0 * 1000) + (1.0 * 100000000))/10001; /* direct avg. of raw results */
+            var expectedRawStdDev =
                     Math.Sqrt(
                         ((10000.0 * Math.Pow((1000.0 - expectedRawMean), 2)) +
                                 Math.Pow((100000000.0 - expectedRawMean), 2)) /
                                 10001);
 
-            double expectedMean = (1000.0 + 50000000.0)/2; /* avg. 1 msec for half the time, and 50 sec for other half */
-            double expectedSquareDeviationSum = 10000 * Math.Pow((1000.0 - expectedMean), 2);
+            const double expectedMean = (1000.0 + 50000000.0)/2;
+            var expectedSquareDeviationSum = 10000 * Math.Pow((1000.0 - expectedMean), 2);
             for (long value = 10000; value <= 100000000; value += 10000) {
                 expectedSquareDeviationSum += Math.Pow((value - expectedMean), 2);
             }
-            double expectedStdDev = Math.Sqrt(expectedSquareDeviationSum / 20000);
+            var expectedStdDev = Math.Sqrt(expectedSquareDeviationSum / 20000);
 
             // We expect to see the standard deviations to be accurate to ~3 decimal points (~0.1%):
             Assert.assertEquals("Raw standard deviation is " + expectedRawStdDev + " +/- 0.1%",
-                    expectedRawStdDev, rawHistogram.GetStdDeviation(), expectedRawStdDev * 0.001);
+                    expectedRawStdDev, RawHistogram.GetStdDeviation(), expectedRawStdDev * 0.001);
             Assert.assertEquals("Standard deviation is " + expectedStdDev + " +/- 0.1%",
-                    expectedStdDev, longHistogram.GetStdDeviation(), expectedStdDev * 0.001);
+                    expectedStdDev, LongHistogram.GetStdDeviation(), expectedStdDev * 0.001);
         }
 
         [Test]
-        public void testGetValueAtPercentile()  
+        public void TestGetValueAtPercentile()  
         {
             Assert.assertEquals("raw 30%'ile is 1 msec +/- 0.1%",
-                    1000.0, (double) rawHistogram.GetValueAtPercentile(30.0),
+                    1000.0, (double) RawHistogram.GetValueAtPercentile(30.0),
                     1000.0 * 0.001);
             Assert.assertEquals("raw 99%'ile is 1 msec +/- 0.1%",
-                    1000.0, (double) rawHistogram.GetValueAtPercentile(99.0),
+                    1000.0, (double) RawHistogram.GetValueAtPercentile(99.0),
                     1000.0 * 0.001);
             Assert.assertEquals("raw 99.99%'ile is 1 msec +/- 0.1%",
-                    1000.0, (double) rawHistogram.GetValueAtPercentile(99.99)
+                    1000.0, (double) RawHistogram.GetValueAtPercentile(99.99)
                     , 1000.0 * 0.001);
             Assert.assertEquals("raw 99.999%'ile is 100 sec +/- 0.1%",
-                    100000000.0, (double) rawHistogram.GetValueAtPercentile(99.999),
+                    100000000.0, (double) RawHistogram.GetValueAtPercentile(99.999),
                     100000000.0 * 0.001);
             Assert.assertEquals("raw 100%'ile is 100 sec +/- 0.1%",
-                    100000000.0, (double) rawHistogram.GetValueAtPercentile(100.0),
+                    100000000.0, (double) RawHistogram.GetValueAtPercentile(100.0),
                     100000000.0 * 0.001);
 
             Assert.assertEquals("30%'ile is 1 msec +/- 0.1%",
-                    1000.0, (double) longHistogram.GetValueAtPercentile(30.0),
+                    1000.0, (double) LongHistogram.GetValueAtPercentile(30.0),
                     1000.0 * 0.001);
             Assert.assertEquals("50%'ile is 1 msec +/- 0.1%",
-                    1000.0, (double) longHistogram.GetValueAtPercentile(50.0),
+                    1000.0, (double) LongHistogram.GetValueAtPercentile(50.0),
                     1000.0 * 0.001);
             Assert.assertEquals("75%'ile is 50 sec +/- 0.1%",
-                    50000000.0, (double) longHistogram.GetValueAtPercentile(75.0),
+                    50000000.0, (double) LongHistogram.GetValueAtPercentile(75.0),
                     50000000.0 * 0.001);
             Assert.assertEquals("90%'ile is 80 sec +/- 0.1%",
-                    80000000.0, (double) longHistogram.GetValueAtPercentile(90.0),
+                    80000000.0, (double) LongHistogram.GetValueAtPercentile(90.0),
                     80000000.0 * 0.001);
             Assert.assertEquals("99%'ile is 98 sec +/- 0.1%",
-                    98000000.0, (double) longHistogram.GetValueAtPercentile(99.0),
+                    98000000.0, (double) LongHistogram.GetValueAtPercentile(99.0),
                     98000000.0 * 0.001);
             Assert.assertEquals("99.999%'ile is 100 sec +/- 0.1%",
-                    100000000.0, (double) longHistogram.GetValueAtPercentile(99.999),
+                    100000000.0, (double) LongHistogram.GetValueAtPercentile(99.999),
                     100000000.0 * 0.001);
             Assert.assertEquals("100%'ile is 100 sec +/- 0.1%",
-                    100000000.0, (double) longHistogram.GetValueAtPercentile(100.0),
+                    100000000.0, (double) LongHistogram.GetValueAtPercentile(100.0),
                     100000000.0 * 0.001);
         }
 
         [Test]
-        public void testGetValueAtPercentileForLargeHistogram() 
+        public void TestGetValueAtPercentileForLargeHistogram() 
         {
-            long largestValue = 1000000000000L;
-            LongHistogram h = new LongHistogram(largestValue, 5);
+            const long largestValue = 1000000000000L;
+            var h = new LongHistogram(largestValue, 5);
             h.RecordValue(largestValue);
 
             Assert.assertTrue(h.GetValueAtPercentile(100.0) > 0);
         }
 
         [Test]
-        public void testGetPercentileAtOrBelowValue()  
+        public void TestGetPercentileAtOrBelowValue()  
         {
             Assert.assertEquals("Raw percentile at or below 5 msec is 99.99% +/- 0.0001",
                     99.99,
-                    rawHistogram.GetPercentileAtOrBelowValue(5000), 0.0001);
+                    RawHistogram.GetPercentileAtOrBelowValue(5000), 0.0001);
             Assert.assertEquals("Percentile at or below 5 msec is 50% +/- 0.0001%",
                     50.0,
-                    longHistogram.GetPercentileAtOrBelowValue(5000), 0.0001);
+                    LongHistogram.GetPercentileAtOrBelowValue(5000), 0.0001);
             Assert.assertEquals("Percentile at or below 100 sec is 100% +/- 0.0001%",
                     100.0,
-                    longHistogram.GetPercentileAtOrBelowValue(100000000L), 0.0001);
+                    LongHistogram.GetPercentileAtOrBelowValue(100000000L), 0.0001);
         }
 
         [Test]
-        public void testGetCountBetweenValues()  
+        public void TestGetCountBetweenValues()  
         {
             Assert.assertEquals("Count of raw values between 1 msec and 1 msec is 1",
-                    10000, rawHistogram.GetCountBetweenValues(1000L, 1000L));
+                    10000, RawHistogram.GetCountBetweenValues(1000L, 1000L));
             Assert.assertEquals("Count of raw values between 5 msec and 150 sec is 1",
-                    1, rawHistogram.GetCountBetweenValues(5000L, 150000000L));
+                    1, RawHistogram.GetCountBetweenValues(5000L, 150000000L));
             Assert.assertEquals("Count of values between 5 msec and 150 sec is 10,000",
-                    10000, longHistogram.GetCountBetweenValues(5000L, 150000000L));
+                    10000, LongHistogram.GetCountBetweenValues(5000L, 150000000L));
         }
 
         [Test]
-        public void testGetCountAtValue()  
+        public void TestGetCountAtValue()  
         {
             Assert.assertEquals("Count of raw values at 10 msec is 0",
-                    0, rawHistogram.GetCountBetweenValues(10000L, 10010L));
+                    0, RawHistogram.GetCountBetweenValues(10000L, 10010L));
             Assert.assertEquals("Count of values at 10 msec is 0",
-                    1, longHistogram.GetCountBetweenValues(10000L, 10010L));
+                    1, LongHistogram.GetCountBetweenValues(10000L, 10010L));
             Assert.assertEquals("Count of raw values at 1 msec is 10,000",
-                    10000, rawHistogram.GetCountAtValue(1000L));
+                    10000, RawHistogram.GetCountAtValue(1000L));
             Assert.assertEquals("Count of values at 1 msec is 10,000",
-                    10000, longHistogram.GetCountAtValue(1000L));
+                    10000, LongHistogram.GetCountAtValue(1000L));
         }
 
         [Test]
-        public void testPercentiles()  
+        public void TestPercentiles()  
         {
-            foreach (HistogramIterationValue v  in longHistogram.Percentiles(5 /* ticks per half */)) 
+            foreach (var v  in LongHistogram.Percentiles(5 /* ticks per half */)) 
             {
                 Assert.assertEquals("Value at Iterated-to Percentile is the same as the matching getValueAtPercentile():\n" +
                         "getPercentileLevelIteratedTo = " + v.PercentileLevelIteratedTo +
                         "\ngetValueIteratedTo = " + v.ValueIteratedTo +
                         "\ngetValueIteratedFrom = " + v.ValueIteratedFrom +
                         "\ngetValueAtPercentile(getPercentileLevelIteratedTo()) = " +
-                        longHistogram.GetValueAtPercentile(v.PercentileLevelIteratedTo) +
+                        LongHistogram.GetValueAtPercentile(v.PercentileLevelIteratedTo) +
                         "\ngetPercentile = " + v.Percentile +
                         "\ngetValueAtPercentile(Percentile())" +
-                        longHistogram.GetValueAtPercentile(v.Percentile) +
+                        LongHistogram.GetValueAtPercentile(v.Percentile) +
                         "\nequivalent1 = " +
-                        longHistogram.HighestEquivalentValue(longHistogram.GetValueAtPercentile(v.PercentileLevelIteratedTo)) +
+                        LongHistogram.HighestEquivalentValue(LongHistogram.GetValueAtPercentile(v.PercentileLevelIteratedTo)) +
                         "\nequivalent2 = " +
-                        longHistogram.HighestEquivalentValue(longHistogram.GetValueAtPercentile(v.Percentile)) +
+                        LongHistogram.HighestEquivalentValue(LongHistogram.GetValueAtPercentile(v.Percentile)) +
                         "\n"
                         ,
                         v.ValueIteratedTo,
-                        longHistogram.HighestEquivalentValue(longHistogram.GetValueAtPercentile(v.Percentile)));
+                        LongHistogram.HighestEquivalentValue(LongHistogram.GetValueAtPercentile(v.Percentile)));
             }
         }
 
         [Test]
-        public void testLinearBucketValues()  
+        public void TestLinearBucketValues()  
         {
-            int index = 0;
+            var index = 0;
             // Note that using linear buckets should work "as expected" as long as the number of linear buckets
             // is lower than the resolution level determined by largestValueWithSingleUnitResolution
             // (2000 in this case). Above that count, some of the linear buckets can end up rounded up in size
@@ -300,9 +295,9 @@ namespace HdrHistogram.Test
             // expected covering the range.
 
             // Iterate raw data using linear buckets of 100 msec each.
-            foreach (HistogramIterationValue v in rawHistogram.LinearBucketValues(100000))
+            foreach (var v in RawHistogram.LinearBucketValues(100000))
             {
-                long countAddedInThisBucket = v.CountAddedInThisIterationStep;
+                var countAddedInThisBucket = v.CountAddedInThisIterationStep;
                 if (index == 0) 
                 {
                     Assert.assertEquals("Raw Linear 100 msec bucket # 0 added a count of 10000",
@@ -325,9 +320,9 @@ namespace HdrHistogram.Test
             index = 0;
             long totalAddedCounts = 0;
             // Iterate data using linear buckets of 10 msec each.
-            foreach (HistogramIterationValue v in longHistogram.LinearBucketValues(10000))
+            foreach (var v in LongHistogram.LinearBucketValues(10000))
             {
-                long countAddedInThisBucket = v.CountAddedInThisIterationStep;
+                var countAddedInThisBucket = v.CountAddedInThisIterationStep;
                 if (index == 0) 
                 {
                     Assert.assertEquals("Linear 1 sec bucket # 0 [" +
@@ -350,9 +345,9 @@ namespace HdrHistogram.Test
             index = 0;
             totalAddedCounts = 0;
             // Iterate data using linear buckets of 1 msec each.
-            foreach (HistogramIterationValue v in longHistogram.LinearBucketValues(1000)) 
+            foreach (var v in LongHistogram.LinearBucketValues(1000)) 
             {
-                long countAddedInThisBucket = v.CountAddedInThisIterationStep;
+                var countAddedInThisBucket = v.CountAddedInThisIterationStep;
                 if (index == 0) 
                 {
                     Assert.assertEquals("Linear 1 sec bucket # 0 [" +
@@ -381,13 +376,13 @@ namespace HdrHistogram.Test
         }
 
         [Test]
-        public void testLogarithmicBucketValues()  
+        public void TestLogarithmicBucketValues()  
         {
-            int index = 0;
+            var index = 0;
             // Iterate raw data using logarithmic buckets starting at 10 msec.
-            foreach (HistogramIterationValue v in rawHistogram.LogarithmicBucketValues(10000, 2)) 
+            foreach (var v in RawHistogram.LogarithmicBucketValues(10000, 2)) 
             {
-                long countAddedInThisBucket = v.CountAddedInThisIterationStep;
+                var countAddedInThisBucket = v.CountAddedInThisIterationStep;
                 if (index == 0) 
                 {
                     Assert.assertEquals("Raw Logarithmic 10 msec bucket # 0 added a count of 10000",
@@ -410,9 +405,9 @@ namespace HdrHistogram.Test
             index = 0;
             long totalAddedCounts = 0;
             // Iterate data using linear buckets of 1 sec each.
-            foreach (HistogramIterationValue v in longHistogram.LogarithmicBucketValues(10000, 2)) 
+            foreach (var v in LongHistogram.LogarithmicBucketValues(10000, 2)) 
             {
-                long countAddedInThisBucket = v.CountAddedInThisIterationStep;
+                var countAddedInThisBucket = v.CountAddedInThisIterationStep;
                 if (index == 0) {
                     Assert.assertEquals("Logarithmic 10 msec bucket # 0 [" +
                             v.ValueIteratedFrom + ".." + v.ValueIteratedTo +
@@ -428,13 +423,13 @@ namespace HdrHistogram.Test
         }
 
         [Test]
-        public void testRecordedValues()
+        public void TestRecordedValues()
         {
-            int index = 0;
+            var index = 0;
             // Iterate raw data by stepping through every value that has a count recorded:
-            foreach (HistogramIterationValue v in rawHistogram.RecordedValues()) 
+            foreach (var v in RawHistogram.RecordedValues()) 
             {
-                long countAddedInThisBucket = v.CountAddedInThisIterationStep;
+                var countAddedInThisBucket = v.CountAddedInThisIterationStep;
                 if (index == 0) 
                 {
                     Assert.assertEquals("Raw recorded value bucket # 0 added a count of 10000",
@@ -452,9 +447,9 @@ namespace HdrHistogram.Test
             index = 0;
             long totalAddedCounts = 0;
             // Iterate data using linear buckets of 1 sec each.
-            foreach (HistogramIterationValue v in longHistogram.RecordedValues()) 
+            foreach (var v in LongHistogram.RecordedValues()) 
             {
-                long countAddedInThisBucket = v.CountAddedInThisIterationStep;
+                var countAddedInThisBucket = v.CountAddedInThisIterationStep;
                 if (index == 0) 
                 {
                     Assert.assertEquals("Recorded bucket # 0 [" +
@@ -474,20 +469,20 @@ namespace HdrHistogram.Test
         }
 
         [Test]
-        public void testAllValues() 
+        public void TestAllValues() 
         {
-            int index = 0;
+            var index = 0;
             long latestValueAtIndex = 0;
             // Iterate raw data by stepping through every value that ahs a count recorded:
-            foreach (HistogramIterationValue v in rawHistogram.AllValues()) 
+            foreach (var v in RawHistogram.AllValues()) 
             {
-                long countAddedInThisBucket = v.CountAddedInThisIterationStep;
+                var countAddedInThisBucket = v.CountAddedInThisIterationStep;
                 if (index == 1000) 
                 {
                     Assert.assertEquals("Raw AllValues bucket # 0 added a count of 10000",
                             10000, countAddedInThisBucket);
                 } 
-                else if (longHistogram.ValuesAreEquivalent(v.ValueIteratedTo, 100000000)) 
+                else if (LongHistogram.ValuesAreEquivalent(v.ValueIteratedTo, 100000000)) 
                 {
                     Assert.assertEquals("Raw AllValues value bucket # " + index + " added a count of 1",
                             1, countAddedInThisBucket);
@@ -501,14 +496,14 @@ namespace HdrHistogram.Test
                 index++;
             }
             Assert.assertEquals("Count at latest value iterated to is 1",
-                    1, rawHistogram.GetCountAtValue(latestValueAtIndex));
+                    1, RawHistogram.GetCountAtValue(latestValueAtIndex));
 
             index = 0;
             long totalAddedCounts = 0;
             // Iterate data using linear buckets of 1 sec each.
-            foreach (HistogramIterationValue v in longHistogram.AllValues()) 
+            foreach (var v in LongHistogram.AllValues()) 
             {
-                long countAddedInThisBucket = v.CountAddedInThisIterationStep;
+                var countAddedInThisBucket = v.CountAddedInThisIterationStep;
                 if (index == 1000) 
                 {
                     Assert.assertEquals("AllValues bucket # 0 [" +
