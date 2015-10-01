@@ -24,7 +24,7 @@ namespace HdrHistogram.Examples
     public class SimpleHistogramExample 
     {
         // A Histogram covering the range from 1 nsec to 1 hour (3,600,000,000,000 ns) with 3 decimal point resolution:
-        static readonly Histogram histogram = new Histogram(3600000000000L, 3);
+        static readonly LongHistogram longHistogram = new LongHistogram(3600000000000L, 3);
 
         static public volatile Socket socket;
 
@@ -60,7 +60,7 @@ namespace HdrHistogram.Examples
             timer.Stop();
             // From http://stackoverflow.com/questions/2329079/how-do-you-convert-stopwatch-ticks-to-nanoseconds-milliseconds-and-seconds/2329103#2329103
             long elapsedNanos = (long)(((double)timer.ElapsedTicks / Stopwatch.Frequency) * 1000000000);
-            histogram.RecordValue(elapsedNanos);
+            longHistogram.RecordValue(elapsedNanos);
         }
 
         public static void Run()
@@ -76,7 +76,7 @@ namespace HdrHistogram.Examples
             //} while (now - startTime < WARMUP_TIME_MSEC);
             } while (timer.ElapsedMilliseconds < WARMUP_TIME_MSEC);
 
-            histogram.Reset();
+            longHistogram.Reset();
 
             do {
                 recordTimeToCreateAndCloseDatagramSocket();
@@ -86,13 +86,13 @@ namespace HdrHistogram.Examples
 
             Console.WriteLine("Recorded latencies [in usec] for Create+Close of a DatagramSocket:");
 
-            var size = histogram.GetEstimatedFootprintInBytes();
+            var size = longHistogram.GetEstimatedFootprintInBytes();
             Console.WriteLine("Histogram size = {0} bytes ({1:F2} MB)", size, size / 1024.0 / 1024.0);
 
             // 1 usec = 1000 ns (nanos), results are displayed in usecs, so we need to scale
-            histogram.OutputPercentileDistribution(Console.Out, outputValueUnitScalingRatio: 1000.0);
+            longHistogram.OutputPercentileDistribution(Console.Out, outputValueUnitScalingRatio: 1000.0);
             Console.WriteLine();
-            histogram.OutputPercentileDistribution(Console.Out, outputValueUnitScalingRatio: 1000.0 * 1000.0);
+            longHistogram.OutputPercentileDistribution(Console.Out, outputValueUnitScalingRatio: 1000.0 * 1000.0);
             //Console.WriteLine();
             //data.outputPercentileDistribution(
             //    Console.Out, percentileTicksPerHalfDistance: 5, outputValueUnitScalingRatio: 1000.0, useCsvFormat: true);

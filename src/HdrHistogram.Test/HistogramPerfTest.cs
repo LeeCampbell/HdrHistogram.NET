@@ -34,7 +34,7 @@ namespace HdrHistogram.Test
         [Test]
         public void TestRawRecordingSpeed()
         {
-            HistogramBase histogram = new Histogram(HighestTrackableValue, NumberOfSignificantValueDigits);
+            HistogramBase histogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
             Console.WriteLine("\n\nTiming Histogram:");
             TestRawRecordingSpeedAtExpectedInterval("Histogram: ", histogram, 1000000000, RawtimingLoopCount);
 

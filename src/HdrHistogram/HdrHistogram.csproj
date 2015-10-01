@@ -46,7 +46,7 @@
     <Compile Include="IntHistogram.cs" />
     <Compile Include="Iteration\AbstractHistogramEnumerator.cs" />
     <Compile Include="Iteration\AllValuesEnumerator.cs" />
-    <Compile Include="Histogram.cs" />
+    <Compile Include="LongHistogram.cs" />
     <Compile Include="ShortHistogram.cs" />
     <Compile Include="SynchronizedHistogram.cs" />
     <Compile Include="Utilities\ByteBuffer.cs" />

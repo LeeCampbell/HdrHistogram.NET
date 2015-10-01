@@ -34,7 +34,7 @@ namespace HdrHistogram
     /// Histogram tracks value counts in <c>long</c> fields.
     /// Smaller field types are available in the <see cref="IntHistogram"/> and <see cref="ShortHistogram"/> implementations of <see cref="HistogramBase"/>.
     /// </remarks>
-    public class Histogram : HistogramBase
+    public class LongHistogram : HistogramBase
     {
         private readonly long[] _counts;
 
@@ -51,7 +51,7 @@ namespace HdrHistogram
         /// <param name="numberOfSignificantValueDigits">The number of significant decimal digits to which the histogram will maintain value resolution and separation.
         /// Must be a non-negative integer between 0 and 5.
         /// </param>
-        public Histogram(long highestTrackableValue, int numberOfSignificantValueDigits)
+        public LongHistogram(long highestTrackableValue, int numberOfSignificantValueDigits)
             : this(1, highestTrackableValue, numberOfSignificantValueDigits)
         {
         }
@@ -67,7 +67,7 @@ namespace HdrHistogram
         /// <param name="numberOfSignificantValueDigits">The number of significant decimal digits to which the histogram will maintain value resolution and separation.
         /// Must be a non-negative integer between 0 and 5.
         /// </param>
-        public Histogram(long lowestTrackableValue, long highestTrackableValue,
+        public LongHistogram(long lowestTrackableValue, long highestTrackableValue,
                          int numberOfSignificantValueDigits)
             : base(lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits)
         {
@@ -81,14 +81,14 @@ namespace HdrHistogram
 
         public override HistogramBase Copy()
         {
-            var copy = new Histogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
+            var copy = new LongHistogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
             copy.Add(this);
             return copy;
         }
 
         public override HistogramBase CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples)
         {
-            var toHistogram = new Histogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
+            var toHistogram = new LongHistogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
             toHistogram.AddWhileCorrectingForCoordinatedOmission(this, expectedIntervalBetweenValueSamples);
             return toHistogram;
         }
@@ -104,9 +104,9 @@ namespace HdrHistogram
         /// <param name="buffer">The buffer to decode from</param>
         /// <param name="minBarForHighestTrackableValue">Force highestTrackableValue to be set at least this high</param>
         /// <returns>The newly constructed histogram</returns>
-        public static Histogram DecodeFromByteBuffer(ByteBuffer buffer, long minBarForHighestTrackableValue)
+        public static LongHistogram DecodeFromByteBuffer(ByteBuffer buffer, long minBarForHighestTrackableValue)
         {
-            return DecodeFromByteBuffer<Histogram>(buffer, minBarForHighestTrackableValue);
+            return DecodeFromByteBuffer<LongHistogram>(buffer, minBarForHighestTrackableValue);
         }
 
         /// <summary>
@@ -115,9 +115,9 @@ namespace HdrHistogram
         /// <param name="buffer">The buffer to encode into</param>
         /// <param name="minBarForHighestTrackableValue">Force highestTrackableValue to be set at least this high</param>
         /// <returns>The newly constructed histogram</returns>
-        public static Histogram DecodeFromCompressedByteBuffer(ByteBuffer buffer, long minBarForHighestTrackableValue)
+        public static LongHistogram DecodeFromCompressedByteBuffer(ByteBuffer buffer, long minBarForHighestTrackableValue)
         {
-            return (Histogram)DecodeFromCompressedByteBuffer(buffer, typeof(Histogram), minBarForHighestTrackableValue);
+            return (LongHistogram)DecodeFromCompressedByteBuffer(buffer, typeof(LongHistogram), minBarForHighestTrackableValue);
         }
 
 
