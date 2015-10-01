@@ -120,9 +120,9 @@ namespace HdrHistogram.Test
             Console.WriteLine("{0:N0} leading Zero loops completed in {1:N0} usec, rate = {2:N0} value recording calls per sec.", loopCount, deltaUsec, rate);
 
             // TODO work out why we always seems to get at least 1 GC here, maybe it's due to the length of the test run??
+            Assert.LessOrEqual(gcAfter.Gen0 - gcBefore.Gen0, 1, "There should be at MOST 1 Gen0 GC Collections");
             Assert.LessOrEqual(gcAfter.Gen1 - gcBefore.Gen1, 1, "There should be at MOST 1 Gen1 GC Collections");
-            Assert.LessOrEqual(gcAfter.Gen1 - gcBefore.Gen1, 1, "There should be at MOST 1 Gen2 GC Collections");
-            Assert.LessOrEqual(gcAfter.Gen3 - gcBefore.Gen3, 1, "There should be at MOST 1 Gen3 GC Collections");
+            Assert.LessOrEqual(gcAfter.Gen2 - gcBefore.Gen2, 1, "There should be at MOST 1 Gen2 GC Collections");
         }
 
 
@@ -169,22 +169,22 @@ namespace HdrHistogram.Test
             if (assertNoGc)
             {
                 // TODO work out why we always seems to get at least 1 GC here, maybe it's due to the length of the test run??
+                Assert.LessOrEqual(gcAfter.Gen0 - gcBefore.Gen0, 1, "There should be at MOST 1 Gen0 GC Collections");
                 Assert.LessOrEqual(gcAfter.Gen1 - gcBefore.Gen1, 1, "There should be at MOST 1 Gen1 GC Collections");
                 Assert.LessOrEqual(gcAfter.Gen2 - gcBefore.Gen2, 1, "There should be at MOST 1 Gen2 GC Collections");
-                Assert.LessOrEqual(gcAfter.Gen3 - gcBefore.Gen3, 1, "There should be at MOST 1 Gen3 GC Collections");
             }
         }
 
         private static GcInfo PrintGcAndMemoryStats(string label)
         {
             var bytesUsed = GC.GetTotalMemory(forceFullCollection: false);
-            var gen1 = GC.CollectionCount(0);
-            var gen2 = GC.CollectionCount(1);
-            var gen3 = GC.CollectionCount(2);
+            var gen0 = GC.CollectionCount(0);
+            var gen1 = GC.CollectionCount(1);
+            var gen2 = GC.CollectionCount(2);
             Console.WriteLine("{0}: {1:0.00} MB ({2:N0} bytes), Gen0 {3}, Gen1 {4}, Gen2 {5}",
-                                label, bytesUsed / 1024.0 / 1024.0, bytesUsed, gen1, gen2, gen3);
+                                label, bytesUsed / 1024.0 / 1024.0, bytesUsed, gen0, gen1, gen2);
 
-            return new GcInfo(gen1, gen2, gen3);
+            return new GcInfo(gen0, gen1, gen2);
         }
 
         private static void RecordLoopWithExpectedInterval(HistogramBase histogram, long loopCount, long expectedInterval)
@@ -225,15 +225,15 @@ namespace HdrHistogram.Test
 
         private class GcInfo
         {
+            public int Gen0 { get; }
             public int Gen1 { get; }
             public int Gen2 { get; }
-            public int Gen3 { get; }
 
-            public GcInfo(int gen1, int gen2, int gen3)
+            public GcInfo(int gen0, int gen1, int gen2)
             {
+                Gen0 = gen0;
                 Gen1 = gen1;
                 Gen2 = gen2;
-                Gen3 = gen3;
             }
         }
 
