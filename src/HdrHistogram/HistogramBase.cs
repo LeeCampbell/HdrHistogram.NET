@@ -679,9 +679,12 @@ namespace HdrHistogram
         /// Provide a (conservatively high) estimate of the Histogram's total footprint in bytes
         /// </summary>
         /// <returns>a (conservatively high) estimate of the Histogram's total footprint in bytes</returns>
-        public abstract int GetEstimatedFootprintInBytes();
+        public virtual int GetEstimatedFootprintInBytes()
+        {
+            return (512 + (WordSizeInBytes * CountsArrayLength));
+        }
 
-        
+
         internal long GetCountAt(int bucketIndex, int subBucketIndex)
         {
             return GetCountAtIndex(CountsArrayIndex(bucketIndex, subBucketIndex));

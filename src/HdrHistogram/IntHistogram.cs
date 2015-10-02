@@ -71,11 +71,6 @@ namespace HdrHistogram
             return toHistogram;
         }
 
-        public override int GetEstimatedFootprintInBytes()
-        {
-            return (512 + (4 * _counts.Length));
-        }
-
         /// <summary>
         /// Construct a new histogram by decoding it from a ByteBuffer.
         /// </summary>
