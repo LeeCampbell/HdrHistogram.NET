@@ -712,11 +712,10 @@ namespace HdrHistogram
 
         protected abstract void ClearCounts();
 
-        //TODO: Can I make this Generic, or at least more .NET idomatic -LC
         protected static T DecodeFromByteBuffer<T>(ByteBuffer buffer, long minBarForHighestTrackableValue)
             where T : HistogramBase
         {
-            Type histogramClass = typeof (T);
+            var histogramClass = typeof (T);
             HistogramBase histogram = ConstructHistogramFromBufferHeader(buffer, histogramClass,
                     minBarForHighestTrackableValue);
 
@@ -728,7 +727,7 @@ namespace HdrHistogram
 
             Debug.WriteLine("DECODING: Writing {0} items (int/short/long, NOT bytes)", histogram.CountsArrayLength);
 
-            // TODO to optimise this we'd have to store "relevantLength" in the buffer itself and pull it out here
+            // TODO to optimize this we'd have to store "relevantLength" in the buffer itself and pull it out here
             // See https://github.com/HdrHistogram/HdrHistogram/issues/18 for full discussion
 
             histogram.FillCountsArrayFromBuffer(buffer, histogram.CountsArrayLength * histogram.WordSizeInBytes);
@@ -839,8 +838,8 @@ namespace HdrHistogram
 
         private int GetBucketIndex(long value)
         {
-            int pow2ceiling = 64 - MiscUtilities.NumberOfLeadingZeros(value | _subBucketMask); // smallest power of 2 containing value
-            return pow2ceiling - _unitMagnitude - (_subBucketHalfCountMagnitude + 1);
+            var pow2Ceiling = 64 - MiscUtilities.NumberOfLeadingZeros(value | _subBucketMask); // smallest power of 2 containing value
+            return pow2Ceiling - _unitMagnitude - (_subBucketHalfCountMagnitude + 1);
         }
 
         private int GetSubBucketIndex(long value, int bucketIndex)
