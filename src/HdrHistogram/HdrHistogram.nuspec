@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>Gil Tene, Michael Barker, Matt Warren, Lee Campbell</authors>
+    <owners>Lee Campbell</owners>
+    <licenseUrl>https://raw.githubusercontent.com/LeeCampbell/HdrHistogram/master/LICENSE.txt</licenseUrl>
+    <projectUrl>https://github.com/LeeCampbell/HdrHistogram.NET</projectUrl>
+    <!-- <iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl> -->
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>HdrHistogram supports low latency recording and analyzing of sampled data value counts across a configurable integer value range with configurable value precision within the range.</description>
+    <releaseNotes>Rewrite of the HdrHistogram to be .NET idiomatic, package as nuget, add API comments, fix tests, remove used code.</releaseNotes>
+    <copyright>Copyright 2015</copyright>
+    <tags>HdrHistogram Histogram Instrumentation</tags>
+  </metadata>
+</package>
