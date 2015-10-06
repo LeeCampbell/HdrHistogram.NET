@@ -49,7 +49,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssertEx.cs" />
     <Compile Include="HistogramDataAccessTest.cs" />
     <Compile Include="HistogramEncodingTest.cs" />
     <Compile Include="HistogramTest.cs" />
