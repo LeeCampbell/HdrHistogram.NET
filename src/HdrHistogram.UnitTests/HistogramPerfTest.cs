@@ -14,7 +14,7 @@ using System.Threading;
 using HdrHistogram.Utilities;
 using NUnit.Framework;
 
-namespace HdrHistogram.Test
+namespace HdrHistogram.UnitTests
 {
     /**
      * JUnit test for {@link Histogram}

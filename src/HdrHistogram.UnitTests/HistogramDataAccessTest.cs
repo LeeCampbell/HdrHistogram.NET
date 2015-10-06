@@ -10,9 +10,9 @@
 
 using System;
 using NUnit.Framework;
-using Assert = HdrHistogram.Test.AssertEx;
+using Assert = HdrHistogram.UnitTests.AssertEx;
 
-namespace HdrHistogram.Test
+namespace HdrHistogram.UnitTests
 {
     public class HistogramDataAccessTest 
     {

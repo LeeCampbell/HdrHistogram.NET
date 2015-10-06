@@ -12,7 +12,7 @@ using System;
 using HdrHistogram.Utilities;
 using NUnit.Framework;
 
-namespace HdrHistogram.Test.Utilities
+namespace HdrHistogram.UnitTests.Utilities
 {
     public class MiscUtilitiesTest
     {

@@ -10,7 +10,7 @@
 
 using NUnit.Framework;
 
-namespace HdrHistogram.Test
+namespace HdrHistogram.UnitTests
 {
     /// <summary>
     /// This class is here just to make the porting easier, means we can leave the original unit test alone 
