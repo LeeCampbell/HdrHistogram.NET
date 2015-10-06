@@ -1,15 +1,179 @@
-HdrHistogram: A High Dynamic Range (HDR) Histogram
+#HdrHistogram: A High Dynamic Range (HDR) Histogram
 
-This project currently includes Java, C, and C# implementations of
-HdrHistogram, all of which share common concepts and data
-representation capabilities. Recent Go and Erlang ports can be found
-in other repositories.
 
-Note: The below is an excerpt from a Histogram JavaDoc. While it
-generally applies to C and C# as well, some details may vary by
-implementation (e.g. iteration and synchronization), so you should
-consult the documentation or header information of specific API
-library you intended to use.
+##What is it
+HdrHistogram.NET is the unofficial port of the Java HdrHistogram library. The official Java, C, and C# implementations of HdrHistogram can be found at https://github.com/HdrHistogram/HdrHistogram
+
+##Why would I use it?
+You would use it to record latency for large number of measurements.
+
+Often when measuring latency recordings, one could make the common mistake of reporting on the mean value or the 90th percentile. Gil Tene (the original author of the Java HdrHistogram) illustrates in numerous presentations (such as [here](http://www.infoq.com/presentations/latency-pitfalls) and [here](https://www.youtube.com/watch?v=9MKY4KypBzg)) on why this is a mistake. Instead you want to collect all of the data and then be able to report your measurements across the range of measurements. 
+
+##How would I use it?
+Generally you want to be able to record at the finest accuracy the latency of a given function of your software. To do this code might look something like this
+
+```
+//A single tick represents one hundred nanoseconds or one ten-millionth of a second. 
+//There are 10,000 ticks in a millisecond, or 10 million ticks in a second.
+// https://msdn.microsoft.com/en-us/library/system.datetime.ticks(v=vs.110).aspx
+
+// A Histogram covering the range from 100 nano-seconds to 1 hour (3,600,000,000,000 ns) with 3 decimal point resolution:
+var histogram = new LongHistogram(TimeSpan.TicksPerHour, 3);
+
+foreach(var element in things)
+{
+	long startTimestamp = Stopwatch.GetTimestamp();
+	ExecuteSomeActionToBeMeasured();
+	long ticks = Stopwatch.GetTimestamp() - startTs; 
+	historgram.RecordValue(deltaTicks);
+}
+
+```
+
+Once you have recorded all of your data, you are able to present that data based on a highly dynamic range of buckets.
+
+###Example console output
+Once you have recorded your data, you can dump a text report to a text writer. Here we show an example of writing to the `Console`.
+
+```
+var writer = new StringWriter();
+histogram.outputPercentileDistribution(writer);
+Console.WriteLine(writer.ToString());
+```
+
+Would produce output similar to:
+
+```
+       Value     Percentile TotalCount 1/(1-Percentile)
+
+       0.285 0.000000000000          1           1.00
+       0.448 0.100000000000       3535           1.11
+       0.466 0.200000000000       7100           1.25
+       0.497 0.300000000000      10504           1.43
+       0.523 0.400000000000      14046           1.67
+       0.535 0.500000000000      17644           2.00
+       0.541 0.550000000000      19466           2.22
+       0.547 0.600000000000      21134           2.50
+       0.555 0.650000000000      22898           2.86
+       0.567 0.700000000000      24513           3.33
+       0.594 0.750000000000      26260           4.00
+       0.609 0.775000000000      27129           4.44
+       0.627 0.800000000000      28005           5.00
+       0.642 0.825000000000      28939           5.71
+       0.660 0.850000000000      29793           6.67
+       0.680 0.875000000000      30649           8.00
+       0.687 0.887500000000      31095           8.89
+       0.693 0.900000000000      31550          10.00
+       0.698 0.912500000000      31992          11.43
+       0.703 0.925000000000      32415          13.33
+       0.710 0.937500000000      32880          16.00
+       0.713 0.943750000000      33080          17.78
+       0.717 0.950000000000      33277          20.00
+       0.721 0.956250000000      33476          22.86
+       0.727 0.962500000000      33710          26.67
+       0.736 0.968750000000      33925          32.00
+       0.741 0.971875000000      34023          35.56
+       0.748 0.975000000000      34141          40.00
+       0.757 0.978125000000      34249          45.71
+       0.768 0.981250000000      34352          53.33
+       0.786 0.984375000000      34459          64.00
+       0.803 0.985937500000      34515          71.11
+       0.815 0.987500000000      34567          80.00
+       0.838 0.989062500000      34622          91.43
+       0.869 0.990625000000      34676         106.67
+       1.045 0.992187500000      34731         128.00
+       1.815 0.992968750000      34759         142.22
+       1.943 0.993750000000      34786         160.00
+       1.989 0.994531250000      34813         182.86
+       2.038 0.995312500000      34841         213.33
+       2.087 0.996093750000      34868         256.00
+       2.127 0.996484375000      34881         284.44
+       2.161 0.996875000000      34895         320.00
+       2.225 0.997265625000      34909         365.71
+       2.355 0.997656250000      34922         426.67
+       2.539 0.998046875000      34936         512.00
+       2.601 0.998242187500      34943         568.89
+       2.653 0.998437500000      34950         640.00
+       2.689 0.998632812500      34957         731.43
+       2.755 0.998828125000      34964         853.33
+       2.801 0.999023437500      34970        1024.00
+       2.827 0.999121093750      34974        1137.78
+       2.847 0.999218750000      34977        1280.00
+       2.889 0.999316406250      34982        1462.86
+       2.947 0.999414062500      34984        1706.67
+       2.979 0.999511718750      34987        2048.00
+       3.015 0.999560546875      34989        2275.56
+       3.131 0.999609375000      34991        2560.00
+       3.267 0.999658203125      34993        2925.71
+       3.397 0.999707031250      34994        3413.33
+       3.627 0.999755859375      34996        4096.00
+       3.845 0.999780273438      34997        4551.11
+       3.995 0.999804687500      34998        5120.00
+       4.299 0.999829101563      34999        5851.43
+       4.299 0.999853515625      34999        6826.67
+       4.839 0.999877929688      35000        8192.00
+      10.039 0.999890136719      35001        9102.22
+      10.039 0.999902343750      35001       10240.00
+      11.911 0.999914550781      35002       11702.86
+      11.911 0.999926757813      35002       13653.33
+      11.911 0.999938964844      35002       16384.00
+      15.367 0.999945068359      35003       18204.44
+      15.367 0.999951171875      35003       20480.00
+      15.367 0.999957275391      35003       23405.71
+      15.367 0.999963378906      35003       27306.67
+      15.367 0.999969482422      35003       32768.00
+    2543.615 0.999972534180      35004       36408.89
+    2543.615 1.000000000000      35004
+#[Mean    =        0.633, StdDeviation   =       13.588]
+#[Max     =     2541.568, Total count    =        35004]
+#[Buckets =           21, SubBuckets     =         2048]
+```
+
+###Example of reporting results as a chart
+You can also have HdrHistogram output the results in a file format that can be charted. 
+This is especially useful when comparing measurements.
+
+First you will need to create the file to be used as an input for the chart.
+
+```
+var sw = new StringWriter();
+histogram.outputPercentileDistribution(sw);
+File.WriteAllText("HistogramChart.hgrm", sw.ToString());
+```
+
+Then you can use this website to plot a chart of the percentile distribution.
+Multiple files can be plotted in the same chart allowing effective visual comparison of your results.
+http://hdrhistogram.github.io/HdrHistogram/plotFiles.html
+  ![](http://i.imgur.com/Z1wIqw1.png)
+
+##So what is so special about this way of recording latency?
+ 
+* itself is low latency
+* tiny foot print due to just storing a dynamic range of buckets and counts
+* produces the reports you actually want
+
+
+###How would I contribute to this project?
+We welcome pull requests!
+If you do choose to contribute, please first raise an issue so we are not caught off guard by the pull request.
+Next can you please ensure that your PR (Pull Request) has a comment in it describing what it achieves and the issues that it closes.
+
+
+#Why an unofficial port, and not contribute to the official C# code base?
+
+At the time of forking away from the the Official HdrHistogram C# code base, I had the following reservations:
+
+1. Both the C# and Java code were in the same repository. I find that this makes things messy as they share only concepts but no artefacts. I think this also makes it harder to follow the C# code base evolution as you have to sift through unrelated commits to the Java code.
+2. The C# code is a port from Java which maintains the Java idioms. This is meant to aid patching the C# code base with updates to the Java code base. However this reduces the usability of the resulting .NET library.
+3. The intent of keeping the C# code to be like the Java code was to be able to keep it up to date. However, at time of writing it was over 10 months behind.
+4. There were failing tests in the C# code base.
+5. There appeared to be no automated build.
+6. The C# and Java APIs do not have to be the same. They ideally would produce the same results and have similar features, but like `NUnit` and `JUnit` they should be allowed to diverge to meet the needs of the community. 
+7. It is not using the latest version of Visual Studio (2015) 
+8. There is no Nuget package for the library. You need to download and compile it yourself
+9. A simple Pull Request to update the project (to Visual Studio 2015 sln type) had not been actioned in 3 weeks.
+10. Documentation is weak, and in places that it existed it was mainly in `JavaDoc` format.
+
 
 HdrHistogram
 ----------------------------------------------
