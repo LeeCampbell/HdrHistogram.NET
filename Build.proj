@@ -3,8 +3,7 @@
   <UsingTask AssemblyFile=".\packages\AssemblyVersion.MSBuild.0.1.0\tools\AssemblyVersion.MSBuild.dll"  TaskName="AssemblyVersion.MSBuild.SetAssemblyVersion" />
 
   <PropertyGroup>
-    <Version Condition="'$(Version)'==''">1.0.0</Version>
-    <BUILD_NUMBER Condition="'$(BUILD_NUMBER)'==''">1</BUILD_NUMBER>
+    <BUILD_NUMBER Condition="'$(BUILD_NUMBER)'==''">1.0.0</BUILD_NUMBER>
     <Configuration Condition="'$(Configuration)'==''">Release</Configuration>
     <!--Provide a value of 'release' for a release package of nuget-->
     <ReleaseType Condition="'$(ReleaseType)'==''">beta</ReleaseType>
@@ -15,9 +14,9 @@
     <Message Text="Version: $(Version)"/>
   
     <SetAssemblyVersion FileName=".\src\HdrHistogram\Properties\AssemblyInfo.g.cs"
-	                      VersionNumber="$(Version)"
+	                      VersionNumber="$(BUILD_NUMBER)"
 	                      Flavour="$(ReleaseType)"
-	                      BuildNumber="$(BuildNumber)"/>
+	                      BuildNumber="0"/>
   </Target>
 
   <!-- Projects to Build -->
