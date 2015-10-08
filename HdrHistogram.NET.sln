@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HdrHistogram.UnitTests", "s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HdrHistogram.PerfTests", "src\HdrHistogram.PerfTests\HdrHistogram.PerfTests.csproj", "{FF7983E4-B76A-4AAB-B2AD-AC3355D4C7F7}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{D3EBE9D9-B40D-4D2F-B76D-16A34FB09A94}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,5 +48,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2D189069-FE39-42AE-8169-71ABC4D5A87B} = {D3EBE9D9-B40D-4D2F-B76D-16A34FB09A94}
+		{FF7983E4-B76A-4AAB-B2AD-AC3355D4C7F7} = {D3EBE9D9-B40D-4D2F-B76D-16A34FB09A94}
 	EndGlobalSection
 EndGlobal
