@@ -11,7 +11,7 @@
   
   <Target Name="Version">
     
-    <Message Text="Version: $(Version)"/>
+    <Message Text="Version: $(BUILD_NUMBER)"/>
   
     <SetAssemblyVersion FileName=".\src\HdrHistogram\Properties\AssemblyInfo.g.cs"
 	                      VersionNumber="$(BUILD_NUMBER)"
