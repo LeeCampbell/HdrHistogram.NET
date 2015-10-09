@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using HdrHistogram.Iteration;
@@ -150,7 +151,7 @@ namespace HdrHistogram
                                         histogram.BucketCount, histogram.SubBucketCount);
                 }
             }
-            catch (ArgumentOutOfRangeException e)
+            catch (ArgumentOutOfRangeException)
             {
                 // Overflow conditions on histograms can lead to ArrayIndexOutOfBoundsException on iterations:
                 if (histogram.HasOverflowed())
@@ -161,11 +162,10 @@ namespace HdrHistogram
                 else
                 {
                     // Re-throw if reason is not a known overflow:
-                    throw e;
+                    throw;
                 }
             }
         }
-
 
         /// <summary>
         /// Provide a means of iterating through histogram values according to percentile levels. 
@@ -214,6 +214,19 @@ namespace HdrHistogram
         public static long HighestEquivalentValue(this HistogramBase histogram, long value)
         {
             return histogram.NextNonEquivalentValue(value) - 1;
+        }
+
+        /// <summary>
+        /// Executes the action and records the time to complete the action. The time is recorded in ticks.
+        /// </summary>
+        /// <param name="histogram">The Histogram to record the latency in.</param>
+        /// <param name="action">The functionality to execute and measure</param>
+        public static void RecordLatency(this HistogramBase histogram, Action action)
+        {
+            var start = Stopwatch.GetTimestamp();
+            action();
+            var elapsedTicks = (Stopwatch.GetTimestamp() - start);
+            histogram.RecordValue(elapsedTicks);
         }
     }
 }
