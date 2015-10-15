@@ -1,0 +1,2 @@
+Run ..\Scripts\GetAndBuildLatestOfficial.bat to download and install the official .NET HDrHistogram to this dir.
+This allows you to run comparative performance tests between this project and the official project.

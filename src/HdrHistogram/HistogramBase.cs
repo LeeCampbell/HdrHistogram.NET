@@ -173,7 +173,6 @@ namespace HdrHistogram
         /// </summary>
         /// <param name="value">The value to record</param>
         /// <param name="expectedIntervalBetweenValueSamples">If <param name="expectedIntervalBetweenValueSamples"/> is larger than 0, add auto-generated value records as appropriate if <param name="value"/> is larger than <param name="expectedIntervalBetweenValueSamples"/></param>
-        /// <remarks></remarks>
         /// <exception cref="System.IndexOutOfRangeException">if value is exceeds highestTrackableValue</exception>
         /// <remarks>
         /// To compensate for the loss of sampled values when a recorded value is larger than the expected interval between value samples, 

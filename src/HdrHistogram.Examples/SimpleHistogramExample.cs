@@ -22,23 +22,39 @@ namespace HdrHistogram.Examples
      */
     public class SimpleHistogramExample
     {
-        private const long NanosPerHour = TimeSpan.TicksPerHour * 100L;
-        private const double MicrosPerNano = 1000.0;
-        private static readonly LongHistogram Histogram = new LongHistogram(NanosPerHour, 3);
+        private const double MicrosPerTick = 10.0;
+        private static readonly LongHistogram Histogram = new LongHistogram(TimeSpan.TicksPerHour, 3);
         private static volatile Socket _socket;
         private static readonly Lazy<AddressFamily> AddressFamily = new Lazy<AddressFamily>(() => GetAddressFamily("google.com"));
 
         private static readonly TimeSpan WarmUpPeriod = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan RunPeriod = TimeSpan.FromSeconds(20);
 
-        static void RecordLatency(Action action)
+        public static void Run()
         {
-            var startTime = Stopwatch.GetTimestamp();
-            action();
-            long elapsedNanos = (Stopwatch.GetTimestamp() - startTime) * 100;
-            Histogram.RecordValue(elapsedNanos);
+            var timer = Stopwatch.StartNew();
+
+            do
+            {
+                Histogram.RecordLatency(CreateAndCloseDatagramSocket);
+            } while (timer.Elapsed < WarmUpPeriod);
+
+            Histogram.Reset();
+
+            do
+            {
+                Histogram.RecordLatency(CreateAndCloseDatagramSocket);
+            } while (timer.Elapsed < RunPeriod);
+
+            Console.WriteLine("Recorded latencies [in usec] for Create+Close of a DatagramSocket:");
+
+            var size = Histogram.GetEstimatedFootprintInBytes();
+            Console.WriteLine("Histogram size = {0} bytes ({1:F2} MB)", size, size / 1024.0 / 1024.0);
+
+            Histogram.OutputPercentileDistribution(Console.Out, outputValueUnitScalingRatio: MicrosPerTick);
         }
-        static void CreateAndCloseDatagramSocket()
+
+        private static void CreateAndCloseDatagramSocket()
         {
             try
             {
@@ -58,30 +74,6 @@ namespace HdrHistogram.Examples
             var hostIpAddress = Dns.GetHostEntry(url).AddressList[0];
             var hostIpEndPoint = new IPEndPoint(hostIpAddress, 80);
             return hostIpEndPoint.AddressFamily;
-        }
-
-        public static void Run()
-        {
-            var timer = Stopwatch.StartNew();
-
-            do
-            {
-                RecordLatency(CreateAndCloseDatagramSocket);
-            } while (timer.Elapsed < WarmUpPeriod);
-
-            Histogram.Reset();
-
-            do
-            {
-                RecordLatency(CreateAndCloseDatagramSocket);
-            } while (timer.Elapsed < RunPeriod);
-
-            Console.WriteLine("Recorded latencies [in usec] for Create+Close of a DatagramSocket:");
-
-            var size = Histogram.GetEstimatedFootprintInBytes();
-            Console.WriteLine("Histogram size = {0} bytes ({1:F2} MB)", size, size / 1024.0 / 1024.0);
-
-            Histogram.OutputPercentileDistribution(Console.Out, outputValueUnitScalingRatio: MicrosPerNano);
         }
     }
 }

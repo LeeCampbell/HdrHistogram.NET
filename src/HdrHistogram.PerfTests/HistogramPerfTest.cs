@@ -10,20 +10,17 @@
 
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading;
 using HdrHistogram.Utilities;
 using NUnit.Framework;
 
 namespace HdrHistogram.PerfTests
 {
-    /**
-     * JUnit test for {@link Histogram}
-     */
     [Category("Performance")]
     public class HistogramPerfTest
     {
-        /// <summary> 3,600,000,000 (3600L * 1000 * 1000, e.g. for 1 hr in usec units) </summary>
-        private const long HighestTrackableValue = 3600L * 1000 * 1000; // e.g. for 1 hr in usec units
+        private const long HighestTrackableValue = TimeSpan.TicksPerHour;
         private const int NumberOfSignificantValueDigits = 3;
         private const long TestValueLevel = 12340;
         private const long WarmupLoopLength = 50 * 1000;
@@ -52,46 +49,6 @@ namespace HdrHistogram.PerfTests
             // Check that the histogram contains as many values are we wrote to it
             Assert.AreEqual(SynchronizedTimingLoopCount, histogram.TotalCount);
         }
-
-        //[Test]
-        //public void testRawSyncronizedRecordingSpeedMultithreaded()
-        //{
-        //    HistogramBase histogram;
-        //    histogram = new SynchronizedHistogram(highestTrackableValue, numberOfSignificantValueDigits);
-        //    Console.WriteLine("\n\nTiming SynchronizedHistogram - Multithreaded:");
-
-        //    var task1 = Task.Factory.StartNew(() =>
-        //        testRawRecordingSpeedAtExpectedInterval("SynchronizedHistogram: ", histogram, 1000000000, synchronizedTimingLoopCount, assertNoGC: false, multiThreaded: true));
-        //    var task2 = Task.Factory.StartNew(() =>
-        //        testRawRecordingSpeedAtExpectedInterval("SynchronizedHistogram: ", histogram, 1000000000, synchronizedTimingLoopCount, assertNoGC: false, multiThreaded: true));
-        //    var task3 = Task.Factory.StartNew(() =>
-        //        testRawRecordingSpeedAtExpectedInterval("SynchronizedHistogram: ", histogram, 1000000000, synchronizedTimingLoopCount, assertNoGC: false, multiThreaded: true));
-
-        //    Task.WaitAll(task1, task2, task3);
-
-        //    // Check that the histogram contains as many values are we wrote to it
-        //    Assert.AreEqual(synchronizedTimingLoopCount * 3L, histogram.getTotalCount());
-        //}
-
-        //[Test]
-        //public void testRawAtomicRecordingSpeedMultithreaded()
-        //{
-        //    HistogramBase histogram;
-        //    histogram = new AtomicHistogram(highestTrackableValue, numberOfSignificantValueDigits);
-        //    Console.WriteLine("\n\nTiming AtomicHistogram - Multithreaded:");
-
-        //    var task1 = Task.Factory.StartNew(() =>
-        //        testRawRecordingSpeedAtExpectedInterval("AtomicHistogram: ", histogram, 1000000000, atomicTimingLoopCount, assertNoGC: false, multiThreaded: true));
-        //    var task2 = Task.Factory.StartNew(() =>
-        //        testRawRecordingSpeedAtExpectedInterval("AtomicHistogram: ", histogram, 1000000000, atomicTimingLoopCount, assertNoGC: false, multiThreaded: true));
-        //    var task3 = Task.Factory.StartNew(() =>
-        //        testRawRecordingSpeedAtExpectedInterval("AtomicHistogram: ", histogram, 1000000000, atomicTimingLoopCount, assertNoGC: false, multiThreaded: true));
-
-        //    Task.WaitAll(task1, task2, task3);
-
-        //    // Check that the histogram contains as many values are we wrote to it
-        //    Assert.AreEqual(atomicTimingLoopCount * 3L, histogram.getTotalCount());
-        //}
 
         [Test]
         public void TestLeadingZerosSpeed()
@@ -126,9 +83,9 @@ namespace HdrHistogram.PerfTests
         }
 
 
-        private static void TestRawRecordingSpeedAtExpectedInterval(String label, HistogramBase histogram,
+        private static void TestRawRecordingSpeedAtExpectedInterval(string label, HistogramBase histogram,
                                                             long expectedInterval, long timingLoopCount,
-                                                            bool assertNoGc = true, bool multiThreaded = false)
+                                                            bool assertNoGc = true)
         {
             Console.WriteLine("\nTiming recording speed with expectedInterval = " + expectedInterval + " :");
             // Warm up:
@@ -159,12 +116,6 @@ namespace HdrHistogram.PerfTests
             Console.WriteLine(label + "Hot code timing:");
             Console.WriteLine("{0}{1:N0} value recordings completed in {2:N0} usec, rate = {3:N0} value recording calls per sec.",
                                 label, timingLoopCount, deltaUsec, rate);
-            if (multiThreaded == false)
-            {
-                rate = 1000000 * histogram.TotalCount / deltaUsec;
-                Console.WriteLine("{0}{1:N0} raw recorded entries completed in {2:N0} usec, rate = {3:N0} recorded values per sec.",
-                                    label, histogram.TotalCount, deltaUsec, rate);
-            }
 
             if (assertNoGc)
             {
@@ -234,26 +185,6 @@ namespace HdrHistogram.PerfTests
                 Gen0 = gen0;
                 Gen1 = gen1;
                 Gen2 = gen2;
-            }
-        }
-
-        public static void Main(string[] args)
-        {
-            try
-            {
-                HistogramPerfTest test = new HistogramPerfTest();
-                test.TestRawRecordingSpeed();
-                Console.WriteLine("");
-                test.TestRawSyncronizedRecordingSpeed();
-                Console.WriteLine("");
-                test.TestLeadingZerosSpeed();
-                Console.WriteLine("");
-
-                //Thread.sleep(1000000);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Exception: " + e);
             }
         }
     }
