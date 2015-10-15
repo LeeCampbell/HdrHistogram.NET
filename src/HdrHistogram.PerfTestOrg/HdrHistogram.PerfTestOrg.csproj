@@ -4,15 +4,17 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{FF7983E4-B76A-4AAB-B2AD-AC3355D4C7F7}</ProjectGuid>
+    <ProjectGuid>{237E69D6-F662-45F3-8BA0-73ABAD73C6DA}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>HdrHistogram.PerfTests</RootNamespace>
-    <AssemblyName>HdrHistogram.PerfTests</AssemblyName>
+    <RootNamespace>HdrHistogram.PerfTestOrg</RootNamespace>
+    <AssemblyName>HdrHistogram.PerfTestOrg</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -22,6 +24,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -29,10 +32,10 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
   <ItemGroup>
+    <Reference Include="HdrHistogram.NET">
+      <HintPath>lib\HdrHistogram.NET.dll</HintPath>
+    </Reference>
     <Reference Include="nunit.framework, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
       <HintPath>..\..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
       <Private>True</Private>
@@ -47,25 +50,27 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
-    <Compile Include="Throughput\IntHistogramThoughputTest.cs" />
-    <Compile Include="Throughput\LongHistogramThoughputTest.cs" />
-    <Compile Include="Throughput\HistogramThoughputTestBase.cs" />
-    <Compile Include="Throughput\GcInfo.cs" />
-    <Compile Include="HistogramPerfTest.cs" />
+    <Compile Include="..\HdrHistogram.PerfTests\Program.cs">
+      <Link>Program.cs</Link>
+    </Compile>
+    <Compile Include="..\HdrHistogram.PerfTests\Throughput\GcInfo.cs">
+      <Link>Throughput\GcInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\HdrHistogram.PerfTests\Throughput\ThroughputTestResult.cs">
+      <Link>Throughput\ThroughputTestResult.cs</Link>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Throughput\AtomicLongHistogramThoughputTest.cs" />
+    <Compile Include="Throughput\HistogramThoughputTestBase.cs" />
+    <Compile Include="Throughput\IntHistogramThoughputTest.cs" />
+    <Compile Include="Throughput\HistogramThoughputTest.cs" />
     <Compile Include="Throughput\ShortHistogramThoughputTest.cs" />
     <Compile Include="Throughput\SynchronizedHistogramThoughputTest.cs" />
-    <Compile Include="Throughput\ThroughputTestResult.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\HdrHistogram\HdrHistogram.csproj">
-      <Project>{655D9C4C-5BBD-4494-9828-AE427A1DDD01}</Project>
-      <Name>HdrHistogram</Name>
-    </ProjectReference>
+    <None Include="Scripts\Download-File.ps1" />
+    <None Include="Scripts\GetAndBuildLatestOfficial.bat" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
