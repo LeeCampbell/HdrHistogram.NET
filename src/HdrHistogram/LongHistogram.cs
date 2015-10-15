@@ -28,11 +28,13 @@ namespace HdrHistogram
     /// Value quantization within the range will thus be no larger than 1/1,000th (or 0.1%) of any value.
     /// This example Histogram could be used to track and analyze the counts of observed response times ranging between
     ///  1 microsecond and 1 hour in magnitude, while maintaining a value resolution of 1 microsecond up to 1 millisecond, 
-    /// a resolution of 1 millisecond(or better) up to one second, and a resolution of 1 second (or better) up to 1,000 seconds.
+    /// a resolution of 1 millisecond(or better) up to one second, and a resolution of 1 second (or better) up to 1,000
+    /// seconds.
     /// At it's maximum tracked value(1 hour), it would still maintain a resolution of 3.6 seconds (or better).
     /// </para>
     /// Histogram tracks value counts in <c>long</c> fields.
-    /// Smaller field types are available in the <see cref="IntHistogram"/> and <see cref="ShortHistogram"/> implementations of <see cref="HistogramBase"/>.
+    /// Smaller field types are available in the <see cref="IntHistogram"/> and <see cref="ShortHistogram"/> 
+    /// implementations of <see cref="HistogramBase"/>.
     /// </remarks>
     public class LongHistogram : HistogramBase
     {
