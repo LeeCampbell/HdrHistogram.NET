@@ -44,6 +44,7 @@ namespace HdrHistogram
         private LongBuffer _cachedDstLongBuffer;
         private ByteBuffer _cachedDstByteBuffer;
         private int _cachedDstByteBufferPosition;
+        private long _totalCount;
 
         /// <summary>
         /// Construct a Histogram given the Highest value to be tracked and a number of significant decimal digits. 
@@ -77,7 +78,7 @@ namespace HdrHistogram
         }
 
 
-        public override long TotalCount { get; protected set; }
+        public override long TotalCount { get { return _totalCount; } protected set { _totalCount = value; } }
 
         protected override int WordSizeInBytes => 8;
 
@@ -126,29 +127,21 @@ namespace HdrHistogram
         protected override void IncrementCountAtIndex(int index)
         {
             _counts[index]++;
+            _totalCount++;
         }
 
         protected override void AddToCountAtIndex(int index, long value)
         {
             _counts[index] += value;
+            _totalCount += value;
         }
 
         protected override void ClearCounts()
         {
             Array.Clear(_counts, 0, _counts.Length);
-            TotalCount = 0;
+            _totalCount = 0;
         }
-
-        protected override void IncrementTotalCount()
-        {
-            TotalCount++;
-        }
-
-        protected override void AddToTotalCount(long value)
-        {
-            TotalCount += value;
-        }
-
+        
         protected override void FillCountsArrayFromBuffer(ByteBuffer buffer, int length)
         {
             lock (UpdateLock)

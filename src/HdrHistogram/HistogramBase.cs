@@ -54,6 +54,7 @@ namespace HdrHistogram
         private ByteBuffer _intermediateUncompressedByteBuffer;
 
         protected readonly object UpdateLock = new object();
+        private readonly int _bucketIndexOffset;
 
         /// <summary>
         /// Get the configured highestTrackableValue
@@ -140,6 +141,10 @@ namespace HdrHistogram
             SubBucketCount = (int)Math.Pow(2, (_subBucketHalfCountMagnitude + 1));
             SubBucketHalfCount = SubBucketCount / 2;
             _subBucketMask = (SubBucketCount - 1) << _unitMagnitude;
+
+
+            _bucketIndexOffset = 64 - _unitMagnitude - (_subBucketHalfCountMagnitude + 1);
+
 
             // determine exponent range needed to support the trackable value with no overflow:
             BucketCount = GetBucketsNeededToCoverValue(HighestTrackableValue);
@@ -232,7 +237,6 @@ namespace HdrHistogram
                 {
                     AddToCountAtIndex(i, fromHistogram.GetCountAtIndex(i));
                 }
-                TotalCount = TotalCount + fromHistogram.TotalCount;
             }
             else
             {
@@ -704,11 +708,7 @@ namespace HdrHistogram
         protected abstract void IncrementCountAtIndex(int index);
 
         protected abstract void AddToCountAtIndex(int index, long value);
-
-        protected abstract void IncrementTotalCount();
-
-        protected abstract void AddToTotalCount(long value);
-
+        
         protected abstract void ClearCounts();
 
         protected static T DecodeFromByteBuffer<T>(ByteBuffer buffer, long minBarForHighestTrackableValue)
@@ -773,7 +773,6 @@ namespace HdrHistogram
             int subBucketIndex = GetSubBucketIndex(value, bucketIndex);
             int countsIndex = CountsArrayIndex(bucketIndex, subBucketIndex);
             AddToCountAtIndex(countsIndex, count);
-            AddToTotalCount(count);
         }
 
         private void RecordSingleValue(long value)
@@ -783,7 +782,6 @@ namespace HdrHistogram
             int subBucketIndex = GetSubBucketIndex(value, bucketIndex);
             int countsIndex = CountsArrayIndex(bucketIndex, subBucketIndex);
             IncrementCountAtIndex(countsIndex);
-            IncrementTotalCount();
         }
 
         private void RecordValueWithCountAndExpectedInterval(long value, long count, long expectedIntervalBetweenValueSamples)
@@ -837,8 +835,8 @@ namespace HdrHistogram
 
         private int GetBucketIndex(long value)
         {
-            var pow2Ceiling = 64 - MiscUtilities.NumberOfLeadingZeros(value | _subBucketMask); // smallest power of 2 containing value
-            return pow2Ceiling - _unitMagnitude - (_subBucketHalfCountMagnitude + 1);
+            var leadingZeros = MiscUtilities.NumberOfLeadingZeros(value | _subBucketMask); // smallest power of 2 containing value
+            return _bucketIndexOffset - leadingZeros;
         }
 
         private int GetSubBucketIndex(long value, int bucketIndex)
