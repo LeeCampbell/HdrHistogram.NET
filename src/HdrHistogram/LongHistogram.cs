@@ -127,11 +127,13 @@ namespace HdrHistogram
         protected override void IncrementCountAtIndex(int index)
         {
             _counts[index]++;
+            _totalCount++;
         }
 
         protected override void AddToCountAtIndex(int index, long value)
         {
             _counts[index] += value;
+            _totalCount += value;
         }
 
         protected override void ClearCounts()
@@ -139,17 +141,7 @@ namespace HdrHistogram
             Array.Clear(_counts, 0, _counts.Length);
             _totalCount = 0;
         }
-
-        protected override void IncrementTotalCount()
-        {
-            _totalCount++;
-        }
-
-        protected override void AddToTotalCount(long value)
-        {
-            _totalCount += value;
-        }
-
+        
         protected override void FillCountsArrayFromBuffer(ByteBuffer buffer, int length)
         {
             lock (UpdateLock)

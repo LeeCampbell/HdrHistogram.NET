@@ -145,6 +145,7 @@ namespace HdrHistogram
             lock (UpdateLock)
             {
                 _counts[index]++;
+                _totalCount++;
             }
         }
 
@@ -153,6 +154,7 @@ namespace HdrHistogram
             lock (UpdateLock)
             {
                 _counts[index] += value;
+                _totalCount += value;
             }
         }
 
@@ -162,22 +164,6 @@ namespace HdrHistogram
             {
                 Array.Clear(_counts, 0, _counts.Length);
                 TotalCount = 0;
-            }
-        }
-
-        protected override void IncrementTotalCount()
-        {
-            lock (UpdateLock)
-            {
-                _totalCount++;
-            }
-        }
-
-        protected override void AddToTotalCount(long value)
-        {
-            lock (UpdateLock)
-            {
-                _totalCount += value;
             }
         }
 
