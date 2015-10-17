@@ -146,7 +146,7 @@ namespace HdrHistogram
         {
             lock (UpdateLock)
             {
-                buffer.asLongBuffer().get(_counts, 0, length);
+                buffer.AsLongBuffer().Get(_counts, 0, length);
             }
         }
 
@@ -156,14 +156,14 @@ namespace HdrHistogram
             {
                 if ((_cachedDstLongBuffer == null) ||
                     (buffer != _cachedDstByteBuffer) ||
-                    (buffer.position() != _cachedDstByteBufferPosition))
+                    (buffer.Position != _cachedDstByteBufferPosition))
                 {
                     _cachedDstByteBuffer = buffer;
-                    _cachedDstByteBufferPosition = buffer.position();
-                    _cachedDstLongBuffer = buffer.asLongBuffer();
+                    _cachedDstByteBufferPosition = buffer.Position;
+                    _cachedDstLongBuffer = buffer.AsLongBuffer();
                 }
-                _cachedDstLongBuffer.rewind();
-                _cachedDstLongBuffer.put(_counts, 0, length);
+                _cachedDstLongBuffer.Rewind();
+                _cachedDstLongBuffer.Put(_counts, 0, length);
             }
         }
     }

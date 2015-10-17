@@ -484,18 +484,18 @@ namespace HdrHistogram
                 long maxValue = this.GetMaxValue();
                 int relevantLength = GetLengthForNumberOfBuckets(GetBucketsNeededToCoverValue(maxValue));
                 Console.WriteLine("buffer.capacity() < getNeededByteBufferCapacity(relevantLength))");
-                Console.WriteLine($"  buffer.capacity() = {buffer.capacity()}");
+                Console.WriteLine($"  buffer.capacity() = {buffer.Capacity()}");
                 Console.WriteLine($"  relevantLength = {relevantLength}");
                 Console.WriteLine($"  getNeededByteBufferCapacity(relevantLength) = {GetNeededByteBufferCapacity(relevantLength)}");
-                if (buffer.capacity() < GetNeededByteBufferCapacity(relevantLength))
+                if (buffer.Capacity() < GetNeededByteBufferCapacity(relevantLength))
                 {
                     throw new ArgumentOutOfRangeException("buffer does not have capacity for" + GetNeededByteBufferCapacity(relevantLength) + " bytes");
                 }
-                buffer.putInt(GetEncodingCookie());
-                buffer.putInt(NumberOfSignificantValueDigits);
-                buffer.putLong(LowestTrackableValue);
-                buffer.putLong(HighestTrackableValue);
-                buffer.putLong(TotalCount); // Needed because overflow situations may lead this to differ from counts totals
+                buffer.PutInt(GetEncodingCookie());
+                buffer.PutInt(NumberOfSignificantValueDigits);
+                buffer.PutLong(LowestTrackableValue);
+                buffer.PutLong(HighestTrackableValue);
+                buffer.PutLong(TotalCount); // Needed because overflow situations may lead this to differ from counts totals
 
                 Debug.WriteLine("MaxValue = {0}, Buckets needed = {1}, relevantLength = {2}", maxValue, GetBucketsNeededToCoverValue(maxValue), relevantLength);
                 Debug.WriteLine("MaxValue = {0}, Buckets needed = {1}, relevantLength = {2}", maxValue, GetBucketsNeededToCoverValue(maxValue), relevantLength);
@@ -519,26 +519,26 @@ namespace HdrHistogram
             {
                 if (_intermediateUncompressedByteBuffer == null)
                 {
-                    _intermediateUncompressedByteBuffer = ByteBuffer.allocate(GetNeededByteBufferCapacity(CountsArrayLength));
+                    _intermediateUncompressedByteBuffer = ByteBuffer.Allocate(GetNeededByteBufferCapacity(CountsArrayLength));
                 }
-                _intermediateUncompressedByteBuffer.clear();
+                _intermediateUncompressedByteBuffer.Clear();
                 int uncompressedLength = EncodeIntoByteBuffer(_intermediateUncompressedByteBuffer);
 
-                targetBuffer.putInt(GetCompressedEncodingCookie());
-                targetBuffer.putInt(0); // Placeholder for compressed contents length
-                byte[] targetArray = targetBuffer.array();
+                targetBuffer.PutInt(GetCompressedEncodingCookie());
+                targetBuffer.PutInt(0); // Placeholder for compressed contents length
+                byte[] targetArray = targetBuffer.Array();
                 long compressedDataLength;
                 using (var outputStream = new CountingMemoryStream(targetArray, 8, targetArray.Length - 8))
                 {
                     using (var compressor = new DeflateStream(outputStream, compressionLevel))
                     {
-                        compressor.Write(_intermediateUncompressedByteBuffer.array(), 0, uncompressedLength);
+                        compressor.Write(_intermediateUncompressedByteBuffer.Array(), 0, uncompressedLength);
                         compressor.Flush();
                     }
                     compressedDataLength = outputStream.BytesWritten;
                 }
 
-                targetBuffer.putInt(4, (int)compressedDataLength); // Record the compressed length
+                targetBuffer.PutInt(4, (int)compressedDataLength); // Record the compressed length
 
                 Debug.WriteLine("COMPRESSING - Wrote {0} bytes (header = 8), original size {1}", compressedDataLength + 8, uncompressedLength);
 
@@ -719,7 +719,7 @@ namespace HdrHistogram
                     minBarForHighestTrackableValue);
 
             int expectedCapacity = histogram.GetNeededByteBufferCapacity(histogram.CountsArrayLength);
-            if (expectedCapacity > buffer.capacity())
+            if (expectedCapacity > buffer.Capacity())
             {
                 throw new ArgumentException("The buffer does not contain the full Histogram");
             }
@@ -736,27 +736,27 @@ namespace HdrHistogram
 
         protected static HistogramBase DecodeFromCompressedByteBuffer(ByteBuffer buffer, Type histogramClass, long minBarForHighestTrackableValue)
         {
-            int cookie = buffer.getInt();
+            int cookie = buffer.GetInt();
             if (GetCookieBase(cookie) != CompressedEncodingCookieBase)
             {
                 throw new ArgumentException("The buffer does not contain a compressed Histogram");
             }
-            int lengthOfCompressedContents = buffer.getInt();
+            int lengthOfCompressedContents = buffer.GetInt();
             HistogramBase histogram;
             ByteBuffer countsBuffer;
             int numOfBytesDecompressed;
-            using (var inputStream = new MemoryStream(buffer.array(), 8, lengthOfCompressedContents))
+            using (var inputStream = new MemoryStream(buffer.Array(), 8, lengthOfCompressedContents))
             using (var decompressor = new DeflateStream(inputStream, CompressionMode.Decompress))
             {
-                ByteBuffer headerBuffer = ByteBuffer.allocate(32);
-                decompressor.Read(headerBuffer.array(), 0, 32);
+                ByteBuffer headerBuffer = ByteBuffer.Allocate(32);
+                decompressor.Read(headerBuffer.Array(), 0, 32);
                 histogram = ConstructHistogramFromBufferHeader(headerBuffer, histogramClass, minBarForHighestTrackableValue);
-                countsBuffer = ByteBuffer.allocate(histogram.GetNeededByteBufferCapacity(histogram.CountsArrayLength) - 32);
-                numOfBytesDecompressed = decompressor.Read(countsBuffer.array(), 0, countsBuffer.array().Length);
+                countsBuffer = ByteBuffer.Allocate(histogram.GetNeededByteBufferCapacity(histogram.CountsArrayLength) - 32);
+                numOfBytesDecompressed = decompressor.Read(countsBuffer.Array(), 0, countsBuffer.Array().Length);
             }
 
             Debug.WriteLine("DECOMPRESSING: Writing {0} bytes (plus 32 for header) into array size {1}, started with {2} bytes of compressed data  ({3} + 8 for the header)",
-                numOfBytesDecompressed, countsBuffer.array().Length, lengthOfCompressedContents + 8, lengthOfCompressedContents);
+                numOfBytesDecompressed, countsBuffer.Array().Length, lengthOfCompressedContents + 8, lengthOfCompressedContents);
 
             // TODO Sigh, have to fix this for AtomicHistogram, it's needs a count of ITEMS, not BYTES)
             //histogram.fillCountsArrayFromBuffer(countsBuffer, histogram.countsArrayLength * histogram.wordSizeInBytes);
@@ -868,16 +868,16 @@ namespace HdrHistogram
 
         private static HistogramBase ConstructHistogramFromBufferHeader(ByteBuffer buffer, Type histogramClass, long minBarForHighestTrackableValue)
         {
-            int cookie = buffer.getInt();
+            int cookie = buffer.GetInt();
             if (GetCookieBase(cookie) != EncodingCookieBase)
             {
                 throw new ArgumentException("The buffer does not contain a Histogram");
             }
 
-            int numberOfSignificantValueDigits = buffer.getInt();
-            long lowestTrackableValue = buffer.getLong();
-            long highestTrackableValue = buffer.getLong();
-            long totalCount = buffer.getLong();
+            int numberOfSignificantValueDigits = buffer.GetInt();
+            long lowestTrackableValue = buffer.GetLong();
+            long highestTrackableValue = buffer.GetLong();
+            long totalCount = buffer.GetLong();
 
             highestTrackableValue = Math.Max(highestTrackableValue, minBarForHighestTrackableValue);
 
