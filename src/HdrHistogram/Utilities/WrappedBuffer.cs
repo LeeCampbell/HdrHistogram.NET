@@ -11,49 +11,35 @@
 namespace HdrHistogram.Utilities
 {
     // This needs to be a view on-top of a byte array
-    class WrappedBuffer<T> where T : struct
+    sealed class WrappedBuffer<T> where T : struct
     {
         private readonly ByteBuffer _underlyingBuffer;
         private readonly int _parentOffset;
-        //private readonly int _wordSizeInBytes;
 
-        public static WrappedBuffer<U> create<U>(ByteBuffer underlyingBuffer, int wordSizeInBytes) where U : struct
+        public static WrappedBuffer<T> Create(ByteBuffer underlyingBuffer)
         {
-            return new WrappedBuffer<U>(underlyingBuffer); //, wordSizeInBytes);
+            return new WrappedBuffer<T>(underlyingBuffer);
         }
 
-        private WrappedBuffer(ByteBuffer underlyingBuffer) //, int wordSizeInBytes)
+        private WrappedBuffer(ByteBuffer underlyingBuffer)
         {
             _underlyingBuffer = underlyingBuffer;
-            _parentOffset = underlyingBuffer.position();
-            //_wordSizeInBytes = wordSizeInBytes;
+            _parentOffset = underlyingBuffer.Position;
         }
 
-        internal void put(T[] values, int index, int length)
+        internal void Put(T[] values, int index, int length)
         {
-            //_underlyingBuffer.blockCopy(src: values, srcOffset: index, dstOffset: _parentOffset, count: length * _wordSizeInBytes);
-            _underlyingBuffer.blockCopy(src: values, srcOffset: index, dstOffset: _parentOffset, count: length);
+            _underlyingBuffer.BlockCopy(src: values, srcOffset: index, dstOffset: _parentOffset, count: length);
         }
 
-        internal void get(T[] destination, int index, int length)
+        internal void Get(T[] destination, int index, int length)
         {
-            //_underlyingBuffer.blockGet(dst: destination, dstOffset: index, srcOffset: _parentOffset, count: length * _wordSizeInBytes);
-            _underlyingBuffer.blockGet(dst: destination, dstOffset: index, srcOffset: _parentOffset, count: length);
+            _underlyingBuffer.BlockGet(target: destination, targetOffset: index, sourceOffset: _parentOffset, count: length);
         }
 
-        internal void put(long value)
+        internal void Rewind()
         {
-            _underlyingBuffer.putLong(value);
-        }
-
-        internal long get()
-        {
-            return _underlyingBuffer.getLong();
-        }
-
-        internal void rewind()
-        {
-            _underlyingBuffer.rewind(_parentOffset);
+            _underlyingBuffer.Position = _parentOffset;
         }
     }
 }

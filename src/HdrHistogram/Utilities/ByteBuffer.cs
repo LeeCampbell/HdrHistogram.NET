@@ -17,12 +17,20 @@ namespace HdrHistogram.Utilities
     // and http://stackoverflow.com/questions/18040012/what-is-the-equivalent-of-javas-bytebuffer-wrap-in-c
     // and http://stackoverflow.com/questions/1261543/equivalent-of-javas-bytebuffer-puttype-in-c-sharp
     // Java version http://docs.oracle.com/javase/7/docs/api/java/nio/ByteBuffer.html
-    public class ByteBuffer
+    /// <summary>
+    /// A byte buffer that tracks position and allows reads and writes of 32 and 64 bit integer values.
+    /// </summary>
+    public sealed class ByteBuffer
     {
         private readonly byte[] _internalBuffer;
         private int _position;
 
-        public static ByteBuffer allocate(int bufferCapacity)
+        /// <summary>
+        /// Creates a <see cref="ByteBuffer"/> with a specified capacity in bytes.
+        /// </summary>
+        /// <param name="bufferCapacity">The capacity of the buffer in bytes</param>
+        /// <returns>A newly created <see cref="ByteBuffer"/>.</returns>
+        public static ByteBuffer Allocate(int bufferCapacity)
         {
             return new ByteBuffer(bufferCapacity);
         }
@@ -31,102 +39,124 @@ namespace HdrHistogram.Utilities
         {
             _internalBuffer = new byte[bufferCapacity];
             _position = 0;
-            //for (int i = 0; i < _internalBuffer.Length; i++)
-            //    _internalBuffer[i] = 255;
         }
 
-        public int capacity()
+        /// <summary>
+        /// The buffer's current position in the underlying byte array
+        /// </summary>
+        public int Position { get { return _position; } set { _position = value; } }
+
+        /// <summary>
+        /// Returns the capacity of the <see cref="ByteBuffer"/>
+        /// </summary>
+        /// <returns>The length of the internal byte array.</returns>
+        public int Capacity()
         {
             return _internalBuffer.Length;
         }
 
-        public void clear()
+        /// <summary>
+        /// Clears the buffer, and sets the position back to zero.
+        /// </summary>
+        public void Clear()
         {
-            Array.Clear(_internalBuffer, 0, _internalBuffer.Length);
+            System.Array.Clear(_internalBuffer, 0, _internalBuffer.Length);
             _position = 0;
         }
 
-        public int getInt()
+        /// <summary>
+        /// Gets the value of the current position as an <see cref="int"/> value, and advances the position to the next int.
+        /// </summary>
+        /// <returns>The value of the <see cref="int"/> at the current position.</returns>
+        public int GetInt()
         {
             var intValue = BitConverter.ToInt32(_internalBuffer, _position);
             _position += sizeof(int);
             return intValue;
         }
 
-        public long getLong()
+        /// <summary>
+        /// Gets the value of the current position as an <see cref="long"/> value, and advances the position to the next long.
+        /// </summary>
+        /// <returns>The value of the long at the current position.</returns>
+        public long GetLong()
         {
             var longValue = BitConverter.ToInt64(_internalBuffer, _position);
             _position += sizeof(long);
             return longValue;
         }
 
-        public void putInt(int value)
+        /// <summary>
+        /// Sets the bytes at the current position to the value of the passed value, and advances the position.
+        /// </summary>
+        /// <param name="value">The value to set the current position to.</param>
+        public void PutInt(int value)
         {
             var intAsBytes = BitConverter.GetBytes(value);
-            Array.Copy(intAsBytes, 0, _internalBuffer, _position, intAsBytes.Length);
+            System.Array.Copy(intAsBytes, 0, _internalBuffer, _position, intAsBytes.Length);
             _position += intAsBytes.Length;
         }
 
-        internal void putInt(int index, int value)
+        /// <summary>
+        /// Sets the bytes at the provided position to the value of the passed value, and does not advance the position.
+        /// </summary>
+        /// <param name="index">The position to set the value at.</param>
+        /// <param name="value">The value to set.</param>
+        internal void PutInt(int index, int value)
         {
             var intAsBytes = BitConverter.GetBytes(value);
-            Array.Copy(intAsBytes, 0, _internalBuffer, index, intAsBytes.Length);
-            // We don't increment the position here, to match the Java behaviour
+            System.Array.Copy(intAsBytes, 0, _internalBuffer, index, intAsBytes.Length);
+            // We don't increment the Position here, to match the Java behavior
         }
 
-        public void putLong(long value)
+        /// <summary>
+        /// Sets the bytes at the current position to the value of the passed value, and advances the position.
+        /// </summary>
+        /// <param name="value">The value to set the current position to.</param>
+        public void PutLong(long value)
         {
             var longAsBytes = BitConverter.GetBytes(value);
-            Array.Copy(longAsBytes, 0, _internalBuffer, _position, longAsBytes.Length);
+            System.Array.Copy(longAsBytes, 0, _internalBuffer, _position, longAsBytes.Length);
             _position += longAsBytes.Length;
         }
 
-        internal byte[] array()
+        /// <summary>
+        /// Gets a copy of the internal byte array.
+        /// </summary>
+        /// <returns>The a copy of the internal byte array.</returns>
+        internal byte[] Array()
         {
-            return _internalBuffer;
+            var copy  = new byte[_internalBuffer.Length];
+            System.Array.Copy(_internalBuffer, copy, _internalBuffer.Length);
+            return copy;
         }
 
-        public void rewind()
+        internal void BlockCopy(Array src, int srcOffset, int dstOffset, int count)
         {
-            _position = 0;
-        }
-
-        public void rewind(int position)
-        {
-            _position = position;
-        }
-
-        public int position()
-        {
-            return _position;
-        }
-
-        internal void blockCopy(Array src, int srcOffset, int dstOffset, int count)
-        {
-            Debug.WriteLine("  Buffer.BlockCopy - Copying {0} bytes INTO internalBuffer, scrOffset = {1}, dstOffset = {2}", count, srcOffset, dstOffset);
+            Debug.WriteLine("  Buffer.BlockCopy - Copying {0} bytes INTO internalBuffer, scrOffset = {1}, targetOffset = {2}", count, srcOffset, dstOffset);
             Buffer.BlockCopy(src: src, srcOffset: srcOffset, dst: _internalBuffer, dstOffset: dstOffset, count: count);
             _position += count;
         }
 
-        internal void blockGet(Array dst, int dstOffset, int srcOffset, int count)
+        internal void BlockGet(Array target, int targetOffset, int sourceOffset, int count)
         {
-            Debug.WriteLine("  Buffer.BlockCopy - Copying {0} bytes FROM internalBuffer, scrOffset = {1}, dstOffset = {2}", count, srcOffset, dstOffset);
-            Buffer.BlockCopy(src: _internalBuffer, srcOffset: srcOffset, dst: dst, dstOffset: dstOffset, count: count);
+            Debug.WriteLine("  Buffer.BlockCopy - Copying {0} bytes FROM internalBuffer, scrOffset = {1}, targetOffset = {2}", count, sourceOffset, targetOffset);
+            Buffer.BlockCopy(src: _internalBuffer, srcOffset: sourceOffset, dst: target, dstOffset: targetOffset, count: count);
         }
 
-        internal WrappedBuffer<short> asShortBuffer()
+        internal WrappedBuffer<short> AsShortBuffer()
         {
-            return WrappedBuffer<short>.create<short>(this, sizeof(short));
+            return WrappedBuffer<short>.Create(this);
         }
 
-        internal WrappedBuffer<int> asIntBuffer()
+        internal WrappedBuffer<int> AsIntBuffer()
         {
-            return WrappedBuffer<int>.create<int>(this, sizeof(int));
+            return WrappedBuffer<int>.Create(this);
         }
 
-        internal WrappedBuffer<long> asLongBuffer()
+        internal WrappedBuffer<long> AsLongBuffer()
         {
-            return WrappedBuffer<long>.create<long>(this, sizeof(long));
+            return WrappedBuffer<long>.Create(this);
         }
     }
 }

@@ -47,13 +47,19 @@ namespace HdrHistogram
         private static readonly Type[] HistogramClassConstructorArgsTypes = { typeof(long), typeof(long), typeof(int) };
         private static long _nextIdentity = -1L;
 
+        /// <summary>
+        /// The object to used to lock on when performing atomic actions.
+        /// </summary>
+        protected readonly object UpdateLock = new object();
+
         private readonly int _subBucketHalfCountMagnitude;
         private readonly int _unitMagnitude;
         private readonly long _subBucketMask;
+        
 
         private ByteBuffer _intermediateUncompressedByteBuffer;
 
-        protected readonly object UpdateLock = new object();
+        
         private readonly int _bucketIndexOffset;
 
         /// <summary>
@@ -74,6 +80,9 @@ namespace HdrHistogram
         /// <returns>numberOfSignificantValueDigits</returns>
         public int NumberOfSignificantValueDigits { get; }
 
+        /// <summary>
+        /// A unique id number for this instance.
+        /// </summary>
         public long Identity { get; private set; }
 
         /// <summary>
@@ -88,6 +97,9 @@ namespace HdrHistogram
         /// </summary>
         public long EndTimeStamp { get; set; }
 
+        /// <summary>
+        /// Gets the total number of recorded values.
+        /// </summary>
         public abstract long TotalCount { get; protected set; }
 
         
@@ -95,8 +107,14 @@ namespace HdrHistogram
         internal int SubBucketCount { get; }    //TODO: Candidate for private read-only field. -LC
         internal int SubBucketHalfCount { get; }//TODO: Candidate for private read-only field. -LC
 
+        /// <summary>
+        /// The length of the internal array that stores the counts.
+        /// </summary>
         protected int CountsArrayLength { get; }
 
+        /// <summary>
+        /// Returns the word size of this implementation
+        /// </summary>
         protected abstract int WordSizeInBytes { get; }
 
 
@@ -177,7 +195,7 @@ namespace HdrHistogram
         /// Record a value in the histogram.
         /// </summary>
         /// <param name="value">The value to record</param>
-        /// <param name="expectedIntervalBetweenValueSamples">If <param name="expectedIntervalBetweenValueSamples"/> is larger than 0, add auto-generated value records as appropriate if <param name="value"/> is larger than <param name="expectedIntervalBetweenValueSamples"/></param>
+        /// <param name="expectedIntervalBetweenValueSamples">If <paramref name="expectedIntervalBetweenValueSamples"/> is larger than 0, add auto-generated value records as appropriate if <paramref name="value"/> is larger than <paramref name="expectedIntervalBetweenValueSamples"/></param>
         /// <exception cref="System.IndexOutOfRangeException">if value is exceeds highestTrackableValue</exception>
         /// <remarks>
         /// To compensate for the loss of sampled values when a recorded value is larger than the expected interval between value samples, 
@@ -205,7 +223,7 @@ namespace HdrHistogram
         /// Copy this histogram, corrected for coordinated omission, into the target histogram, overwriting it's contents.
         /// </summary>
         /// <param name="targetHistogram">the histogram to copy into</param>
-        /// <param name="expectedIntervalBetweenValueSamples">If <param name="expectedIntervalBetweenValueSamples"/> is larger than 0, add auto-generated value records as appropriate if value is larger than <param name="expectedIntervalBetweenValueSamples"/></param>
+        /// <param name="expectedIntervalBetweenValueSamples">If <paramref name="expectedIntervalBetweenValueSamples"/> is larger than 0, add auto-generated value records as appropriate if value is larger than <paramref name="expectedIntervalBetweenValueSamples"/></param>
         /// <remarks>
         /// See <see cref="CopyCorrectedForCoordinatedOmission"/> for more detailed explanation about how correction is applied
         /// </remarks>
@@ -254,7 +272,7 @@ namespace HdrHistogram
         /// Add the contents of another histogram to this one, while correcting the incoming data for coordinated omission.
         /// </summary>
         /// <param name="fromHistogram">The other histogram. highestTrackableValue and largestValueWithSingleUnitResolution must match.</param>
-        /// <param name="expectedIntervalBetweenValueSamples">If <param name="expectedIntervalBetweenValueSamples"/> is larger than 0, add auto-generated value records as appropriate if value is larger than <param name="expectedIntervalBetweenValueSamples"/></param>
+        /// <param name="expectedIntervalBetweenValueSamples">If <paramref name="expectedIntervalBetweenValueSamples"/> is larger than 0, add auto-generated value records as appropriate if value is larger than <paramref name="expectedIntervalBetweenValueSamples"/></param>
         /// <remarks>
         /// To compensate for the loss of sampled values when a recorded value is larger than the expected interval between value samples, the values added will include an auto-generated additional series of decreasingly-smaller(down to the expectedIntervalBetweenValueSamples) value records for each count found in the current histogram that is larger than the expectedIntervalBetweenValueSamples.
         /// 
@@ -397,7 +415,7 @@ namespace HdrHistogram
         /// </summary>
         /// <param name="lowValue">The lower value bound on the range for which to provide the recorded count. Will be rounded down with <see cref="LowestEquivalentValue"/>.</param>
         /// <param name="highValue">The higher value bound on the range for which to provide the recorded count. Will be rounded up with <see cref="HistogramExtensions.HighestEquivalentValue"/>.</param>
-        /// <returns>the total count of values recorded in the histogram within the value range that is &gt;= <param name="lowValue"/> &lt;= <param name="highValue"></param></returns>
+        /// <returns>the total count of values recorded in the histogram within the value range that is &gt;= <paramref name="lowValue"/> &lt;= <paramref name="highValue"/></returns>
         /// <exception cref="IndexOutOfRangeException">on parameters that are outside the tracked value range</exception>
         public long GetCountBetweenValues(long lowValue, long highValue)
         {
@@ -484,18 +502,18 @@ namespace HdrHistogram
                 long maxValue = this.GetMaxValue();
                 int relevantLength = GetLengthForNumberOfBuckets(GetBucketsNeededToCoverValue(maxValue));
                 Console.WriteLine("buffer.capacity() < getNeededByteBufferCapacity(relevantLength))");
-                Console.WriteLine($"  buffer.capacity() = {buffer.capacity()}");
+                Console.WriteLine($"  buffer.capacity() = {buffer.Capacity()}");
                 Console.WriteLine($"  relevantLength = {relevantLength}");
                 Console.WriteLine($"  getNeededByteBufferCapacity(relevantLength) = {GetNeededByteBufferCapacity(relevantLength)}");
-                if (buffer.capacity() < GetNeededByteBufferCapacity(relevantLength))
+                if (buffer.Capacity() < GetNeededByteBufferCapacity(relevantLength))
                 {
                     throw new ArgumentOutOfRangeException("buffer does not have capacity for" + GetNeededByteBufferCapacity(relevantLength) + " bytes");
                 }
-                buffer.putInt(GetEncodingCookie());
-                buffer.putInt(NumberOfSignificantValueDigits);
-                buffer.putLong(LowestTrackableValue);
-                buffer.putLong(HighestTrackableValue);
-                buffer.putLong(TotalCount); // Needed because overflow situations may lead this to differ from counts totals
+                buffer.PutInt(GetEncodingCookie());
+                buffer.PutInt(NumberOfSignificantValueDigits);
+                buffer.PutLong(LowestTrackableValue);
+                buffer.PutLong(HighestTrackableValue);
+                buffer.PutLong(TotalCount); // Needed because overflow situations may lead this to differ from counts totals
 
                 Debug.WriteLine("MaxValue = {0}, Buckets needed = {1}, relevantLength = {2}", maxValue, GetBucketsNeededToCoverValue(maxValue), relevantLength);
                 Debug.WriteLine("MaxValue = {0}, Buckets needed = {1}, relevantLength = {2}", maxValue, GetBucketsNeededToCoverValue(maxValue), relevantLength);
@@ -519,26 +537,26 @@ namespace HdrHistogram
             {
                 if (_intermediateUncompressedByteBuffer == null)
                 {
-                    _intermediateUncompressedByteBuffer = ByteBuffer.allocate(GetNeededByteBufferCapacity(CountsArrayLength));
+                    _intermediateUncompressedByteBuffer = ByteBuffer.Allocate(GetNeededByteBufferCapacity(CountsArrayLength));
                 }
-                _intermediateUncompressedByteBuffer.clear();
+                _intermediateUncompressedByteBuffer.Clear();
                 int uncompressedLength = EncodeIntoByteBuffer(_intermediateUncompressedByteBuffer);
 
-                targetBuffer.putInt(GetCompressedEncodingCookie());
-                targetBuffer.putInt(0); // Placeholder for compressed contents length
-                byte[] targetArray = targetBuffer.array();
+                targetBuffer.PutInt(GetCompressedEncodingCookie());
+                targetBuffer.PutInt(0); // Placeholder for compressed contents length
+                byte[] targetArray = targetBuffer.Array();
                 long compressedDataLength;
                 using (var outputStream = new CountingMemoryStream(targetArray, 8, targetArray.Length - 8))
                 {
                     using (var compressor = new DeflateStream(outputStream, compressionLevel))
                     {
-                        compressor.Write(_intermediateUncompressedByteBuffer.array(), 0, uncompressedLength);
+                        compressor.Write(_intermediateUncompressedByteBuffer.Array(), 0, uncompressedLength);
                         compressor.Flush();
                     }
                     compressedDataLength = outputStream.BytesWritten;
                 }
 
-                targetBuffer.putInt(4, (int)compressedDataLength); // Record the compressed length
+                targetBuffer.PutInt(4, (int)compressedDataLength); // Record the compressed length
 
                 Debug.WriteLine("COMPRESSING - Wrote {0} bytes (header = 8), original size {1}", compressedDataLength + 8, uncompressedLength);
 
@@ -634,6 +652,12 @@ namespace HdrHistogram
             return true;
         }
 
+        /// <summary>
+        /// Serves as the default hash function. 
+        /// </summary>
+        /// <returns>
+        /// A hash code for the current object.
+        /// </returns>
         public override int GetHashCode()
         {
             // From http://stackoverflow.com/questions/263400/what-is-the-best-algorithm-for-an-overridden-system-object-gethashcode/263416#263416
@@ -664,11 +688,11 @@ namespace HdrHistogram
         /// <summary>
         /// Get a copy of this histogram, corrected for coordinated omission.
         /// </summary>
-        /// <param name="expectedIntervalBetweenValueSamples">If <param name="expectedIntervalBetweenValueSamples"/> is larger than 0, add auto-generated value records as appropriate if value is larger than <param name="expectedIntervalBetweenValueSamples"/></param>
+        /// <param name="expectedIntervalBetweenValueSamples">If <paramref name="expectedIntervalBetweenValueSamples"/> is larger than 0, add auto-generated value records as appropriate if value is larger than <paramref name="expectedIntervalBetweenValueSamples"/></param>
         /// <returns>a copy of this histogram, corrected for coordinated omission.</returns>
         /// <remarks>
         /// To compensate for the loss of sampled values when a recorded value is larger than the expected interval between value samples, 
-        /// the new histogram will include an auto-generated additional series of decreasingly-smaller(down to the <param name="expectedIntervalBetweenValueSamples"/>) 
+        /// the new histogram will include an auto-generated additional series of decreasingly-smaller(down to the <paramref name="expectedIntervalBetweenValueSamples"/>) 
         /// value records for each count found in the current histogram that is larger than the expectedIntervalBetweenValueSamples.
         /// <para>
         /// Note: This is a post-correction method, as opposed to the at-recording correction method provided by <seealso cref="RecordValueWithExpectedInterval"/>. 
@@ -699,18 +723,52 @@ namespace HdrHistogram
         }
 
 
+        /// <summary>
+        /// Copies data from the provided buffer into the internal counts array.
+        /// </summary>
+        /// <param name="buffer">The buffer to read from.</param>
+        /// <param name="length">The length of the buffer to read.</param>
         protected abstract void FillCountsArrayFromBuffer(ByteBuffer buffer, int length);
 
+        /// <summary>
+        /// Writes the data from the internal counts array into the buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to write to</param>
+        /// <param name="length">The length to write.</param>
         protected abstract void FillBufferFromCountsArray(ByteBuffer buffer, int length);
 
+        /// <summary>
+        /// Gets the number of recorded values at a given index.
+        /// </summary>
+        /// <param name="index">The index to get the count for</param>
+        /// <returns>The number of recorded values at the given index.</returns>
         protected abstract long GetCountAtIndex(int index);
 
+        /// <summary>
+        /// Increments the count at the given index. Will also increment the <see cref="TotalCount"/>.
+        /// </summary>
+        /// <param name="index">The index to increment the count at.</param>
         protected abstract void IncrementCountAtIndex(int index);
 
-        protected abstract void AddToCountAtIndex(int index, long value);
+        /// <summary>
+        /// Adds the specified amount to the count of the provided index. Also increments the <see cref="TotalCount"/> by the same amount.
+        /// </summary>
+        /// <param name="index">The index to increment.</param>
+        /// <param name="addend">The amount to increment by.</param>
+        protected abstract void AddToCountAtIndex(int index, long addend);
         
+
+        /// <summary>
+        /// Clears the counts of this implementation.
+        /// </summary>
         protected abstract void ClearCounts();
 
+        /// <summary>
+        /// Construct a new histogram by decoding it from a ByteBuffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to decode from</param>
+        /// <param name="minBarForHighestTrackableValue">Force highestTrackableValue to be set at least this high</param>
+        /// <returns>The newly constructed histogram</returns>
         protected static T DecodeFromByteBuffer<T>(ByteBuffer buffer, long minBarForHighestTrackableValue)
             where T : HistogramBase
         {
@@ -719,7 +777,7 @@ namespace HdrHistogram
                     minBarForHighestTrackableValue);
 
             int expectedCapacity = histogram.GetNeededByteBufferCapacity(histogram.CountsArrayLength);
-            if (expectedCapacity > buffer.capacity())
+            if (expectedCapacity > buffer.Capacity())
             {
                 throw new ArgumentException("The buffer does not contain the full Histogram");
             }
@@ -734,35 +792,41 @@ namespace HdrHistogram
             return (T)histogram;
         }
 
-        protected static HistogramBase DecodeFromCompressedByteBuffer(ByteBuffer buffer, Type histogramClass, long minBarForHighestTrackableValue)
+        /// <summary>
+        /// Construct a new histogram by decoding it from a compressed form in a ByteBuffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to encode into</param>
+        /// <param name="minBarForHighestTrackableValue">Force highestTrackableValue to be set at least this high</param>
+        /// <returns>The newly constructed histogram</returns>
+        protected static T DecodeFromCompressedByteBuffer<T>(ByteBuffer buffer, long minBarForHighestTrackableValue)
+            where T : HistogramBase
         {
-            int cookie = buffer.getInt();
+            var histogramClass = typeof(T);
+            int cookie = buffer.GetInt();
             if (GetCookieBase(cookie) != CompressedEncodingCookieBase)
             {
                 throw new ArgumentException("The buffer does not contain a compressed Histogram");
             }
-            int lengthOfCompressedContents = buffer.getInt();
+            int lengthOfCompressedContents = buffer.GetInt();
             HistogramBase histogram;
             ByteBuffer countsBuffer;
             int numOfBytesDecompressed;
-            using (var inputStream = new MemoryStream(buffer.array(), 8, lengthOfCompressedContents))
+            using (var inputStream = new MemoryStream(buffer.Array(), 8, lengthOfCompressedContents))
             using (var decompressor = new DeflateStream(inputStream, CompressionMode.Decompress))
             {
-                ByteBuffer headerBuffer = ByteBuffer.allocate(32);
-                decompressor.Read(headerBuffer.array(), 0, 32);
+                var headerBuffer = ByteBuffer.Allocate(32);
+                decompressor.Read(headerBuffer.Array(), 0, 32);
                 histogram = ConstructHistogramFromBufferHeader(headerBuffer, histogramClass, minBarForHighestTrackableValue);
-                countsBuffer = ByteBuffer.allocate(histogram.GetNeededByteBufferCapacity(histogram.CountsArrayLength) - 32);
-                numOfBytesDecompressed = decompressor.Read(countsBuffer.array(), 0, countsBuffer.array().Length);
+                countsBuffer = ByteBuffer.Allocate(histogram.GetNeededByteBufferCapacity(histogram.CountsArrayLength) - 32);
+                numOfBytesDecompressed = decompressor.Read(countsBuffer.Array(), 0, countsBuffer.Array().Length);
             }
 
             Debug.WriteLine("DECOMPRESSING: Writing {0} bytes (plus 32 for header) into array size {1}, started with {2} bytes of compressed data  ({3} + 8 for the header)",
-                numOfBytesDecompressed, countsBuffer.array().Length, lengthOfCompressedContents + 8, lengthOfCompressedContents);
+                numOfBytesDecompressed, countsBuffer.Array().Length, lengthOfCompressedContents + 8, lengthOfCompressedContents);
 
-            // TODO Sigh, have to fix this for AtomicHistogram, it's needs a count of ITEMS, not BYTES)
-            //histogram.fillCountsArrayFromBuffer(countsBuffer, histogram.countsArrayLength * histogram.wordSizeInBytes);
             histogram.FillCountsArrayFromBuffer(countsBuffer, numOfBytesDecompressed);
 
-            return histogram;
+            return (T)histogram;
         }
 
 
@@ -868,16 +932,16 @@ namespace HdrHistogram
 
         private static HistogramBase ConstructHistogramFromBufferHeader(ByteBuffer buffer, Type histogramClass, long minBarForHighestTrackableValue)
         {
-            int cookie = buffer.getInt();
+            int cookie = buffer.GetInt();
             if (GetCookieBase(cookie) != EncodingCookieBase)
             {
                 throw new ArgumentException("The buffer does not contain a Histogram");
             }
 
-            int numberOfSignificantValueDigits = buffer.getInt();
-            long lowestTrackableValue = buffer.getLong();
-            long highestTrackableValue = buffer.getLong();
-            long totalCount = buffer.getLong();
+            int numberOfSignificantValueDigits = buffer.GetInt();
+            long lowestTrackableValue = buffer.GetLong();
+            long highestTrackableValue = buffer.GetLong();
+            long totalCount = buffer.GetLong();
 
             highestTrackableValue = Math.Max(highestTrackableValue, minBarForHighestTrackableValue);
 

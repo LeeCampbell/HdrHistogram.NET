@@ -59,6 +59,9 @@ namespace HdrHistogram
             _counts = new long[CountsArrayLength];
         }
 
+        /// <summary>
+        /// Gets the total number of recorded values.
+        /// </summary>
         public override long TotalCount
         {
             get { return _totalCount; }
@@ -71,31 +74,42 @@ namespace HdrHistogram
             }
         }
 
-        public override void Add(HistogramBase other)
+        /// <summary>
+        /// Add the contents of another histogram to this one.
+        /// </summary>
+        /// <param name="fromHistogram">The other histogram.</param>
+        /// <exception cref="System.IndexOutOfRangeException">if values in fromHistogram's are higher than highestTrackableValue.</exception>
+        public override void Add(HistogramBase fromHistogram)
         {
+            //TODO: Review the use of locks on public instances. It seems that getting a copy in a thread safe manner, then adding that to this is better -LC
+
             // Synchronize add(). Avoid deadlocks by synchronizing in order of construction identity count.
-            if (Identity < other.Identity)
+            if (Identity < fromHistogram.Identity)
             {
                 lock (UpdateLock)
                 {
-                    lock (other)
+                    lock (fromHistogram)
                     {
-                        base.Add(other);
+                        base.Add(fromHistogram);
                     }
                 }
             }
             else
             {
-                lock (other)
+                lock (fromHistogram)
                 {
                     lock (UpdateLock)
                     {
-                        base.Add(other);
+                        base.Add(fromHistogram);
                     }
                 }
             }
         }
 
+        /// <summary>
+        /// Create a copy of this histogram, complete with data and everything.
+        /// </summary>
+        /// <returns>A distinct copy of this histogram.</returns>
         public override HistogramBase Copy()
         {
             SynchronizedHistogram copy = new SynchronizedHistogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
@@ -103,6 +117,21 @@ namespace HdrHistogram
             return copy;
         }
 
+        /// <summary>
+        /// Get a copy of this histogram, corrected for coordinated omission.
+        /// </summary>
+        /// <param name="expectedIntervalBetweenValueSamples">If <paramref name="expectedIntervalBetweenValueSamples"/> is larger than 0, add auto-generated value records as appropriate if value is larger than <paramref name="expectedIntervalBetweenValueSamples"/></param>
+        /// <returns>a copy of this histogram, corrected for coordinated omission.</returns>
+        /// <remarks>
+        /// To compensate for the loss of sampled values when a recorded value is larger than the expected interval between value samples, 
+        /// the new histogram will include an auto-generated additional series of decreasingly-smaller(down to the <paramref name="expectedIntervalBetweenValueSamples"/>) 
+        /// value records for each count found in the current histogram that is larger than the expectedIntervalBetweenValueSamples.
+        /// <para>
+        /// Note: This is a post-correction method, as opposed to the at-recording correction method provided by <seealso cref="HistogramBase.RecordValueWithExpectedInterval"/>. 
+        /// The two methods are mutually exclusive, and only one of the two should be be used on a given data set to correct for the same coordinated omission issue.
+        /// </para>
+        /// See notes in the description of the Histogram calls for an illustration of why this corrective behavior is important.
+        /// </remarks>
         public override HistogramBase CopyCorrectedForCoordinatedOmission(long expectedIntervalBetweenValueSamples)
         {
             SynchronizedHistogram toHistogram = new SynchronizedHistogram(LowestTrackableValue, HighestTrackableValue, NumberOfSignificantValueDigits);
@@ -129,17 +158,29 @@ namespace HdrHistogram
         /// <returns>The newly constructed histogram</returns>
         public static SynchronizedHistogram DecodeFromCompressedByteBuffer(ByteBuffer buffer, long minBarForHighestTrackableValue)
         {
-            return (SynchronizedHistogram)DecodeFromCompressedByteBuffer(buffer, typeof(SynchronizedHistogram), minBarForHighestTrackableValue);
+            return DecodeFromCompressedByteBuffer<SynchronizedHistogram>(buffer, minBarForHighestTrackableValue);
         }
 
 
+        /// <summary>
+        /// Returns the word size of this implementation
+        /// </summary>
         protected override int WordSizeInBytes => 8;
 
+        /// <summary>
+        /// Gets the number of recorded values at a given index.
+        /// </summary>
+        /// <param name="index">The index to get the count for</param>
+        /// <returns>The number of recorded values at the given index.</returns>
         protected override long GetCountAtIndex(int index)
         {
             return _counts[index];
         }
 
+        /// <summary>
+        /// Increments the count at the given index. Will also increment the <see cref="HistogramBase.TotalCount"/>.
+        /// </summary>
+        /// <param name="index">The index to increment the count at.</param>
         protected override void IncrementCountAtIndex(int index)
         {
             lock (UpdateLock)
@@ -149,15 +190,23 @@ namespace HdrHistogram
             }
         }
 
-        protected override void AddToCountAtIndex(int index, long value)
+        /// <summary>
+        /// Adds the specified amount to the count of the provided index. Also increments the <see cref="HistogramBase.TotalCount"/> by the same amount.
+        /// </summary>
+        /// <param name="index">The index to increment.</param>
+        /// <param name="addend">The amount to increment by.</param>
+        protected override void AddToCountAtIndex(int index, long addend)
         {
             lock (UpdateLock)
             {
-                _counts[index] += value;
-                _totalCount += value;
+                _counts[index] += addend;
+                _totalCount += addend;
             }
         }
 
+        /// <summary>
+        /// Clears the counts of this implementation.
+        /// </summary>
         protected override void ClearCounts()
         {
             lock (UpdateLock)
@@ -167,28 +216,38 @@ namespace HdrHistogram
             }
         }
 
+        /// <summary>
+        /// Copies data from the provided buffer into the internal counts array.
+        /// </summary>
+        /// <param name="buffer">The buffer to read from.</param>
+        /// <param name="length">The length of the buffer to read.</param>
         protected override void FillCountsArrayFromBuffer(ByteBuffer buffer, int length)
         {
             lock (UpdateLock)
             {
-                buffer.asLongBuffer().get(_counts, 0, length);
+                buffer.AsLongBuffer().Get(_counts, 0, length);
             }
         }
 
+        /// <summary>
+        /// Writes the data from the internal counts array into the buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to write to</param>
+        /// <param name="length">The length to write.</param>
         protected override void FillBufferFromCountsArray(ByteBuffer buffer, int length)
         {
             lock (UpdateLock)
             {
                 if ((_cachedDstLongBuffer == null) ||
                     (buffer != _cachedDstByteBuffer) ||
-                    (buffer.position() != _cachedDstByteBufferPosition))
+                    (buffer.Position != _cachedDstByteBufferPosition))
                 {
                     _cachedDstByteBuffer = buffer;
-                    _cachedDstByteBufferPosition = buffer.position();
-                    _cachedDstLongBuffer = buffer.asLongBuffer();
+                    _cachedDstByteBufferPosition = buffer.Position;
+                    _cachedDstLongBuffer = buffer.AsLongBuffer();
                 }
-                _cachedDstLongBuffer.rewind();
-                _cachedDstLongBuffer.put(_counts, 0, length);
+                _cachedDstLongBuffer.Rewind();
+                _cachedDstLongBuffer.Put(_counts, 0, length);
             }
         }
     }

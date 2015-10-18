@@ -7,6 +7,9 @@ using HdrHistogram.Iteration;
 
 namespace HdrHistogram
 {
+    /// <summary>
+    /// Extension methods for the Histogram types.
+    /// </summary>
     public static class HistogramExtensions
     {
         /// <summary>
