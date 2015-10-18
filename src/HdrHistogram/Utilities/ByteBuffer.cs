@@ -133,15 +133,15 @@ namespace HdrHistogram.Utilities
 
         internal void BlockCopy(Array src, int srcOffset, int dstOffset, int count)
         {
-            Debug.WriteLine("  Buffer.BlockCopy - Copying {0} bytes INTO internalBuffer, scrOffset = {1}, dstOffset = {2}", count, srcOffset, dstOffset);
+            Debug.WriteLine("  Buffer.BlockCopy - Copying {0} bytes INTO internalBuffer, scrOffset = {1}, targetOffset = {2}", count, srcOffset, dstOffset);
             Buffer.BlockCopy(src: src, srcOffset: srcOffset, dst: _internalBuffer, dstOffset: dstOffset, count: count);
             _position += count;
         }
 
-        internal void BlockGet(Array dst, int dstOffset, int srcOffset, int count)
+        internal void BlockGet(Array target, int targetOffset, int sourceOffset, int count)
         {
-            Debug.WriteLine("  Buffer.BlockCopy - Copying {0} bytes FROM internalBuffer, scrOffset = {1}, dstOffset = {2}", count, srcOffset, dstOffset);
-            Buffer.BlockCopy(src: _internalBuffer, srcOffset: srcOffset, dst: dst, dstOffset: dstOffset, count: count);
+            Debug.WriteLine("  Buffer.BlockCopy - Copying {0} bytes FROM internalBuffer, scrOffset = {1}, targetOffset = {2}", count, sourceOffset, targetOffset);
+            Buffer.BlockCopy(src: _internalBuffer, srcOffset: sourceOffset, dst: target, dstOffset: targetOffset, count: count);
         }
 
         internal WrappedBuffer<short> AsShortBuffer()

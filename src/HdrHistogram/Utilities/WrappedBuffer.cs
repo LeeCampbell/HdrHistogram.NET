@@ -34,7 +34,7 @@ namespace HdrHistogram.Utilities
 
         internal void Get(T[] destination, int index, int length)
         {
-            _underlyingBuffer.BlockGet(dst: destination, dstOffset: index, srcOffset: _parentOffset, count: length);
+            _underlyingBuffer.BlockGet(target: destination, targetOffset: index, sourceOffset: _parentOffset, count: length);
         }
 
         internal void Rewind()
