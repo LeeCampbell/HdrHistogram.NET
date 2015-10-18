@@ -52,7 +52,6 @@
     <Compile Include="Throughput\LongHistogramThoughputTest.cs" />
     <Compile Include="Throughput\HistogramThoughputTestBase.cs" />
     <Compile Include="Throughput\GcInfo.cs" />
-    <Compile Include="HistogramPerfTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Throughput\ShortHistogramThoughputTest.cs" />
     <Compile Include="Throughput\SynchronizedHistogramThoughputTest.cs" />

@@ -61,7 +61,6 @@
     <Compile Include="Iteration\PercentileEnumerator.cs" />
     <Compile Include="Iteration\RecordedValuesEnumerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utilities\MiscUtilities.cs" />
     <Compile Include="Utilities\WrappedBuffer.cs" />
   </ItemGroup>
   <ItemGroup>
