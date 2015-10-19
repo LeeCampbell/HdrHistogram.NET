@@ -23,7 +23,6 @@ namespace HdrHistogram.Utilities
     public sealed class ByteBuffer
     {
         private readonly byte[] _internalBuffer;
-        private int _position;
 
         /// <summary>
         /// Creates a <see cref="ByteBuffer"/> with a specified capacity in bytes.
@@ -38,13 +37,13 @@ namespace HdrHistogram.Utilities
         private ByteBuffer(int bufferCapacity)
         {
             _internalBuffer = new byte[bufferCapacity];
-            _position = 0;
+            Position = 0;
         }
 
         /// <summary>
         /// The buffer's current position in the underlying byte array
         /// </summary>
-        public int Position { get { return _position; } set { _position = value; } }
+        public int Position { get; set; }
 
         /// <summary>
         /// Returns the capacity of the <see cref="ByteBuffer"/>
@@ -53,15 +52,6 @@ namespace HdrHistogram.Utilities
         public int Capacity()
         {
             return _internalBuffer.Length;
-        }
-
-        /// <summary>
-        /// Clears the buffer, and sets the position back to zero.
-        /// </summary>
-        public void Clear()
-        {
-            System.Array.Clear(_internalBuffer, 0, _internalBuffer.Length);
-            _position = 0;
         }
 
         public int ReadFrom(System.IO.Stream source, int length)
@@ -80,8 +70,8 @@ namespace HdrHistogram.Utilities
         /// <returns>The value of the <see cref="int"/> at the current position.</returns>
         public int GetInt()
         {
-            var intValue = BitConverter.ToInt32(_internalBuffer, _position);
-            _position += sizeof(int);
+            var intValue = BitConverter.ToInt32(_internalBuffer, Position);
+            Position += sizeof(int);
             return intValue;
         }
 
@@ -91,8 +81,8 @@ namespace HdrHistogram.Utilities
         /// <returns>The value of the long at the current position.</returns>
         public long GetLong()
         {
-            var longValue = BitConverter.ToInt64(_internalBuffer, _position);
-            _position += sizeof(long);
+            var longValue = BitConverter.ToInt64(_internalBuffer, Position);
+            Position += sizeof(long);
             return longValue;
         }
 
@@ -103,8 +93,8 @@ namespace HdrHistogram.Utilities
         public void PutInt(int value)
         {
             var intAsBytes = BitConverter.GetBytes(value);
-            System.Array.Copy(intAsBytes, 0, _internalBuffer, _position, intAsBytes.Length);
-            _position += intAsBytes.Length;
+            Array.Copy(intAsBytes, 0, _internalBuffer, Position, intAsBytes.Length);
+            Position += intAsBytes.Length;
         }
 
         /// <summary>
@@ -115,7 +105,7 @@ namespace HdrHistogram.Utilities
         internal void PutInt(int index, int value)
         {
             var intAsBytes = BitConverter.GetBytes(value);
-            System.Array.Copy(intAsBytes, 0, _internalBuffer, index, intAsBytes.Length);
+            Array.Copy(intAsBytes, 0, _internalBuffer, index, intAsBytes.Length);
             // We don't increment the Position here, to match the Java behavior
         }
 
@@ -126,18 +116,18 @@ namespace HdrHistogram.Utilities
         public void PutLong(long value)
         {
             var longAsBytes = BitConverter.GetBytes(value);
-            System.Array.Copy(longAsBytes, 0, _internalBuffer, _position, longAsBytes.Length);
-            _position += longAsBytes.Length;
+            Array.Copy(longAsBytes, 0, _internalBuffer, Position, longAsBytes.Length);
+            Position += longAsBytes.Length;
         }
 
         /// <summary>
         /// Gets a copy of the internal byte array.
         /// </summary>
         /// <returns>The a copy of the internal byte array.</returns>
-        internal byte[] Array()
+        internal byte[] ToArray()
         {
             var copy = new byte[_internalBuffer.Length];
-            System.Array.Copy(_internalBuffer, copy, _internalBuffer.Length);
+            Array.Copy(_internalBuffer, copy, _internalBuffer.Length);
             return copy;
         }
 
@@ -150,7 +140,7 @@ namespace HdrHistogram.Utilities
         {
             Debug.WriteLine("  Buffer.BlockCopy - Copying {0} bytes INTO internalBuffer, scrOffset = {1}, targetOffset = {2}", count, srcOffset, dstOffset);
             Buffer.BlockCopy(src: src, srcOffset: srcOffset, dst: _internalBuffer, dstOffset: dstOffset, count: count);
-            _position += count;
+            Position += count;
         }
 
         internal void BlockGet(Array target, int targetOffset, int sourceOffset, int count)
