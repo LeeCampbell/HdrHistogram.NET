@@ -93,7 +93,7 @@ namespace HdrHistogram.Utilities
         public void PutInt(int value)
         {
             var intAsBytes = BitConverter.GetBytes(value);
-            System.Array.Copy(intAsBytes, 0, _internalBuffer, Position, intAsBytes.Length);
+            Array.Copy(intAsBytes, 0, _internalBuffer, Position, intAsBytes.Length);
             Position += intAsBytes.Length;
         }
 
@@ -105,7 +105,7 @@ namespace HdrHistogram.Utilities
         internal void PutInt(int index, int value)
         {
             var intAsBytes = BitConverter.GetBytes(value);
-            System.Array.Copy(intAsBytes, 0, _internalBuffer, index, intAsBytes.Length);
+            Array.Copy(intAsBytes, 0, _internalBuffer, index, intAsBytes.Length);
             // We don't increment the Position here, to match the Java behavior
         }
 
@@ -116,7 +116,7 @@ namespace HdrHistogram.Utilities
         public void PutLong(long value)
         {
             var longAsBytes = BitConverter.GetBytes(value);
-            System.Array.Copy(longAsBytes, 0, _internalBuffer, Position, longAsBytes.Length);
+            Array.Copy(longAsBytes, 0, _internalBuffer, Position, longAsBytes.Length);
             Position += longAsBytes.Length;
         }
 
@@ -127,7 +127,7 @@ namespace HdrHistogram.Utilities
         internal byte[] ToArray()
         {
             var copy = new byte[_internalBuffer.Length];
-            System.Array.Copy(_internalBuffer, copy, _internalBuffer.Length);
+            Array.Copy(_internalBuffer, copy, _internalBuffer.Length);
             return copy;
         }
 
