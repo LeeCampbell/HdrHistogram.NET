@@ -55,11 +55,6 @@ namespace HdrHistogram
         private readonly int _subBucketHalfCountMagnitude;
         private readonly int _unitMagnitude;
         private readonly long _subBucketMask;
-        
-
-        private ByteBuffer _intermediateUncompressedByteBuffer;
-
-        
         private readonly int _bucketIndexOffset;
 
         /// <summary>
@@ -237,7 +232,7 @@ namespace HdrHistogram
 
         /// <summary>
         /// Add the contents of another histogram to this one.
-        /// <HET/summary>
+        /// </summary>
         /// <param name="fromHistogram">The other histogram.</param>
         /// <exception cref="System.IndexOutOfRangeException">if values in fromHistogram's are higher than highestTrackableValue.</exception>
         public virtual void Add(HistogramBase fromHistogram)
@@ -501,10 +496,10 @@ namespace HdrHistogram
             {
                 long maxValue = this.GetMaxValue();
                 int relevantLength = GetLengthForNumberOfBuckets(GetBucketsNeededToCoverValue(maxValue));
-                Console.WriteLine("buffer.capacity() < getNeededByteBufferCapacity(relevantLength))");
-                Console.WriteLine($"  buffer.capacity() = {buffer.Capacity()}");
-                Console.WriteLine($"  relevantLength = {relevantLength}");
-                Console.WriteLine($"  getNeededByteBufferCapacity(relevantLength) = {GetNeededByteBufferCapacity(relevantLength)}");
+                Debug.WriteLine("buffer.capacity() < getNeededByteBufferCapacity(relevantLength))");
+                Debug.WriteLine($"  buffer.capacity() = {buffer.Capacity()}");
+                Debug.WriteLine($"  relevantLength = {relevantLength}");
+                Debug.WriteLine($"  getNeededByteBufferCapacity(relevantLength) = {GetNeededByteBufferCapacity(relevantLength)}");
                 if (buffer.Capacity() < GetNeededByteBufferCapacity(relevantLength))
                 {
                     throw new ArgumentOutOfRangeException("buffer does not have capacity for" + GetNeededByteBufferCapacity(relevantLength) + " bytes");
@@ -518,7 +513,7 @@ namespace HdrHistogram
                 Debug.WriteLine("MaxValue = {0}, Buckets needed = {1}, relevantLength = {2}", maxValue, GetBucketsNeededToCoverValue(maxValue), relevantLength);
                 Debug.WriteLine("MaxValue = {0}, Buckets needed = {1}, relevantLength = {2}", maxValue, GetBucketsNeededToCoverValue(maxValue), relevantLength);
 
-                Console.WriteLine($"fillBufferFromCountsArray({buffer}, {relevantLength} * {WordSizeInBytes});");
+                Debug.WriteLine($"fillBufferFromCountsArray({buffer}, {relevantLength} * {WordSizeInBytes});");
                 FillBufferFromCountsArray(buffer, relevantLength * WordSizeInBytes);
 
                 return GetNeededByteBufferCapacity(relevantLength);
@@ -807,7 +802,7 @@ namespace HdrHistogram
             HistogramBase histogram;
             ByteBuffer countsBuffer;
             int numOfBytesDecompressed;
-            using (var inputStream = new MemoryStream(buffer.Array(), buffer.Position, lengthOfCompressedContents))
+            using (var inputStream = new MemoryStream(buffer.ToArray(), buffer.Position, lengthOfCompressedContents))
             using (var decompressor = new DeflateStream(inputStream, CompressionMode.Decompress))
             {
                 var headerBuffer = ByteBuffer.Allocate(32);
