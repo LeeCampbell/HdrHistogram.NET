@@ -52,7 +52,6 @@
     <Compile Include="HistogramDataAccessTest.cs" />
     <Compile Include="HistogramEncodingTest.cs" />
     <Compile Include="HistogramTest.cs" />
-    <Compile Include="Utilities\MiscUtilitiesTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

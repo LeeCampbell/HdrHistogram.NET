@@ -34,74 +34,74 @@ namespace HdrHistogram.UnitTests
             }
 
             Console.WriteLine("\n\nTesting encoding of a ShortHistogram:");
-            var targetBuffer = ByteBuffer.allocate(shortHistogram.GetNeededByteBufferCapacity());
+            var targetBuffer = ByteBuffer.Allocate(shortHistogram.GetNeededByteBufferCapacity());
             shortHistogram.EncodeIntoByteBuffer(targetBuffer);
             //Console.WriteLine("After ENCODING TargetBuffer length = {0} (position {1}), shortHistogram size = {2}",
             //                targetBuffer.capacity(), targetBuffer.position(), shortHistogram.getTotalCount());
-            targetBuffer.rewind();
+            targetBuffer.Position = 0;
 
             var shortHistogram2 = ShortHistogram.DecodeFromByteBuffer(targetBuffer, 0);
             Assert.AreEqual(shortHistogram, shortHistogram2);
 
-            var targetCompressedBuffer = ByteBuffer.allocate(shortHistogram.GetNeededByteBufferCapacity());
+            var targetCompressedBuffer = ByteBuffer.Allocate(shortHistogram.GetNeededByteBufferCapacity());
             shortHistogram.EncodeIntoCompressedByteBuffer(targetCompressedBuffer);
-            targetCompressedBuffer.rewind();
+            targetCompressedBuffer.Position = 0;
 
             var shortHistogram3 = ShortHistogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
             Assert.AreEqual(shortHistogram, shortHistogram3);
 
             Console.WriteLine("\n\nTesting encoding of a IntHistogram:");
-            targetBuffer = ByteBuffer.allocate(intHistogram.GetNeededByteBufferCapacity());
+            targetBuffer = ByteBuffer.Allocate(intHistogram.GetNeededByteBufferCapacity());
             intHistogram.EncodeIntoByteBuffer(targetBuffer);
             //Console.WriteLine("After ENCODING TargetBuffer length = {0} (position = {1}), intHistogram size = {2}", 
             //                targetBuffer.capacity(), targetBuffer.position(), intHistogram.getTotalCount());
-            targetBuffer.rewind();
+            targetBuffer.Position = 0;
 
             var intHistogram2 = IntHistogram.DecodeFromByteBuffer(targetBuffer, 0);
             Assert.AreEqual(intHistogram, intHistogram2);
 
-            targetCompressedBuffer = ByteBuffer.allocate(intHistogram.GetNeededByteBufferCapacity());
+            targetCompressedBuffer = ByteBuffer.Allocate(intHistogram.GetNeededByteBufferCapacity());
             intHistogram.EncodeIntoCompressedByteBuffer(targetCompressedBuffer);
-            targetCompressedBuffer.rewind();
+            targetCompressedBuffer.Position = 0;
 
             var intHistogram3 = IntHistogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
             Assert.AreEqual(intHistogram, intHistogram3);
 
             Console.WriteLine("\n\nTesting encoding of a Histogram (long):");
-            targetBuffer = ByteBuffer.allocate(longHistogram.GetNeededByteBufferCapacity());
+            targetBuffer = ByteBuffer.Allocate(longHistogram.GetNeededByteBufferCapacity());
             longHistogram.EncodeIntoByteBuffer(targetBuffer);
             //Console.WriteLine("After ENCODING TargetBuffer length = {0} (position = {1}), histogram size = {2}",
             //                targetBuffer.capacity(), targetBuffer.position(), histogram.getTotalCount());
-            targetBuffer.rewind();
+            targetBuffer.Position = 0;
 
             var histogram2 = LongHistogram.DecodeFromByteBuffer(targetBuffer, 0);
             Assert.AreEqual(longHistogram, histogram2);
 
-            targetCompressedBuffer = ByteBuffer.allocate(longHistogram.GetNeededByteBufferCapacity());
+            targetCompressedBuffer = ByteBuffer.Allocate(longHistogram.GetNeededByteBufferCapacity());
             longHistogram.EncodeIntoCompressedByteBuffer(targetCompressedBuffer);
-            targetCompressedBuffer.rewind();
+            targetCompressedBuffer.Position = 0;
 
             var histogram3 = LongHistogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
             Assert.AreEqual(longHistogram, histogram3);
 
-            targetBuffer.rewind();
+            targetBuffer.Position = 0;
 
 
-            targetCompressedBuffer.rewind();
+            targetCompressedBuffer.Position = 0;
 
             Console.WriteLine("\n\nTesting encoding of a SynchronizedHistogram:");
-            targetBuffer = ByteBuffer.allocate(synchronizedHistogram.GetNeededByteBufferCapacity());
+            targetBuffer = ByteBuffer.Allocate(synchronizedHistogram.GetNeededByteBufferCapacity());
             synchronizedHistogram.EncodeIntoByteBuffer(targetBuffer);
             //Console.WriteLine("After ENCODING TargetBuffer length = {0} (position {1}), synchronizedHistogram size = {2}",
             //                targetBuffer.capacity(), targetBuffer.position(), synchronizedHistogram.getTotalCount());
-            targetBuffer.rewind();
+            targetBuffer.Position = 0;
 
             var synchronizedHistogram2 = SynchronizedHistogram.DecodeFromByteBuffer(targetBuffer, 0);
             Assert.AreEqual(synchronizedHistogram, synchronizedHistogram2);
 
-            targetCompressedBuffer = ByteBuffer.allocate(synchronizedHistogram.GetNeededByteBufferCapacity());
+            targetCompressedBuffer = ByteBuffer.Allocate(synchronizedHistogram.GetNeededByteBufferCapacity());
             synchronizedHistogram.EncodeIntoCompressedByteBuffer(targetCompressedBuffer);
-            targetCompressedBuffer.rewind();
+            targetCompressedBuffer.Position = 0;
 
             var synchronizedHistogram3 = SynchronizedHistogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
             Assert.AreEqual(synchronizedHistogram, synchronizedHistogram3);
@@ -119,16 +119,16 @@ namespace HdrHistogram.UnitTests
             longHistogram.RecordValue(HighestTrackableValue);
 
             Console.WriteLine("\n\nTesting encoding of a Histogram (long):");
-            var targetBuffer = ByteBuffer.allocate(longHistogram.GetNeededByteBufferCapacity());
+            var targetBuffer = ByteBuffer.Allocate(longHistogram.GetNeededByteBufferCapacity());
             longHistogram.EncodeIntoByteBuffer(targetBuffer);
-            targetBuffer.rewind();
+            targetBuffer.Position = 0;
 
             var histogram2 = LongHistogram.DecodeFromByteBuffer(targetBuffer, 0);
             Assert.AreEqual(longHistogram, histogram2);
 
-            var targetCompressedBuffer = ByteBuffer.allocate(longHistogram.GetNeededByteBufferCapacity());
+            var targetCompressedBuffer = ByteBuffer.Allocate(longHistogram.GetNeededByteBufferCapacity());
             longHistogram.EncodeIntoCompressedByteBuffer(targetCompressedBuffer);
-            targetCompressedBuffer.rewind();
+            targetCompressedBuffer.Position = 0;
 
             var histogram3 = LongHistogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
             Assert.AreEqual(longHistogram, histogram3);

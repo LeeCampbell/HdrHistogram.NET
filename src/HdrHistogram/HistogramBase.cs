@@ -237,7 +237,7 @@ namespace HdrHistogram
 
         /// <summary>
         /// Add the contents of another histogram to this one.
-        /// </summary>
+        /// <HET/summary>
         /// <param name="fromHistogram">The other histogram.</param>
         /// <exception cref="System.IndexOutOfRangeException">if values in fromHistogram's are higher than highestTrackableValue.</exception>
         public virtual void Add(HistogramBase fromHistogram)
@@ -533,34 +533,30 @@ namespace HdrHistogram
         /// <returns>The number of bytes written to the buffer</returns>
         public long EncodeIntoCompressedByteBuffer(ByteBuffer targetBuffer, CompressionLevel compressionLevel = CompressionLevel.Optimal)
         {
+            var temp = ByteBuffer.Allocate(GetNeededByteBufferCapacity(CountsArrayLength));
             lock (UpdateLock)
             {
-                if (_intermediateUncompressedByteBuffer == null)
-                {
-                    _intermediateUncompressedByteBuffer = ByteBuffer.Allocate(GetNeededByteBufferCapacity(CountsArrayLength));
-                }
-                _intermediateUncompressedByteBuffer.Clear();
-                int uncompressedLength = EncodeIntoByteBuffer(_intermediateUncompressedByteBuffer);
+                int uncompressedLength = EncodeIntoByteBuffer(temp);
 
                 targetBuffer.PutInt(GetCompressedEncodingCookie());
-                targetBuffer.PutInt(0); // Placeholder for compressed contents length
-                byte[] targetArray = targetBuffer.Array();
+                targetBuffer.PutInt(0); // Placeholder for compressed contents length *
+                var headerSize = targetBuffer.Position;
                 long compressedDataLength;
-                using (var outputStream = new CountingMemoryStream(targetArray, 8, targetArray.Length - 8))
+                using (var outputStream = targetBuffer.GetWriter())
                 {
                     using (var compressor = new DeflateStream(outputStream, compressionLevel))
                     {
-                        compressor.Write(_intermediateUncompressedByteBuffer.Array(), 0, uncompressedLength);
-                        compressor.Flush();
+                        temp.WriteTo(compressor, 0, uncompressedLength);
                     }
                     compressedDataLength = outputStream.BytesWritten;
                 }
 
+                // *Go back and write the now known compressed data length
                 targetBuffer.PutInt(4, (int)compressedDataLength); // Record the compressed length
 
-                Debug.WriteLine("COMPRESSING - Wrote {0} bytes (header = 8), original size {1}", compressedDataLength + 8, uncompressedLength);
+                Debug.WriteLine($"COMPRESSING - Wrote {compressedDataLength + headerSize} bytes (header = {headerSize}), original size {uncompressedLength}");
 
-                return compressedDataLength + 8;
+                return compressedDataLength + headerSize;
             }
         }
 
@@ -795,7 +791,7 @@ namespace HdrHistogram
         /// <summary>
         /// Construct a new histogram by decoding it from a compressed form in a ByteBuffer.
         /// </summary>
-        /// <param name="buffer">The buffer to encode into</param>
+        /// <param name="buffer">The buffer to decode from</param>
         /// <param name="minBarForHighestTrackableValue">Force highestTrackableValue to be set at least this high</param>
         /// <returns>The newly constructed histogram</returns>
         protected static T DecodeFromCompressedByteBuffer<T>(ByteBuffer buffer, long minBarForHighestTrackableValue)
@@ -811,18 +807,17 @@ namespace HdrHistogram
             HistogramBase histogram;
             ByteBuffer countsBuffer;
             int numOfBytesDecompressed;
-            using (var inputStream = new MemoryStream(buffer.Array(), 8, lengthOfCompressedContents))
+            using (var inputStream = new MemoryStream(buffer.Array(), buffer.Position, lengthOfCompressedContents))
             using (var decompressor = new DeflateStream(inputStream, CompressionMode.Decompress))
             {
                 var headerBuffer = ByteBuffer.Allocate(32);
-                decompressor.Read(headerBuffer.Array(), 0, 32);
+                headerBuffer.ReadFrom(decompressor, 32);
                 histogram = ConstructHistogramFromBufferHeader(headerBuffer, histogramClass, minBarForHighestTrackableValue);
-                countsBuffer = ByteBuffer.Allocate(histogram.GetNeededByteBufferCapacity(histogram.CountsArrayLength) - 32);
-                numOfBytesDecompressed = decompressor.Read(countsBuffer.Array(), 0, countsBuffer.Array().Length);
+                var countsLength = histogram.GetNeededByteBufferCapacity(histogram.CountsArrayLength) - 32;
+                countsBuffer = ByteBuffer.Allocate(countsLength);
+                numOfBytesDecompressed = countsBuffer.ReadFrom(decompressor, countsLength);
+                Debug.WriteLine($"DECOMPRESSING: Writing {numOfBytesDecompressed} bytes (plus 32 for header) into array size {countsLength}, started with {lengthOfCompressedContents + 8} bytes of compressed data  ({lengthOfCompressedContents} + 8 for the header)");
             }
-
-            Debug.WriteLine("DECOMPRESSING: Writing {0} bytes (plus 32 for header) into array size {1}, started with {2} bytes of compressed data  ({3} + 8 for the header)",
-                numOfBytesDecompressed, countsBuffer.Array().Length, lengthOfCompressedContents + 8, lengthOfCompressedContents);
 
             histogram.FillCountsArrayFromBuffer(countsBuffer, numOfBytesDecompressed);
 
@@ -899,7 +894,7 @@ namespace HdrHistogram
 
         private int GetBucketIndex(long value)
         {
-            var leadingZeros = MiscUtilities.NumberOfLeadingZeros(value | _subBucketMask); // smallest power of 2 containing value
+            var leadingZeros = NumberOfLeadingZeros(value | _subBucketMask); // smallest power of 2 containing value
             return _bucketIndexOffset - leadingZeros;
         }
 
@@ -981,6 +976,25 @@ namespace HdrHistogram
         private static int GetWordSizeInBytesFromCookie(int cookie)
         {
             return (cookie & 0xf0) >> 4;
+        }
+
+        private static int NumberOfLeadingZeros(long value)
+        {
+            // Code from http://stackoverflow.com/questions/9543410/i-dont-think-numberofleadingzeroslong-i-in-long-java-is-based-floorlog2x/9543537#9543537
+
+            // HD, Figure 5-6
+            if (value == 0)
+                return 64;
+            int n = 1;
+            // >>> in Java is a "unsigned bit shift", to do the same in C# we use >> (but it HAS to be an unsigned int)
+            uint x = (uint)(value >> 32);
+            if (x == 0) { n += 32; x = (uint)value; }
+            if (x >> 16 == 0) { n += 16; x <<= 16; }
+            if (x >> 24 == 0) { n += 8; x <<= 8; }
+            if (x >> 28 == 0) { n += 4; x <<= 4; }
+            if (x >> 30 == 0) { n += 2; x <<= 2; }
+            n -= (int)(x >> 31);
+            return n;
         }
     }
 }
