@@ -38,28 +38,24 @@ namespace HdrHistogram.UnitTests
             var histogram2 = new LongHistogram(1000, HighestTrackableValue, NumberOfSignificantValueDigits);
             Assert.AreEqual(1000, histogram2.LowestTrackableValue);
         }
-
+        
         [Test]
-        public void TestGetEstimatedFootprintInBytes()
+        public void TestGetEstimatedFootprintInBytes2()
         {
             var longHistogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
             var largestValueWithSingleUnitResolution = 2 * (long)Math.Pow(10, NumberOfSignificantValueDigits);
             var subBucketCountMagnitude = (int)Math.Ceiling(Math.Log(largestValueWithSingleUnitResolution) / Math.Log(2));
             var subBucketSize = (int)Math.Pow(2, (subBucketCountMagnitude));
+            var bucketCount = GetBucketsNeededToCoverValue(subBucketSize, HighestTrackableValue);
 
-            long expectedSize = 512 +
-                    ((8 *
-                     ((long)(
-                            Math.Ceiling(
-                             Math.Log(HighestTrackableValue / subBucketSize)
-                                     / Math.Log(2)
-                            )
-                           + 2)) *
-                        (1 << (64 - MiscUtilities.NumberOfLeadingZeros(2 * (long)Math.Pow(10, NumberOfSignificantValueDigits))))
-                     ) / 2);
+            var header = 512;
+            var width = sizeof (long);
+            var length = (bucketCount + 1) * (subBucketSize / 2);
+            var expectedSize = header + (width * length);
+
             Assert.AreEqual(expectedSize, longHistogram.GetEstimatedFootprintInBytes());
         }
-
+        
         [Test]
         public void TestRecordValue()
         {
@@ -473,6 +469,19 @@ namespace HdrHistogram.UnitTests
 
             syncHistogram.CopyInto(targetSyncHistogram);
             AssertEqual(syncHistogram, targetSyncHistogram);
+        }
+
+
+        private static int GetBucketsNeededToCoverValue(int subBucketSize, long value)
+        {
+            long trackableValue = (subBucketSize - 1);// << _unitMagnitude;
+            int bucketsNeeded = 1;
+            while (trackableValue < value)
+            {
+                trackableValue <<= 1;
+                bucketsNeeded++;
+            }
+            return bucketsNeeded;
         }
     }
 }

@@ -237,7 +237,7 @@ namespace HdrHistogram
 
         /// <summary>
         /// Add the contents of another histogram to this one.
-        /// </summary>
+        /// <HET/summary>
         /// <param name="fromHistogram">The other histogram.</param>
         /// <exception cref="System.IndexOutOfRangeException">if values in fromHistogram's are higher than highestTrackableValue.</exception>
         public virtual void Add(HistogramBase fromHistogram)
