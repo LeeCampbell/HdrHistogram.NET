@@ -64,6 +64,16 @@ namespace HdrHistogram.Utilities
             _position = 0;
         }
 
+        public int ReadFrom(System.IO.Stream source, int length)
+        {
+            return source.Read(_internalBuffer, Position, length);
+        }
+        public void WriteTo(System.IO.Stream target, int offset, int length)
+        {
+            target.Write(_internalBuffer, offset, length);
+            target.Flush();
+        }
+
         /// <summary>
         /// Gets the value of the current position as an <see cref="int"/> value, and advances the position to the next int.
         /// </summary>
@@ -126,9 +136,14 @@ namespace HdrHistogram.Utilities
         /// <returns>The a copy of the internal byte array.</returns>
         internal byte[] Array()
         {
-            var copy  = new byte[_internalBuffer.Length];
+            var copy = new byte[_internalBuffer.Length];
             System.Array.Copy(_internalBuffer, copy, _internalBuffer.Length);
             return copy;
+        }
+
+        internal CountingMemoryStream GetWriter()
+        {
+            return new CountingMemoryStream(_internalBuffer, Position, _internalBuffer.Length - Position);
         }
 
         internal void BlockCopy(Array src, int srcOffset, int dstOffset, int count)
