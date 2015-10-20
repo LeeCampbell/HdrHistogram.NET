@@ -20,34 +20,43 @@ namespace HdrHistogram.Examples
      * time it takes to perform a simple Datagram Socket create/close operation,
      * and report a histogram of the times at the end.
      */
-    public class SimpleHistogramExample
+    static class SimpleHistogramExample
     {
         private const double MicrosPerTick = 10.0;
         private static readonly LongHistogram Histogram = new LongHistogram(TimeSpan.TicksPerHour, 3);
         private static volatile Socket _socket;
         private static readonly Lazy<AddressFamily> AddressFamily = new Lazy<AddressFamily>(() => GetAddressFamily("google.com"));
 
-        private static readonly TimeSpan WarmUpPeriod = TimeSpan.FromSeconds(5);
-        private static readonly TimeSpan RunPeriod = TimeSpan.FromSeconds(20);
+        private static readonly TimeSpan RunPeriod = TimeSpan.FromSeconds(10);
 
         public static void Run()
         {
+            Console.WriteLine($"Running for {RunPeriod.TotalSeconds}sec.");
+
+            RecordMeasurements();
+
+            OutputMeasurements();
+        }
+
+        /// <summary>
+        /// Shows a sample loop where an action is executed, and the latency of each execution is recorded.
+        /// </summary>
+        private static void RecordMeasurements()
+        {
             var timer = Stopwatch.StartNew();
-
-            do
-            {
-                Histogram.RecordLatency(CreateAndCloseDatagramSocket);
-            } while (timer.Elapsed < WarmUpPeriod);
-
-            Histogram.Reset();
-
             do
             {
                 Histogram.RecordLatency(CreateAndCloseDatagramSocket);
             } while (timer.Elapsed < RunPeriod);
+        }
 
+        /// <summary>
+        /// Write to the console the Memory footprint of the histogram instance and
+        /// the percentile distribution of all the recorded values.
+        /// </summary>
+        private static void OutputMeasurements()
+        {
             Console.WriteLine("Recorded latencies [in usec] for Create+Close of a DatagramSocket:");
-
             var size = Histogram.GetEstimatedFootprintInBytes();
             Console.WriteLine("Histogram size = {0} bytes ({1:F2} MB)", size, size / 1024.0 / 1024.0);
 

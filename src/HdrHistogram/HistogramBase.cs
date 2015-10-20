@@ -126,9 +126,9 @@ namespace HdrHistogram
         /// Must be a non-negative integer between 0 and 5.
         /// </param>
         /// <remarks>
-        /// Providing a lowestTrackableValue is useful is situations where the units used for the histogram's values are much 
-        /// smaller that the minimal accuracy required. E.g. when tracking time values stated in nanosecond units, where the 
-        /// minimal accuracy required is a microsecond, the proper value for lowestTrackableValue would be 1000.
+        /// Providing a lowestTrackableValue is useful in situations where the units used for the histogram's values are much 
+        /// smaller that the minimal accuracy required. E.g. when tracking time values stated in ticks (100 nanoseconds), where
+        /// the minimal accuracy required is a microsecond, the proper value for lowestTrackableValue would be 10.
         /// </remarks>
         protected HistogramBase(long lowestTrackableValue, long highestTrackableValue, int numberOfSignificantValueDigits)
         {
