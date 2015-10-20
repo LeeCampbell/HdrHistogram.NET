@@ -96,7 +96,7 @@ namespace HdrHistogram
         /// </summary>
         public abstract long TotalCount { get; protected set; }
 
-        
+
         internal int BucketCount { get; }       //TODO: Candidate for private read-only field. -LC
         internal int SubBucketCount { get; }    //TODO: Candidate for private read-only field. -LC
         internal int SubBucketHalfCount { get; }//TODO: Candidate for private read-only field. -LC
@@ -285,11 +285,11 @@ namespace HdrHistogram
             {
                 RecordValueWithCountAndExpectedInterval(
                     v.ValueIteratedTo,
-                    v.CountAtValueIteratedTo, 
+                    v.CountAtValueIteratedTo,
                     expectedIntervalBetweenValueSamples);
             }
         }
-        
+
         /// <summary>
         /// Get the size (in value units) of the range of values that are equivalent to the given value within the histogram's resolution. 
         /// Where "equivalent" means that value samples recorded for any two equivalent values are counted in a common total count.
@@ -327,7 +327,7 @@ namespace HdrHistogram
         /// <returns>The value lies in the middle (rounded up) of the range of values equivalent the given value.</returns>
         public long MedianEquivalentValue(long value)
         {
-            return LowestEquivalentValue(value) 
+            return LowestEquivalentValue(value)
                 + (SizeOfEquivalentValueRange(value) >> 1);
         }
 
@@ -606,7 +606,7 @@ namespace HdrHistogram
             }
             TotalCount = totalCounted;
         }
-        
+
         //TODO: Implement IEquatable? -LC
         /// <summary>
         /// Determine if this histogram is equivalent to another.
@@ -750,7 +750,7 @@ namespace HdrHistogram
         /// <param name="index">The index to increment.</param>
         /// <param name="addend">The amount to increment by.</param>
         protected abstract void AddToCountAtIndex(int index, long addend);
-        
+
 
         /// <summary>
         /// Clears the counts of this implementation.
@@ -766,7 +766,7 @@ namespace HdrHistogram
         protected static T DecodeFromByteBuffer<T>(ByteBuffer buffer, long minBarForHighestTrackableValue)
             where T : HistogramBase
         {
-            var histogramClass = typeof (T);
+            var histogramClass = typeof(T);
             var histogram = ConstructHistogramFromBufferHeader(buffer, histogramClass,
                     minBarForHighestTrackableValue);
 
@@ -880,10 +880,15 @@ namespace HdrHistogram
             return bucketBaseIndex + offsetInBucket;
         }
 
+        //Optimization. This simple method should be in-lined by the JIT compiler, allowing hot path `GetBucketIndex(long, long, int)` to become static. -LC
         private int GetBucketIndex(long value)
         {
-            var leadingZeros = NumberOfLeadingZeros(value | _subBucketMask); // smallest power of 2 containing value
-            return _bucketIndexOffset - leadingZeros;
+            return GetBucketIndex(value, _subBucketMask, _bucketIndexOffset);
+        }
+        private static int GetBucketIndex(long value, long subBucketMask, int bucketIndexOffset)
+        {
+            var leadingZeros = NumberOfLeadingZeros(value | subBucketMask); // smallest power of 2 containing value
+            return bucketIndexOffset - leadingZeros;
         }
 
         private int GetSubBucketIndex(long value, int bucketIndex)
@@ -930,7 +935,7 @@ namespace HdrHistogram
             try
             {
                 var constructor = histogramClass.GetConstructor(HistogramClassConstructorArgsTypes);
-                if(constructor==null)
+                if (constructor == null)
                     throw new ArgumentException("The target type does not have a supported constructor", nameof(histogramClass));
                 var histogram = (HistogramBase)constructor.Invoke(new object[] { lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits });
                 histogram.TotalCount = totalCount; // Restore totalCount
