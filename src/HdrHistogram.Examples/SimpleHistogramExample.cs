@@ -22,7 +22,6 @@ namespace HdrHistogram.Examples
      */
     static class SimpleHistogramExample
     {
-        private const double MicrosPerTick = 10.0;
         private static readonly LongHistogram Histogram = new LongHistogram(TimeSpan.TicksPerHour, 3);
         private static volatile Socket _socket;
         private static readonly Lazy<AddressFamily> AddressFamily = new Lazy<AddressFamily>(() => GetAddressFamily("google.com"));
@@ -56,11 +55,23 @@ namespace HdrHistogram.Examples
         /// </summary>
         private static void OutputMeasurements()
         {
-            Console.WriteLine("Recorded latencies [in usec] for Create+Close of a DatagramSocket:");
             var size = Histogram.GetEstimatedFootprintInBytes();
             Console.WriteLine("Histogram size = {0} bytes ({1:F2} MB)", size, size / 1024.0 / 1024.0);
 
-            Histogram.OutputPercentileDistribution(Console.Out, outputValueUnitScalingRatio: MicrosPerTick);
+            Console.WriteLine("Recorded latencies [in ticks] for Create+Close of a DatagramSocket:");
+            Histogram.OutputPercentileDistribution(Console.Out, outputValueUnitScalingRatio: OutputScalingFactor.None);
+            Console.WriteLine();
+
+            Console.WriteLine("Recorded latencies [in usec] for Create+Close of a DatagramSocket:");
+            Histogram.OutputPercentileDistribution(Console.Out, outputValueUnitScalingRatio: OutputScalingFactor.TicksToMicroseconds);
+            Console.WriteLine();
+
+            Console.WriteLine("Recorded latencies [in msec] for Create+Close of a DatagramSocket:");
+            Histogram.OutputPercentileDistribution(Console.Out, outputValueUnitScalingRatio: OutputScalingFactor.TicksToMilliseconds);
+            Console.WriteLine();
+
+            Console.WriteLine("Recorded latencies [in sec] for Create+Close of a DatagramSocket:");
+            Histogram.OutputPercentileDistribution(Console.Out, outputValueUnitScalingRatio: OutputScalingFactor.TicksToSeconds);
         }
 
         private static void CreateAndCloseDatagramSocket()

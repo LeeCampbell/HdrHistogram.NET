@@ -79,12 +79,15 @@ namespace HdrHistogram
         /// <param name="histogram">The histogram to operate on</param>
         /// <param name="printStream">Stream into which the distribution will be output</param>
         /// <param name="percentileTicksPerHalfDistance">The number of reporting points per exponentially decreasing half-distance</param>
-        /// <param name="outputValueUnitScalingRatio">The scaling factor by which to divide histogram recorded values units in output</param>
+        /// <param name="outputValueUnitScalingRatio">
+        /// The scaling factor by which to divide histogram recorded values units in output.
+        /// Use the <see cref="OutputScalingFactor"/> constant values to help choose an appropriate output measurement.
+        /// </param>
         /// <param name="useCsvFormat">Output in CSV format if <c>true</c>, else use plain text form.</param>
         public static void OutputPercentileDistribution(this HistogramBase histogram,
             TextWriter printStream,
             int percentileTicksPerHalfDistance = 5,
-            double outputValueUnitScalingRatio = 1000.0,
+            double outputValueUnitScalingRatio = OutputScalingFactor.TicksToMilliseconds,
             bool useCsvFormat = false)
         {
             if (useCsvFormat)
@@ -224,6 +227,11 @@ namespace HdrHistogram
         /// </summary>
         /// <param name="histogram">The Histogram to record the latency in.</param>
         /// <param name="action">The functionality to execute and measure</param>
+        /// <remarks>
+        /// Ticks are used as the unit of recording here as they are the smallest unit that .NET can measure
+        /// and require no conversion at time of recording. Instead conversion (scaling) can be done at time
+        /// of output to microseconds, milliseconds, seconds or other appropriate unit.
+        /// </remarks>
         public static void RecordLatency(this HistogramBase histogram, Action action)
         {
             var start = Stopwatch.GetTimestamp();
