@@ -14,8 +14,14 @@ using HdrHistogram.Utilities;
 namespace HdrHistogram
 {
     /// <summary>
-    /// An internally synchronized High Dynamic Range (HDR) Histogram using a <c>long</c> count type.
+    /// An thread safe High Dynamic Range (HDR) Histogram using a <see cref="long"/> count type.
     /// </summary>
+    /// <remarks>
+    /// If performance is a concern, then it is advisable to use a <see cref="LongHistogram"/> per
+    /// thread of execution and then combine them to get the results. This way you only pay the 
+    /// synchronization cost at output not on every write. Write to this synchronized histogram
+    /// can be 3 times slower than the non thread-safe implementation.
+    /// </remarks>
     public class SynchronizedHistogram : HistogramBase
     {
         private readonly long[] _counts;
