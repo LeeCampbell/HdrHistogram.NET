@@ -74,16 +74,19 @@ namespace HdrHistogram
 
         /// <summary>
         /// Produce textual representation of the value distribution of histogram data by percentile. 
-        /// The distribution is output with exponentially increasing resolution, with each exponentially decreasing half-distance containing <i>dumpTicksPerHalf</i> percentile reporting tick points.
+        /// The distribution is output with exponentially increasing resolution, with each exponentially decreasing 
+        /// half-distance containing <paramref name="percentileTicksPerHalfDistance"/> percentile reporting tick points.
         /// </summary>
         /// <param name="histogram">The histogram to operate on</param>
         /// <param name="printStream">Stream into which the distribution will be output</param>
-        /// <param name="percentileTicksPerHalfDistance">The number of reporting points per exponentially decreasing half-distance</param>
+        /// <param name="percentileTicksPerHalfDistance">
+        /// The number of reporting points per exponentially decreasing half-distance
+        /// </param>
         /// <param name="outputValueUnitScalingRatio">
         /// The scaling factor by which to divide histogram recorded values units in output.
         /// Use the <see cref="OutputScalingFactor"/> constant values to help choose an appropriate output measurement.
         /// </param>
-        /// <param name="useCsvFormat">Output in CSV format if <c>true</c>, else use plain text form.</param>
+        /// <param name="useCsvFormat">Output in CSV (Comma Separated Values) format if <c>true</c>, else use plain text form.</param>
         public static void OutputPercentileDistribution(this HistogramBase histogram,
             TextWriter printStream,
             int percentileTicksPerHalfDistance = 5,
@@ -159,10 +162,9 @@ namespace HdrHistogram
             }
             catch (ArgumentOutOfRangeException)
             {
-                // Overflow conditions on histograms can lead to ArrayIndexOutOfBoundsException on iterations:
+                // Overflow conditions on histograms can lead to ArgumentOutOfRangeException on iterations:
                 if (histogram.HasOverflowed())
                 {
-                    //printStream.format(Locale.US, "# Histogram counts indicate OVERFLOW values");
                     printStream.Write("# Histogram counts indicate OVERFLOW values");
                 }
                 else
@@ -175,22 +177,34 @@ namespace HdrHistogram
 
         /// <summary>
         /// Provide a means of iterating through histogram values according to percentile levels. 
-        /// The iteration is performed in steps that start at 0% and reduce their distance to 100% according to the <i>percentileTicksPerHalfDistance</i> parameter, ultimately reaching 100% when all recorded histogram values are exhausted.
+        /// The iteration is performed in steps that start at 0% and reduce their distance to 100% according to the
+        /// <paramref name="percentileTicksPerHalfDistance"/> parameter, ultimately reaching 100% when all recorded
+        /// histogram values are exhausted.
         /// </summary>
         /// <param name="histogram">The histogram to operate on</param>
-        /// <param name="percentileTicksPerHalfDistance">The number of iteration steps per half-distance to 100%.</param>
-        /// <returns>An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="PercentileEnumerator"/></returns>
+        /// <param name="percentileTicksPerHalfDistance">
+        /// The number of iteration steps per half-distance to 100%.
+        /// </param>
+        /// <returns>
+        /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a
+        /// <see cref="PercentileEnumerator"/>.
+        /// </returns>
         public static IEnumerable<HistogramIterationValue> Percentiles(this HistogramBase histogram, int percentileTicksPerHalfDistance)
         {
             return new PercentileEnumerable(histogram, percentileTicksPerHalfDistance);
         }
 
         /// <summary>
-        /// Provide a means of iterating through histogram values using linear steps. The iteration is performed in steps of <i>valueUnitsPerBucket</i> in size, terminating when all recorded histogram values are exhausted.
+        /// Provide a means of iterating through histogram values using linear steps. The iteration is performed in
+        /// steps of <paramref name="valueUnitsPerBucket"/> in size, terminating when all recorded histogram values
+        /// are exhausted.
         /// </summary>
         /// <param name="histogram">The histogram to operate on</param>
         /// <param name="valueUnitsPerBucket">The size (in value units) of the linear buckets to use</param>
-        /// <returns>An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LinearEnumerator"/></returns>
+        /// <returns>
+        /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a 
+        /// <see cref="LinearEnumerator"/>.
+        /// </returns>
         public static IEnumerable<HistogramIterationValue> LinearBucketValues(this HistogramBase histogram, int valueUnitsPerBucket)
         {
             return new LinearBucketEnumerable(histogram, valueUnitsPerBucket);
@@ -198,12 +212,16 @@ namespace HdrHistogram
 
         /// <summary>
         /// Provide a means of iterating through histogram values at logarithmically increasing levels. 
-        /// The iteration is performed in steps that start at<i>valueUnitsInFirstBucket</i> and increase exponentially according to <i>logBase</i>, terminating when all recorded histogram values are exhausted.
+        /// The iteration is performed in steps that start at<i>valueUnitsInFirstBucket</i> and increase exponentially
+        /// according to <paramref name="logBase"/>, terminating when all recorded histogram values are exhausted.
         /// </summary>
         /// <param name="histogram">The histogram to operate on</param>
         /// <param name="valueUnitsInFirstBucket">The size (in value units) of the first bucket in the iteration</param>
         /// <param name="logBase">The multiplier by which bucket sizes will grow in each iteration step</param>
-        /// <returns>An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LogarithmicEnumerator"/></returns>
+        /// <returns>
+        /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a
+        /// <see cref="LogarithmicEnumerator"/>.
+        /// </returns>
         public static IEnumerable<HistogramIterationValue> LogarithmicBucketValues(this HistogramBase histogram, int valueUnitsInFirstBucket, double logBase)
         {
             return new LogarithmicBucketEnumerable(histogram, valueUnitsInFirstBucket, logBase);
@@ -212,7 +230,8 @@ namespace HdrHistogram
 
         /// <summary>
         /// Get the highest value that is equivalent to the given value within the histogram's resolution.
-        /// Where "equivalent" means that value samples recorded for any two equivalent values are counted in a common total count.
+        /// Where "equivalent" means that value samples recorded for any two equivalent values are counted in a common
+        /// total count.
         /// </summary>
         /// <param name="histogram">The histogram to operate on</param>
         /// <param name="value">The given value</param>
