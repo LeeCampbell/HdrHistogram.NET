@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="HistogramBase.cs" />
     <Compile Include="HistogramExtensions.cs" />
+    <Compile Include="OutputScalingFactor.cs" />
     <Compile Include="Properties\AssemblyInfo.g.cs" />
     <Compile Include="Utilities\CountingMemoryStream.cs" />
     <Compile Include="IntHistogram.cs" />

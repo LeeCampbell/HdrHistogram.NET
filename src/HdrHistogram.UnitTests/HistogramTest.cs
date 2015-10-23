@@ -9,23 +9,23 @@
  */
 
 using System;
-using HdrHistogram.Utilities;
 using NUnit.Framework;
 
 namespace HdrHistogram.UnitTests
 {
+    [TestFixture]
     public class HistogramTest
     {
-        private const long HighestTrackableValue = 3600L * 1000 * 1000; // e.g. for 1 hr in usec units
+        private const long HighestTrackableValue = TimeSpan.TicksPerHour; // e.g. for 1 hr in ticks
         private const int NumberOfSignificantValueDigits = 3;
         private const long TestValueLevel = 4;
 
         [Test]
         public void TestConstructionArgumentRanges()
         {
-            NUnit.Framework.Assert.Throws<ArgumentException>(() => { new LongHistogram(1, NumberOfSignificantValueDigits); });
-            NUnit.Framework.Assert.Throws<ArgumentException>(() => { new LongHistogram(HighestTrackableValue, 6); });
-            NUnit.Framework.Assert.Throws<ArgumentException>(() => { new LongHistogram(HighestTrackableValue, -1); });
+            Assert.Throws<ArgumentException>(() => { new LongHistogram(1, NumberOfSignificantValueDigits); });
+            Assert.Throws<ArgumentException>(() => { new LongHistogram(HighestTrackableValue, 6); });
+            Assert.Throws<ArgumentException>(() => { new LongHistogram(HighestTrackableValue, -1); });
         }
 
         [Test]
@@ -129,7 +129,7 @@ namespace HdrHistogram.UnitTests
             Assert.AreEqual(6L, biggerOther.TotalCount);
 
             // But trying to add a larger histogram into a smaller one should throw an AIOOB:
-            NUnit.Framework.Assert.Throws<ArgumentOutOfRangeException>(() => { longHistogram.Add(biggerOther); });
+            Assert.Throws<ArgumentOutOfRangeException>(() => { longHistogram.Add(biggerOther); });
         }
 
         [Test]

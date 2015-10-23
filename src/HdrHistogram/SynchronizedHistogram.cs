@@ -14,8 +14,14 @@ using HdrHistogram.Utilities;
 namespace HdrHistogram
 {
     /// <summary>
-    /// An internally synchronized High Dynamic Range (HDR) Histogram using a <c>long</c> count type.
+    /// An thread safe High Dynamic Range (HDR) Histogram using a <see cref="long"/> count type.
     /// </summary>
+    /// <remarks>
+    /// If performance is a concern, then it is advisable to use a <see cref="LongHistogram"/> per
+    /// thread of execution and then combine them to get the results. This way you only pay the 
+    /// synchronization cost at output not on every write. Write to this synchronized histogram
+    /// can be 3 times slower than the non thread-safe implementation.
+    /// </remarks>
     public class SynchronizedHistogram : HistogramBase
     {
         private readonly long[] _counts;
@@ -44,7 +50,7 @@ namespace HdrHistogram
         /// <summary>
         /// Construct a SynchronizedHistogram given the Lowest and Highest values to be tracked and a number of significant decimal digits.
         /// Providing a lowestTrackableValue is useful is situations where the units used for the histogram's values are much smaller that the minimal accuracy required. 
-        /// E.g. when tracking time values stated in nanosecond units, where the minimal accuracy required is a microsecond, the proper value for lowestTrackableValue would be 1000.
+        /// E.g. when tracking time values stated in ticks (100 nanoseconds), where the minimal accuracy required is a microsecond, the proper value for <paramref name="lowestTrackableValue"/> would be 10.
         /// </summary>
         /// <param name="lowestTrackableValue">The lowest value that can be tracked (distinguished from 0) by the histogram.
         /// Must be a positive integer that is &gt;= 1. May be internally rounded down to nearest power of 2.</param>

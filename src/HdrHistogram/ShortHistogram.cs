@@ -15,7 +15,7 @@ using ShortBuffer = HdrHistogram.Utilities.WrappedBuffer<short>;
 namespace HdrHistogram
 {
     /// <summary>
-    /// A High Dynamic Range (HDR) Histogram using a <c>short</c> count type
+    /// A High Dynamic Range (HDR) Histogram using a <see cref="short"/> count type
     /// </summary>
     /// <remarks>
     /// Histogram supports the recording and analyzing sampled data value counts across a configurable integer value
@@ -24,15 +24,17 @@ namespace HdrHistogram
     /// over value quantization behavior across the value range and the subsequent value resolution at any given level.
     /// <para>
     /// For example, a Histogram could be configured to track the counts of observed integer values between 0 and
-    /// 3,600,000,000 while maintaining a value precision of 3 significant digits across that range.
+    /// 36,000,000,000 while maintaining a value precision of 3 significant digits across that range.
     /// Value quantization within the range will thus be no larger than 1/1,000th (or 0.1%) of any value.
     /// This example Histogram could be used to track and analyze the counts of observed response times ranging between
-    ///  1 microsecond and 1 hour in magnitude, while maintaining a value resolution of 1 microsecond up to 1 millisecond, 
-    /// a resolution of 1 millisecond(or better) up to one second, and a resolution of 1 second (or better) up to 1,000 seconds.
+    /// 1 tick (100 nanoseconds) and 1 hour in magnitude, while maintaining a value resolution of 100 nanosecond up to 
+    /// 100 microseconds, a resolution of 1 millisecond(or better) up to one second, and a resolution of 1 second 
+    /// (or better) up to 1,000 seconds.
     /// At it's maximum tracked value(1 hour), it would still maintain a resolution of 3.6 seconds (or better).
     /// </para>
-    /// Histogram tracks value counts in <c>short</c> fields.
-    /// Other field types are available in the <see cref="IntHistogram"/> and <see cref="LongHistogram"/> implementations of <see cref="HistogramBase"/>.
+    /// Histogram tracks value counts in <see cref="short"/> fields.
+    /// Other field types are available in the <see cref="IntHistogram"/> and <see cref="LongHistogram"/> 
+    /// implementations of <see cref="HistogramBase"/>.
     /// </remarks>
     public sealed class ShortHistogram : HistogramBase
     {

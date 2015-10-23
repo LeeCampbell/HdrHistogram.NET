@@ -29,13 +29,13 @@ namespace HdrHistogram
     /// value quantization behavior across the value range and the subsequent value resolution at any given level.
     /// <para>
     /// For example, a Histogram could be configured to track the counts of observed integer values between 0 and
-    /// 3,600,000,000 while maintaining a value precision of 3 significant digits across that range.
-    /// Value quantization within the range will thus be no larger than 1/1,000th(or 0.1%) of any value.
-    /// This example Histogram could be used to track and analyze the counts of observed response times ranging between 
-    /// 1 microsecond and 1 hour in magnitude, while maintaining a value resolution of 1 microsecond up to 1 millisecond, 
-    /// a resolution of 1 millisecond(or better) up to one second, and a resolution of 1 second(or better) up to 1,000 
-    /// seconds.
-    /// At it's maximum tracked value(1 hour), it would still maintain a resolution of 3.6 seconds(or better).
+    /// 36,000,000,000 while maintaining a value precision of 3 significant digits across that range.
+    /// Value quantization within the range will thus be no larger than 1/1,000th (or 0.1%) of any value.
+    /// This example Histogram could be used to track and analyze the counts of observed response times ranging between
+    /// 1 tick (100 nanoseconds) and 1 hour in magnitude, while maintaining a value resolution of 100 nanosecond up to 
+    /// 100 microseconds, a resolution of 1 millisecond(or better) up to one second, and a resolution of 1 second 
+    /// (or better) up to 1,000 seconds.
+    /// At it's maximum tracked value(1 hour), it would still maintain a resolution of 3.6 seconds (or better).
     /// </para>
     /// </remarks>
     public abstract class HistogramBase
@@ -126,9 +126,9 @@ namespace HdrHistogram
         /// Must be a non-negative integer between 0 and 5.
         /// </param>
         /// <remarks>
-        /// Providing a lowestTrackableValue is useful is situations where the units used for the histogram's values are much 
-        /// smaller that the minimal accuracy required. E.g. when tracking time values stated in nanosecond units, where the 
-        /// minimal accuracy required is a microsecond, the proper value for lowestTrackableValue would be 1000.
+        /// Providing a lowestTrackableValue is useful in situations where the units used for the histogram's values are much 
+        /// smaller that the minimal accuracy required. E.g. when tracking time values stated in ticks (100 nanoseconds), where
+        /// the minimal accuracy required is a microsecond, the proper value for lowestTrackableValue would be 10.
         /// </remarks>
         protected HistogramBase(long lowestTrackableValue, long highestTrackableValue, int numberOfSignificantValueDigits)
         {
@@ -564,7 +564,7 @@ namespace HdrHistogram
         /// <returns><c>true</c> if this histogram has had a count value overflow, else <c>false</c>.</returns>
         /// <remarks>
         /// Since counts are kept in fixed integer form with potentially limited range (e.g. int and short), a specific value range count could potentially overflow, leading to an inaccurate and misleading histogram representation.
-        /// This method accurately determines whether or not an overflow condition has happened in an IntHistogram or ShortHistogram.
+        /// This method accurately determines whether or not an overflow condition has happened in an <see cref="IntHistogram"/> or <see cref="ShortHistogram"/>.
         /// </remarks>
         public bool HasOverflowed()
         {
