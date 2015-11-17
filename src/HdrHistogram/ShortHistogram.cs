@@ -47,7 +47,7 @@ namespace HdrHistogram
         private long _totalCount;
 
         /// <summary>
-        /// Construct a <see cref="ShortHistogram"/> given the Highest value to be tracked and a number of significant decimal digits. 
+        /// Construct a <see cref="ShortHistogram"/> given the highest value to be tracked and a number of significant decimal digits. 
         /// The histogram will be constructed to implicitly track (distinguish from 0) values as low as 1. 
         /// </summary>
         /// <param name="highestTrackableValue">The highest value to be tracked by the histogram. Must be a positive integer that is &gt;= 2.</param>
@@ -58,7 +58,7 @@ namespace HdrHistogram
         }
 
         /// <summary>
-        /// Construct a <see cref="ShortHistogram"/> given the Lowest and Highest values to be tracked and a number of significant decimal digits.
+        /// Construct a <see cref="ShortHistogram"/> given the lowest and highest values to be tracked and a number of significant decimal digits.
         /// Providing a <paramref name="lowestTrackableValue"/> is useful is situations where the units used for the histogram's values are much smaller that the minimal accuracy required. 
         /// For example when tracking time values stated in ticks (100 nanosecond units), where the minimal accuracy required is a microsecond, the proper value for <paramref name="lowestTrackableValue"/> would be 10.
         /// </summary>

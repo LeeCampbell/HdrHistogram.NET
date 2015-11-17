@@ -34,7 +34,7 @@ namespace HdrHistogram
 
 
         /// <summary>
-        /// Construct a <see cref="SynchronizedHistogram"/> given the Highest value to be tracked and a number of significant decimal digits. 
+        /// Construct a <see cref="SynchronizedHistogram"/> given the highest value to be tracked and a number of significant decimal digits. 
         /// The histogram will be constructed to implicitly track(distinguish from 0) values as low as 1.
         /// </summary>
         /// <param name="highestTrackableValue">The highest value to be tracked by the histogram. Must be a positive integer that is &gt;= 2.</param>
