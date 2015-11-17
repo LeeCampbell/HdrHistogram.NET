@@ -136,15 +136,22 @@ This is especially useful when comparing measurements.
 First you will need to create the file to be used as an input for the chart.
 
 ```
-var sw = new StringWriter();
-histogram.outputPercentileDistribution(sw);
-File.WriteAllText("HistogramChart.hgrm", sw.ToString());
+using (var writer = new StreamWriter("HistogramResults.hgrm"))
+{
+	histogram.OutputPercentileDistribution(writer);
+}
 ```
 
-Then you can use this website to plot a chart of the percentile distribution.
+The data can then be plotter to visualize the percentile distribution of your results.
 Multiple files can be plotted in the same chart allowing effective visual comparison of your results.
-http://hdrhistogram.github.io/HdrHistogram/plotFiles.html
+You can use either 
+
+ * the online tool - http://hdrhistogram.github.io/HdrHistogram/plotFiles.html
+ * the local tool - _.\GoogleChartsExample\plotFiles.html_
   ![](http://i.imgur.com/Z1wIqw1.png)
+
+If you use the local tool, there are example result files in the _.\GoogleChartsExample_ directory.
+The tool also allows you to export to png.
 
 ##So what is so special about this way of recording latency?
  
