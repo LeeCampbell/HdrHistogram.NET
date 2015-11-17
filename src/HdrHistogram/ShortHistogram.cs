@@ -47,7 +47,7 @@ namespace HdrHistogram
         private long _totalCount;
 
         /// <summary>
-        /// Construct a ShortHistogram given the Highest value to be tracked and a number of significant decimal digits. 
+        /// Construct a <see cref="ShortHistogram"/> given the Highest value to be tracked and a number of significant decimal digits. 
         /// The histogram will be constructed to implicitly track (distinguish from 0) values as low as 1. 
         /// </summary>
         /// <param name="highestTrackableValue">The highest value to be tracked by the histogram. Must be a positive integer that is &gt;= 2.</param>
@@ -58,15 +58,16 @@ namespace HdrHistogram
         }
 
         /// <summary>
-        /// Construct a ShortHistogram given the Lowest and Highest values to be tracked and a number of significant
-        /// decimal digits.Providing a lowestTrackableValue is useful is situations where the units used
-        /// for the histogram's values are much smaller that the minimal accuracy required. E.g. when tracking
-        /// time values stated in nanosecond units, where the minimal accuracy required is a microsecond, the
-        /// proper value for lowestTrackableValue would be 1000.
+        /// Construct a <see cref="ShortHistogram"/> given the Lowest and Highest values to be tracked and a number of significant decimal digits.
+        /// Providing a <paramref name="lowestTrackableValue"/> is useful is situations where the units used for the histogram's values are much smaller that the minimal accuracy required. 
+        /// For example when tracking time values stated in ticks (100 nanosecond units), where the minimal accuracy required is a microsecond, the proper value for <paramref name="lowestTrackableValue"/> would be 10.
         /// </summary>
-        /// <param name="lowestTrackableValue">The lowest value that can be tracked (distinguished from 0) by the histogram.
-        /// Must be a positive integer that is &gt;= 1. May be internally rounded down to nearest power of 2.</param>
-        /// <param name="highestTrackableValue">The highest value to be tracked by the histogram. Must be a positive integer that is &gt;= (2 * lowestTrackableValue).</param>
+        /// <param name="lowestTrackableValue">
+        /// The lowest value that can be tracked (distinguished from 0) by the histogram.
+        /// Must be a positive integer that is &gt;= 1. 
+        /// May be internally rounded down to nearest power of 2.
+        /// </param>
+        /// <param name="highestTrackableValue">The highest value to be tracked by the histogram. Must be a positive integer that is &gt;= (2 * <paramref name="lowestTrackableValue"/>).</param>
         /// <param name="numberOfSignificantValueDigits">The number of significant decimal digits to which the histogram will maintain value resolution and separation.
         /// Must be a non-negative integer between 0 and 5.</param>
         public ShortHistogram(long lowestTrackableValue, long highestTrackableValue, int numberOfSignificantValueDigits)
