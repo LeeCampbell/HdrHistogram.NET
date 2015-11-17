@@ -113,7 +113,7 @@ namespace HdrHistogram
 
 
         /// <summary>
-        /// Construct a histogram given the Lowest and Highest values to be tracked and a number of significant decimal digits.
+        /// Construct a histogram given the lowest and highest values to be tracked and a number of significant decimal digits.
         /// </summary>
         /// <param name="lowestTrackableValue">The lowest value that can be tracked (distinguished from 0) by the histogram.
         /// Must be a positive integer that is &gt;= 1.
@@ -122,13 +122,15 @@ namespace HdrHistogram
         /// <param name="highestTrackableValue">The highest value to be tracked by the histogram.
         /// Must be a positive integer that is &gt;= (2 * lowestTrackableValue).
         /// </param>
-        /// <param name="numberOfSignificantValueDigits">The number of significant decimal digits to which the histogram will maintain value resolution and separation. 
+        /// <param name="numberOfSignificantValueDigits">
+        /// The number of significant decimal digits to which the histogram will maintain value resolution and separation. 
         /// Must be a non-negative integer between 0 and 5.
         /// </param>
         /// <remarks>
         /// Providing a lowestTrackableValue is useful in situations where the units used for the histogram's values are much 
-        /// smaller that the minimal accuracy required. E.g. when tracking time values stated in ticks (100 nanoseconds), where
-        /// the minimal accuracy required is a microsecond, the proper value for lowestTrackableValue would be 10.
+        /// smaller that the minimal accuracy required.
+        /// For example when tracking time values stated in ticks (100 nanoseconds), where the minimal accuracy required is a
+        /// microsecond, the proper value for lowestTrackableValue would be 10.
         /// </remarks>
         protected HistogramBase(long lowestTrackableValue, long highestTrackableValue, int numberOfSignificantValueDigits)
         {
