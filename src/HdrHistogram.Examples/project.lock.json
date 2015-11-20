@@ -1,0 +1,63 @@
+{
+  "locked": false,
+  "version": 2,
+  "targets": {
+    "DNX,Version=v4.5.1": {
+      "HdrHistogram/1.0.0": {
+        "type": "project",
+        "framework": "DNX,Version=v4.5.1",
+        "frameworkAssemblies": [
+          "System.Runtime"
+        ]
+      }
+    },
+    "DNXCore,Version=v5.0": {
+      "HdrHistogram/1.0.0": {
+        "type": "project"
+      }
+    },
+    "DNX,Version=v4.5.1/win7-x86": {
+      "HdrHistogram/1.0.0": {
+        "type": "project",
+        "framework": "DNX,Version=v4.5.1",
+        "frameworkAssemblies": [
+          "System.Runtime"
+        ]
+      }
+    },
+    "DNX,Version=v4.5.1/win7-x64": {
+      "HdrHistogram/1.0.0": {
+        "type": "project",
+        "framework": "DNX,Version=v4.5.1",
+        "frameworkAssemblies": [
+          "System.Runtime"
+        ]
+      }
+    },
+    "DNXCore,Version=v5.0/win7-x86": {
+      "HdrHistogram/1.0.0": {
+        "type": "project"
+      }
+    },
+    "DNXCore,Version=v5.0/win7-x64": {
+      "HdrHistogram/1.0.0": {
+        "type": "project"
+      }
+    }
+  },
+  "libraries": {
+    "HdrHistogram/1.0.0": {
+      "type": "project",
+      "path": "../HdrHistogram/project.json"
+    }
+  },
+  "projectFileDependencyGroups": {
+    "": [
+      "HdrHistogram >= 1.0.0-*"
+    ],
+    "DNX,Version=v4.5.1": [
+      "fx/System.Runtime "
+    ],
+    "DNXCore,Version=v5.0": []
+  }
+}

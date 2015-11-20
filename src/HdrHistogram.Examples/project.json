@@ -1,0 +1,25 @@
+{
+  "version": "1.0.0-*",
+  "description": "HdrHistogram.Examples Console Application",
+  "authors": [ "Qiming Liu" ],
+  "tags": [ "" ],
+  "projectUrl": "",
+  "licenseUrl": "",
+
+  "dependencies": {
+    "HdrHistogram": "1.0.0-*"
+  },
+
+  "commands": {
+    "HdrHistogram.Examples": "HdrHistogram.Examples"
+  },
+
+  "frameworks": {
+    "dnx451": {
+      "frameworkAssemblies": {
+        "System.Runtime": ""
+      }
+    },
+    "dnxcore50": {}
+  }
+}

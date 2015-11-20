@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "HdrHistogram", "HdrHistogram\HdrHistogram.xproj", "{27805873-3757-4A1D-AA57-DB95EF6E5706}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "HdrHistogram.Examples", "HdrHistogram.Examples\HdrHistogram.Examples.xproj", "{F367415A-D1FE-4BDF-AC2A-0CB61EFD8310}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{27805873-3757-4A1D-AA57-DB95EF6E5706}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27805873-3757-4A1D-AA57-DB95EF6E5706}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27805873-3757-4A1D-AA57-DB95EF6E5706}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27805873-3757-4A1D-AA57-DB95EF6E5706}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F367415A-D1FE-4BDF-AC2A-0CB61EFD8310}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F367415A-D1FE-4BDF-AC2A-0CB61EFD8310}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F367415A-D1FE-4BDF-AC2A-0CB61EFD8310}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F367415A-D1FE-4BDF-AC2A-0CB61EFD8310}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

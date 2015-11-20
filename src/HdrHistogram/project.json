@@ -1,0 +1,19 @@
+﻿{
+  "version": "1.0.0-*",
+  "description": "HdrHistogram Class Library",
+  "authors": [ "Qiming Liu" ],
+  "tags": [ "" ],
+  "projectUrl": "",
+  "licenseUrl": "",
+
+  "dependencies": {
+  },
+
+  "frameworks": {
+    "dnx451": {
+      "frameworkAssemblies": {
+        "System.Runtime": ""
+      }
+    }
+  }
+}
