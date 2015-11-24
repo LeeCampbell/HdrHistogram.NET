@@ -162,18 +162,6 @@ namespace HdrHistogram
         }
 
         /// <summary>
-        /// Construct a new histogram by decoding it from a compressed form in a ByteBuffer.
-        /// </summary>
-        /// <param name="buffer">The buffer to encode into</param>
-        /// <param name="minBarForHighestTrackableValue">Force highestTrackableValue to be set at least this high</param>
-        /// <returns>The newly constructed histogram</returns>
-        public static SynchronizedHistogram DecodeFromCompressedByteBuffer(ByteBuffer buffer, long minBarForHighestTrackableValue)
-        {
-            return DecodeFromCompressedByteBuffer<SynchronizedHistogram>(buffer, minBarForHighestTrackableValue);
-        }
-
-
-        /// <summary>
         /// Returns the word size of this implementation
         /// </summary>
         protected override int WordSizeInBytes => 8;

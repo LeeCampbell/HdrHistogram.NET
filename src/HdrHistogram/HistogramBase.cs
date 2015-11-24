@@ -12,7 +12,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
 using HdrHistogram.Iteration;
 using HdrHistogram.Utilities;
@@ -525,42 +526,6 @@ namespace HdrHistogram
         }
 
         /// <summary>
-        /// Encode this histogram in compressed form into a byte array
-        /// </summary>
-        /// <param name="targetBuffer">The buffer to encode into</param>
-        /// <param name="compressionLevel">Compression level.</param>
-        /// <returns>The number of bytes written to the buffer</returns>
-        public long EncodeIntoCompressedByteBuffer(ByteBuffer targetBuffer, CompressionLevel compressionLevel = CompressionLevel.Optimal)
-        {
-            var temp = ByteBuffer.Allocate(GetNeededByteBufferCapacity(CountsArrayLength));
-            lock (UpdateLock)
-            {
-                var uncompressedLength = EncodeIntoByteBuffer(temp);
-
-                targetBuffer.PutInt(GetCompressedEncodingCookie());
-                var contentLengthIdx = targetBuffer.Position;
-                targetBuffer.PutInt(0); // Placeholder for compressed contents length *
-                var headerSize = targetBuffer.Position;
-                int compressedDataLength;
-                using (var outputStream = targetBuffer.GetWriter())
-                {
-                    using (var compressor = new DeflateStream(outputStream, compressionLevel))
-                    {
-                        temp.WriteTo(compressor, 0, uncompressedLength);
-                    }
-                    compressedDataLength = outputStream.BytesWritten;
-                }
-
-                // *Go back and write the now known compressed data length
-                targetBuffer.PutInt(contentLengthIdx, compressedDataLength); // Record the compressed length
-
-                Debug.WriteLine($"COMPRESSING - Wrote {compressedDataLength + headerSize} bytes (header = {headerSize}), original size {uncompressedLength}");
-
-                return compressedDataLength + headerSize;
-            }
-        }
-
-        /// <summary>
         /// Determine if this histogram had any of it's value counts overflow.
         /// </summary>
         /// <returns><c>true</c> if this histogram has had a count value overflow, else <c>false</c>.</returns>
@@ -788,42 +753,6 @@ namespace HdrHistogram
             return (T)histogram;
         }
 
-        /// <summary>
-        /// Construct a new histogram by decoding it from a compressed form in a ByteBuffer.
-        /// </summary>
-        /// <param name="buffer">The buffer to decode from</param>
-        /// <param name="minBarForHighestTrackableValue">Force highestTrackableValue to be set at least this high</param>
-        /// <returns>The newly constructed histogram</returns>
-        protected static T DecodeFromCompressedByteBuffer<T>(ByteBuffer buffer, long minBarForHighestTrackableValue)
-            where T : HistogramBase
-        {
-            var histogramClass = typeof(T);
-            var cookie = buffer.GetInt();
-            if (GetCookieBase(cookie) != CompressedEncodingCookieBase)
-            {
-                throw new ArgumentException("The buffer does not contain a compressed Histogram");
-            }
-            var lengthOfCompressedContents = buffer.GetInt();
-            HistogramBase histogram;
-            ByteBuffer countsBuffer;
-            int numOfBytesDecompressed;
-            using (var inputStream = new MemoryStream(buffer.ToArray(), buffer.Position, lengthOfCompressedContents))
-            using (var decompressor = new DeflateStream(inputStream, CompressionMode.Decompress))
-            {
-                var headerBuffer = ByteBuffer.Allocate(32);
-                headerBuffer.ReadFrom(decompressor, 32);
-                histogram = ConstructHistogramFromBufferHeader(headerBuffer, histogramClass, minBarForHighestTrackableValue);
-                var countsLength = histogram.GetNeededByteBufferCapacity(histogram.CountsArrayLength) - 32;
-                countsBuffer = ByteBuffer.Allocate(countsLength);
-                numOfBytesDecompressed = countsBuffer.ReadFrom(decompressor, countsLength);
-                Debug.WriteLine($"DECOMPRESSING: Writing {numOfBytesDecompressed} bytes (plus 32 for header) into array size {countsLength}, started with {lengthOfCompressedContents + 8} bytes of compressed data  ({lengthOfCompressedContents} + 8 for the header)");
-            }
-
-            histogram.FillCountsArrayFromBuffer(countsBuffer, numOfBytesDecompressed);
-
-            return (T)histogram;
-        }
-
         private void RecordSingleValue(long value)
         {
             // Dissect the value into bucket and sub-bucket parts, and derive index into counts array:
@@ -981,6 +910,37 @@ namespace HdrHistogram
             if (x >> 30 == 0) { n += 2; x <<= 2; }
             n -= (int)(x >> 31);
             return n;
+        }
+    }
+
+    public static class Ex
+    {
+        public static ConstructorInfo GetConstructor(this Type type, Type[] ctorArgTypes)
+        {
+            var info = type.GetTypeInfo();
+            foreach (var ctor in info.DeclaredConstructors)
+            {
+                // find the .ctor you want...
+                var ctorParams = ctor.GetParameters();
+                if (ctorParams.Select(p => p.ParameterType).ToArray().IsSequenceEqual(ctorArgTypes))
+                    return ctor;
+            }
+            return null;
+        }
+
+        public static bool IsSequenceEqual<T>(this T[] source, T[] other)
+        {
+            if (source.Length != other.Length)
+                return false;
+
+            for (int i = 0; i < other.Length; i++)
+            {
+                if (!Equals(source[i], other[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

@@ -7,7 +7,7 @@
   "licenseUrl": "",
 
   "dependencies": {
-    "HdrHistogram": "1.0.0-*"
+    "HdrHistogram": "1.0.0-*",
   },
 
   "commands": {
@@ -15,11 +15,36 @@
   },
 
   "frameworks": {
-    "dnx451": {
-      "frameworkAssemblies": {
-        "System.Runtime": ""
+    "dnxcore50": {
+      "dependencies": {
+        "Microsoft.CSharp": "4.0.0",
+        "System.Collections": "4.0.10",
+        "System.Collections.Concurrent": "4.0.10",
+        "System.ComponentModel.TypeConverter": "4.0.0",
+        "System.Console": "4.0.0-beta-23409",
+        "System.Diagnostics.Debug": "4.0.10",
+        "System.Dynamic.Runtime": "4.0.10",
+        "System.Globalization": "4.0.10",
+        "System.IO": "4.0.10",
+        "System.Linq": "4.0.0",
+        "System.Linq.Expressions": "4.0.10",
+        "System.Net.NameResolution": "4.0.0-beta-23409",
+        "System.Net.Sockets": "4.0.10-beta-23109",
+        "System.ObjectModel": "4.0.10",
+        "System.Reflection": "4.0.10",
+        "System.Reflection.Extensions": "4.0.0",
+        "System.Runtime": "4.0.20",
+        "System.Runtime.Extensions": "4.0.10",
+        "System.Runtime.Numerics": "4.0.0",
+        "System.Runtime.Serialization.Primitives": "4.0.10",
+        "System.Text.Encoding": "4.0.10",
+        "System.Text.Encoding.Extensions": "4.0.10",
+        "System.Text.RegularExpressions": "4.0.10",
+        "System.Threading": "4.0.10",
+        "System.Threading.Tasks": "4.0.10",
+        "System.Xml.ReaderWriter": "4.0.10",
+        "System.Xml.XDocument": "4.0.10"
       }
-    },
-    "dnxcore50": {}
+    }
   }
 }

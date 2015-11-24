@@ -12,6 +12,7 @@ using System;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace HdrHistogram.Examples
 {
@@ -85,13 +86,14 @@ namespace HdrHistogram.Examples
             }
             finally
             {
-                _socket.Close();
+                _socket.Dispose();
             }
         }
 
         private static AddressFamily GetAddressFamily(string url)
         {
-            var hostIpAddress = Dns.GetHostEntry(url).AddressList[0];
+            var ipHostEntries = Dns.GetHostEntryAsync(url).Result;
+            var hostIpAddress = ipHostEntries.AddressList[0];
             var hostIpEndPoint = new IPEndPoint(hostIpAddress, 80);
             return hostIpEndPoint.AddressFamily;
         }

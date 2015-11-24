@@ -131,18 +131,6 @@ namespace HdrHistogram
         }
 
         /// <summary>
-        /// Construct a new histogram by decoding it from a compressed form in a <see cref="ByteBuffer"/>.
-        /// </summary>
-        /// <param name="buffer">The buffer to encode into</param>
-        /// <param name="minBarForHighestTrackableValue">Force highestTrackableValue to be set at least this high</param>
-        /// <returns>The newly constructed histogram</returns>
-        public static ShortHistogram DecodeFromCompressedByteBuffer(ByteBuffer buffer, long minBarForHighestTrackableValue)
-        {
-            return DecodeFromCompressedByteBuffer< ShortHistogram>(buffer, minBarForHighestTrackableValue);
-        }
-
-
-        /// <summary>
         /// Gets the number of recorded values at a given index.
         /// </summary>
         /// <param name="index">The index to get the count for</param>
