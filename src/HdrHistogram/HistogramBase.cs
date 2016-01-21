@@ -528,9 +528,8 @@ namespace HdrHistogram
         /// Encode this histogram in compressed form into a byte array
         /// </summary>
         /// <param name="targetBuffer">The buffer to encode into</param>
-        /// <param name="compressionLevel">Compression level.</param>
         /// <returns>The number of bytes written to the buffer</returns>
-        public long EncodeIntoCompressedByteBuffer(ByteBuffer targetBuffer, CompressionLevel compressionLevel = CompressionLevel.Optimal)
+        public long EncodeIntoCompressedByteBuffer(ByteBuffer targetBuffer)
         {
             var temp = ByteBuffer.Allocate(GetNeededByteBufferCapacity(CountsArrayLength));
             lock (UpdateLock)
@@ -544,7 +543,8 @@ namespace HdrHistogram
                 int compressedDataLength;
                 using (var outputStream = targetBuffer.GetWriter())
                 {
-                    using (var compressor = new DeflateStream(outputStream, compressionLevel))
+                    //using (var compressor = new DeflateStream(outputStream, compressionLevel))    //Make usable by Mono -LC
+                    using (var compressor = new DeflateStream(outputStream, CompressionMode.Compress))
                     {
                         temp.WriteTo(compressor, 0, uncompressedLength);
                     }
@@ -936,7 +936,7 @@ namespace HdrHistogram
 
             try
             {
-                var constructor = histogramClass.GetConstructor(HistogramClassConstructorArgsTypes);
+                var constructor =  TypeHelper.GetConstructor(histogramClass, HistogramClassConstructorArgsTypes);
                 if (constructor == null)
                     throw new ArgumentException("The target type does not have a supported constructor", nameof(histogramClass));
                 var histogram = (HistogramBase)constructor.Invoke(new object[] { lowestTrackableValue, highestTrackableValue, numberOfSignificantValueDigits });
