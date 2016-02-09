@@ -9,6 +9,7 @@
  */
 
 using System;
+using System.Diagnostics;
 using HdrHistogram.Utilities;
 using LongBuffer = HdrHistogram.Utilities.WrappedBuffer<long>;
 
@@ -84,12 +85,14 @@ namespace HdrHistogram
         /// <summary>
         /// Gets the total number of recorded values.
         /// </summary>
-        public override long TotalCount { get { return _totalCount; } protected set { _totalCount = value; } }
+        public override long TotalCount { get { return _totalCount; } internal set { _totalCount = value; } }
 
         /// <summary>
         /// Returns the word size of this implementation
         /// </summary>
-        protected override int WordSizeInBytes => 8;
+        internal override int WordSizeInBytes => 8;
+
+        protected override long MaxAllowableCount => long.MaxValue;
 
         /// <summary>
         /// Create a copy of this histogram, complete with data and everything.
@@ -125,28 +128,6 @@ namespace HdrHistogram
         }
 
         /// <summary>
-        /// Construct a new histogram by decoding it from a ByteBuffer.
-        /// </summary>
-        /// <param name="buffer">The buffer to decode from</param>
-        /// <param name="minBarForHighestTrackableValue">Force highestTrackableValue to be set at least this high</param>
-        /// <returns>The newly constructed histogram</returns>
-        public static LongHistogram DecodeFromByteBuffer(ByteBuffer buffer, long minBarForHighestTrackableValue)
-        {
-            return DecodeFromByteBuffer<LongHistogram>(buffer, minBarForHighestTrackableValue);
-        }
-
-        /// <summary>
-        /// Construct a new histogram by decoding it from a compressed form in a ByteBuffer.
-        /// </summary>
-        /// <param name="buffer">The buffer to encode into</param>
-        /// <param name="minBarForHighestTrackableValue">Force highestTrackableValue to be set at least this high</param>
-        /// <returns>The newly constructed histogram</returns>
-        public static LongHistogram DecodeFromCompressedByteBuffer(ByteBuffer buffer, long minBarForHighestTrackableValue)
-        {
-            return DecodeFromCompressedByteBuffer<LongHistogram>(buffer, minBarForHighestTrackableValue);
-        }
-
-        /// <summary>
         /// Gets the number of recorded values at a given index.
         /// </summary>
         /// <param name="index">The index to get the count for</param>
@@ -154,6 +135,11 @@ namespace HdrHistogram
         protected override long GetCountAtIndex(int index)
         {
             return _counts[index];
+        }
+
+        protected override void SetCountAtIndex(int index, long value)
+        {
+            _counts[index] = value;
         }
 
         /// <summary>
@@ -173,6 +159,8 @@ namespace HdrHistogram
         /// <param name="addend">The amount to increment by.</param>
         protected override void AddToCountAtIndex(int index, long addend)
         {
+            if(index >= _counts.Length)
+                Debug.WriteLine($"Trying to access index {index} when the _counts array is only {_counts.Length} long.");
             _counts[index] += addend;
             _totalCount += addend;
         }
@@ -186,17 +174,25 @@ namespace HdrHistogram
             _totalCount = 0;
         }
 
-        /// <summary>
-        /// Copies data from the provided buffer into the internal counts array.
-        /// </summary>
-        /// <param name="buffer">The buffer to read from.</param>
-        /// <param name="length">The length of the buffer to read.</param>
-        protected override void FillCountsArrayFromBuffer(ByteBuffer buffer, int length)
+        ///// <summary>
+        ///// Copies data from the provided buffer into the internal counts array.
+        ///// </summary>
+        ///// <param name="buffer">The buffer to read from.</param>
+        ///// <param name="length">The length of the buffer to read.</param>
+        //internal override void FillCountsArrayFromBuffer(ByteBuffer sourceBuffer, int lengthInBytes)
+        //{
+        //    //TODO: Delete legacy code -LC
+        //    //lock (UpdateLock)
+        //    //{
+        //    //    buffer.AsLongBuffer().Get(_counts, 0, length);
+        //    //}
+
+        //    throw new NotImplementedException("Lee needs to re-implement this.");
+        //}
+
+        protected override long ReadWord(ByteBuffer buffer)
         {
-            lock (UpdateLock)
-            {
-                buffer.AsLongBuffer().Get(_counts, 0, length);
-            }
+            return buffer.GetLong();
         }
 
         /// <summary>

@@ -79,12 +79,14 @@ namespace HdrHistogram
         /// <summary>
         /// Gets the total number of recorded values.
         /// </summary>
-        public override long TotalCount { get { return _totalCount; } protected set { _totalCount = value; } }
+        public override long TotalCount { get { return _totalCount; } internal set { _totalCount = value; } }
 
         /// <summary>
         /// Returns the word size of this implementation
         /// </summary>
-        protected override int WordSizeInBytes => 2;
+        internal override int WordSizeInBytes => 2;
+
+        protected override long MaxAllowableCount => short.MaxValue;
 
         /// <summary>
         /// Create a copy of this histogram, complete with data and everything.
@@ -118,30 +120,7 @@ namespace HdrHistogram
             toHistogram.AddWhileCorrectingForCoordinatedOmission(this, expectedIntervalBetweenValueSamples);
             return toHistogram;
         }
-
-        /// <summary>
-        /// Construct a new histogram by decoding it from a <see cref="ByteBuffer"/>.
-        /// </summary>
-        /// <param name="buffer">The buffer to decode from</param>
-        /// <param name="minBarForHighestTrackableValue">Force highestTrackableValue to be set at least this high</param>
-        /// <returns>The newly constructed histogram</returns>
-        public static ShortHistogram DecodeFromByteBuffer(ByteBuffer buffer, long minBarForHighestTrackableValue)
-        {
-            return DecodeFromByteBuffer<ShortHistogram>(buffer, minBarForHighestTrackableValue);
-        }
-
-        /// <summary>
-        /// Construct a new histogram by decoding it from a compressed form in a <see cref="ByteBuffer"/>.
-        /// </summary>
-        /// <param name="buffer">The buffer to encode into</param>
-        /// <param name="minBarForHighestTrackableValue">Force highestTrackableValue to be set at least this high</param>
-        /// <returns>The newly constructed histogram</returns>
-        public static ShortHistogram DecodeFromCompressedByteBuffer(ByteBuffer buffer, long minBarForHighestTrackableValue)
-        {
-            return DecodeFromCompressedByteBuffer< ShortHistogram>(buffer, minBarForHighestTrackableValue);
-        }
-
-
+        
         /// <summary>
         /// Gets the number of recorded values at a given index.
         /// </summary>
@@ -150,6 +129,11 @@ namespace HdrHistogram
         protected override long GetCountAtIndex(int index)
         {
             return _counts[index];
+        }
+
+        protected override void SetCountAtIndex(int index, long value)
+        {
+            _counts[index] = (short) value;
         }
 
         /// <summary>
@@ -182,17 +166,22 @@ namespace HdrHistogram
             _totalCount = 0;
         }
 
-        /// <summary>
-        /// Copies data from the provided buffer into the internal counts array.
-        /// </summary>
-        /// <param name="buffer">The buffer to read from.</param>
-        /// <param name="length">The length of the buffer to read.</param>
-        protected override void FillCountsArrayFromBuffer(ByteBuffer buffer, int length)
+        ///// <summary>
+        ///// Copies data from the provided buffer into the internal counts array.
+        ///// </summary>
+        ///// <param name="buffer">The buffer to read from.</param>
+        ///// <param name="length">The length of the buffer to read.</param>
+        //internal override void FillCountsArrayFromBuffer(ByteBuffer buffer, int length)
+        //{
+        //    lock (UpdateLock)
+        //    {
+        //        buffer.AsShortBuffer().Get(_counts, 0, length);
+        //    }
+        //}
+
+        protected override long ReadWord(ByteBuffer buffer)
         {
-            lock (UpdateLock)
-            {
-                buffer.AsShortBuffer().Get(_counts, 0, length);
-            }
+            return (long) buffer.GetShort();
         }
 
         /// <summary>

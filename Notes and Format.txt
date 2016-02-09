@@ -1,0 +1,100 @@
+Header cookie = 478450451
+-->wordsize == 9
+
+
+at 
+
+var filledLength = histogram.FillCountsFromBuffer(
+                    buffer, 
+                    expectedCapacity,
+                    wordsize);
+The buffer has been read to the end. :(
+
+It appears I have a mixed message now. I need to document the whole process
+
+From LogReader->?->?
+
+HistogramLogReader.ctor
+	histogramLogReader.nextIntervalHistogram
+		ReadsLines from file
+		Loads header info
+		Loads line prefix date
+		Reads line remainer from Base64 into byte array->byte buffer
+		
+EncodableHistogram.decodeFromCompressedByteBuffer(buffer, 0);
+	peeks the cookie value
+	if IsDoubleHisto : DoubleHistogram.decodeFromCompressedByteBuffer ? Histogram.decodeFromCompressedByteBuffer(
+	
+Histogram.decodeFromCompressedByteBuffer
+	decodeFromCompressedByteBuffer(buffer, Histogram.class, minBarForHighestTrackableValue);
+		Calculates HeaderSize from cookie
+		Gets lengthOfCompressedContents
+		Decompresses remaining buffer into headerBuffer
+			final Inflater decompressor = new Inflater();
+			byte[] compressedContents = new byte[lengthOfCompressedContents];
+			buffer.get(compressedContents);
+			decompressor.setInput(compressedContents);
+			final ByteBuffer headerBuffer = ByteBuffer.allocate(headerSize).order(BIG_ENDIAN);
+			decompressor.inflate(headerBuffer.array());
+		
+		
+		T histogram = decodeFromByteBuffer(headerBuffer, histogramClass, minBarForHighestTrackableValue, decompressor);
+		
+	decodeFromByteBuffer(headerBuffer, histogramClass, minBarForHighestTrackableValue, decompressor);
+		read cookie
+		conditionally loads meta data (payloadLengthInBytes, normalizingIndexOffset, numberOfSignificantValueDigits, lowestTrackableUnitValue, highestTrackableValue, integerToDoubleValueConversionRatio) fro either v0 or V1+ formats
+		histogramClass.getConstructor(constructorArgsTypes)
+			.newInstance(lowestTrackableUnitValue, highestTrackableValue, numberOfSignificantValueDigits);
+		histogram.setIntegerToDoubleValueConversionRatio(integerToDoubleValueConversionRatio);
+		histogram.setNormalizingIndexOffset(normalizingIndexOffset);
+		calculate expectedCapacity
+		If !Compressed, 
+			keep reading from the input byteBuffer
+		else
+			//Decompress the remaining data in the decompressor
+			ByteBuffer payLoadSourceBuffer = ByteBuffer.allocate(expectedCapacity).order(BIG_ENDIAN);
+			int decompressedByteCount = decompressor.inflate(payLoadSourceBuffer.array());
+		
+		int filledLength = ((AbstractHistogram) histogram).fillCountsArrayFromSourceBuffer(
+                payLoadSourceBuffer,
+                expectedCapacity,
+                getWordSizeInBytesFromCookie(cookie));
+
+        histogram.establishInternalTackingValues(filledLength);
+		return histogram
+
+===================================================================================================
+V2 Format
+---------------------------------------------------------------------------------------------------		
+#[StartTime|BaseTime|Comment]													--Header and comments
+[ColumnHeaders]																	--Human readable column headers. ignored
+[LogTimeStamp][IntervalLengthSeconds][MaxTime][CompressedPayload]
+
+[StartTime]
+	[StartTime:\d*.\d															--start time represented as seconds since epoch. Stored as double
+	
+[BaseTime]
+	[BaseTime:\d*.\d															--base time represented as seconds since epoch. Stored as double
+	
+[Comment]
+	any text																	--Value is ignored
+	
+[ColumnHeaders]
+	StartTimestamp.*
+	
+[LogTimeStamp]																	double
+	
+[IntervalLengthSeconds]															double
+[MaxTime]																		double. Ignored
+[CompressedPayload]																Base64 encoded.
+	Base64
+		Compressed
+			[cookie][lengthOfCompressedContents][CompressedHeader]
+			
+[CompressedHeader]
+	Compressed
+		[cookie][payloadLengthInBytes][normalizingIndexOffset][numberOfSignificantValueDigits][lowestTrackableUnitValue][highestTrackableValue][integerToDoubleValueConversionRatio][CompressedContents]
+		
+[CompressedContents]
+	ZigZaggedEncoded															-- long encoded in a ZigZag LEB128 format
+		[count]*																-- Read count values (as longs) and assign to current index.

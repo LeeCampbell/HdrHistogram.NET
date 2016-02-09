@@ -29,7 +29,7 @@ namespace HdrHistogram
         public static long GetMaxValue(this HistogramBase histogram)
         {
             var max = histogram.RecordedValues().Select(hiv => hiv.ValueIteratedTo).LastOrDefault();
-            return histogram.LowestEquivalentValue(max);
+            return histogram.HighestEquivalentValue(max);
         }
 
         /// <summary>
