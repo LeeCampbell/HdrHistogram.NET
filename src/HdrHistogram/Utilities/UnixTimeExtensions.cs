@@ -18,16 +18,21 @@ namespace HdrHistogram.Utilities
         {
             return (source.UtcTicks - EpochInTicks) / (double)TimeSpan.TicksPerSecond;
         }
+        public static double SecondsSinceUnixEpoch(this DateTime source)
+        {
+            if(source.Kind==DateTimeKind.Unspecified) throw new ArgumentException("DateTime must have kind specified.");
+            return (source.ToUniversalTime().Ticks - EpochInTicks) / (double)TimeSpan.TicksPerSecond;
+        }
 
         /// <summary>
         /// Returns the date and time specified by the seconds since the Unix Epoch
         /// </summary>
         /// <param name="secondsSinceUnixEpoch">The seconds since epoch</param>
         /// <returns>A DateTime value in UTC kind.</returns>
-        public static DateTime ToDateFromSecondsSinceEpoch(double secondsSinceUnixEpoch)
+        public static DateTime ToDateFromSecondsSinceEpoch(this double secondsSinceUnixEpoch)
         {
-            var ticks = secondsSinceUnixEpoch * TimeSpan.TicksPerSecond;
-            return new DateTime((long)ticks, DateTimeKind.Utc);
+            var ticks = (long)(secondsSinceUnixEpoch * TimeSpan.TicksPerSecond);
+            return new DateTime(EpochInTicks + ticks, DateTimeKind.Utc);
         }
     }
 }

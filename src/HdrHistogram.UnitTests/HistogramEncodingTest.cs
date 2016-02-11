@@ -11,6 +11,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using HdrHistogram.Persistence;
 using HdrHistogram.Utilities;
 using NUnit.Framework;
@@ -158,8 +159,9 @@ namespace HdrHistogram.UnitTests
 
             var readerStream = new MemoryStream(data);
             var reader = new HistogramLogReader(readerStream);
-            var histogram = reader.NextIntervalHistogram();
-            Assert.IsNull(histogram);
+            var histograms = reader.ReadHistograms();
+            //Assert.IsNull(histogram.);
+            CollectionAssert.IsEmpty(histograms.ToList());
             Assert.Equals(startTimeWritten, reader.GetStartTime());
         }
 
@@ -171,10 +173,8 @@ namespace HdrHistogram.UnitTests
             int histogramCount = 0;
             long totalCount = 0;
             HistogramBase encodeableHistogram = null;
-            //LongHistogram accumulatedHistogram = new LongHistogram(TimeSpan.TicksPerHour, 3);
-            //var accumulatedHistogram = new LongHistogram(TimeSpan.TicksPerDay * 99, 3);
             var accumulatedHistogram = new LongHistogram(85899345920838, 3);
-            foreach (var histogram in reader.NextIntervalHistogram())
+            foreach (var histogram in reader.ReadHistograms())
             {
                 histogramCount++;
                 Assert.IsInstanceOf<HistogramBase>(histogram, "Expected integer value histograms in log file");
@@ -187,7 +187,7 @@ namespace HdrHistogram.UnitTests
             Assert.AreEqual(48761, totalCount);
             Assert.AreEqual(1745879039, accumulatedHistogram.GetValueAtPercentile(99.9));
             Assert.AreEqual(1796210687, accumulatedHistogram.GetMaxValue());
-            //Assert.Equals(1441812279.474, reader.StartTimeSec);   //TODO: What is this testing? -LC
+            Assert.AreEqual(1441812279.474, reader.GetStartTime().SecondsSinceUnixEpoch());
         }
         /*
         

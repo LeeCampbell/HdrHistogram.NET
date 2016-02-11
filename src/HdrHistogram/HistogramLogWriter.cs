@@ -47,7 +47,7 @@ namespace HdrHistogram
 
         public void OutputLegend()
         {
-            throw new System.NotImplementedException();
+            _log.WriteLine("\"StartTimestamp\",\"Interval_Length\",\"Interval_Max\",\"Interval_Compressed_Histogram\"");
         }
     }
 
@@ -58,6 +58,7 @@ namespace HdrHistogram
         private static readonly Regex BaseTimeMatcher = new Regex(@"#\[BaseTime: (?<seconds>\d*\.\d{1,3}) ", RegexOptions.Compiled);
         //Content lines - format =  startTimestamp, intervalLength, maxTime, histogramPayload
         private static readonly Regex LogLineMatcher = new Regex(@"(?<startTime>\d*\.\d*),(?<interval>\d*\.\d*),(?<max>\d*\.\d*),(?<payload>.*)", RegexOptions.Compiled);
+        private double _startTimeInSeconds;
 
 
         public HistogramLogReader(Stream inputStream)
@@ -66,9 +67,9 @@ namespace HdrHistogram
 
         }
 
-        public IEnumerable<HistogramBase> NextIntervalHistogram(bool isAbsolute = true)
+        public IEnumerable<HistogramBase> ReadHistograms(bool isAbsolute = true)
         {
-            double startTimeInSeconds = 0;
+            _startTimeInSeconds = 0;
             double baseTimeInSeconds = 0;
             bool hasStartTime = false;
             bool hasBaseTime = false;
@@ -79,7 +80,7 @@ namespace HdrHistogram
                 {
                     if (IsStartTime(line))
                     {
-                        startTimeInSeconds = ParseStartTime(line);
+                        _startTimeInSeconds = ParseStartTime(line);
                         hasStartTime = true;
                     }
                     else if(IsBaseTime(line))
@@ -107,18 +108,18 @@ namespace HdrHistogram
                     if (!hasStartTime)
                     {
                         // No explicit start time noted. Use 1st observed time:
-                        startTimeInSeconds = logTimeStampInSec;
+                        _startTimeInSeconds = logTimeStampInSec;
                         hasStartTime = true;
                     }
                     if (!hasBaseTime)
                     {
                         // No explicit base time noted. Deduce from 1st observed time (compared to start time):
-                        if (logTimeStampInSec < startTimeInSeconds - (365 * 24 * 3600.0))
+                        if (logTimeStampInSec < _startTimeInSeconds - (365 * 24 * 3600.0))
                         //if (UnixTimeExtensions.ToDateFromSecondsSinceEpoch(logTimeStampInSec) < startTime.AddYears(1))
                         {
                             // Criteria Note: if log timestamp is more than a year in the past (compared to
                             // StartTime), we assume that timestamps in the log are not absolute
-                            baseTimeInSeconds = startTimeInSeconds;
+                            baseTimeInSeconds = _startTimeInSeconds;
                         }
                         else {
                             // Timestamps are absolute
@@ -128,7 +129,7 @@ namespace HdrHistogram
                     }
 
                     double absoluteStartTimeStampSec = logTimeStampInSec + baseTimeInSeconds;
-                    double offsetStartTimeStampSec = absoluteStartTimeStampSec - startTimeInSeconds;
+                    double offsetStartTimeStampSec = absoluteStartTimeStampSec - _startTimeInSeconds;
                     double absoluteEndTimeStampSec = absoluteStartTimeStampSec + intervalLength;
                     double startTimeStampToCheckRangeOn = isAbsolute ? absoluteStartTimeStampSec : offsetStartTimeStampSec;
 
@@ -217,9 +218,15 @@ namespace HdrHistogram
             return ParseDouble(match, "seconds");
         }
 
-        public DateTimeOffset GetStartTime()
+        //TODO: It would be good if this could expose a DateTimeOffset, however currently that would be misleading, as that level of fidelity is not captured. -LC
+        public DateTime GetStartTime()
         {
-            throw new System.NotImplementedException();
+            //If StartTime was set (#[StartTime:...) use it, else use the first `logTimestampInSec`
+            //This method is odd, in that it only works if the file has been read. That is a bit shit. -LC
+
+            //TODO: Create an API that allows GetStartTime to be deterministic (not dependant on how far through ReadHistograms you have enumerated.
+
+            return _startTimeInSeconds.ToDateFromSecondsSinceEpoch();
         }
 
         private IEnumerable<string> ReadLines()
