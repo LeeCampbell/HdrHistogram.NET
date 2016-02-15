@@ -24,7 +24,8 @@ namespace HdrHistogram
         /// <param name="outputStream"></param>
         public HistogramLogWriter(Stream outputStream)
         {
-            _log = new StreamWriter(outputStream);
+            //TODO: Validate the Encoding. -LC
+            _log = new StreamWriter(outputStream, Encoding.BigEndianUnicode);
         }
 
         /// <summary>
@@ -33,21 +34,24 @@ namespace HdrHistogram
         public void OutputLogFormatVersion()
         {
             _log.WriteLine($"#[Histogram log format version {HistogramLogFormatVersion}]");
+            _log.Flush();
         }
 
         /// <summary>
         /// Log a start time in the log.
         /// </summary>
         /// <param name="startTimeWritten">Time the log was started.</param>
-        public void OutputStartTime(DateTimeOffset startTimeWritten)
+        public void OutputStartTime(DateTime startTimeWritten)
         {
             var secondsSinceEpoch = startTimeWritten.SecondsSinceUnixEpoch();
             _log.WriteLine($"#[StartTime: {secondsSinceEpoch:F3} (seconds since epoch), {startTimeWritten:o}]");
+            _log.Flush();
         }
 
         public void OutputLegend()
         {
             _log.WriteLine("\"StartTimestamp\",\"Interval_Length\",\"Interval_Max\",\"Interval_Compressed_Histogram\"");
+            _log.Flush();
         }
     }
 

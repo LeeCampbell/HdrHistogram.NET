@@ -143,10 +143,15 @@ namespace HdrHistogram.UnitTests
         }
 
         [Test]
-        public void emptyLog()
+        public void CanReadEmptyLog()
         {
             byte[] data;
-            var startTimeWritten = DateTimeOffset.Now;
+            var startTimeWritten = DateTime.Now;
+            var expectedStartTimeTicks = startTimeWritten.ToUniversalTime()
+                .Ticks
+                .Round(-4);
+            var expectedStartTime = new DateTime(expectedStartTimeTicks, DateTimeKind.Utc);
+
             using (var writerStream = new MemoryStream())
             {
                 var writer = new HistogramLogWriter(writerStream);
@@ -154,15 +159,16 @@ namespace HdrHistogram.UnitTests
                 writer.OutputStartTime(startTimeWritten);
                 writer.OutputLogFormatVersion();
                 writer.OutputLegend();
+                writerStream.Flush();
                 data = writerStream.ToArray();
             }
 
             var readerStream = new MemoryStream(data);
             var reader = new HistogramLogReader(readerStream);
             var histograms = reader.ReadHistograms();
-            //Assert.IsNull(histogram.);
             CollectionAssert.IsEmpty(histograms.ToList());
-            Assert.Equals(startTimeWritten, reader.GetStartTime());
+            var actual = reader.GetStartTime();
+            Assert.AreEqual(expectedStartTime, actual);
         }
 
         [Test]
@@ -190,26 +196,6 @@ namespace HdrHistogram.UnitTests
             Assert.AreEqual(1441812279.474, reader.GetStartTime().SecondsSinceUnixEpoch());
         }
         /*
-        
-         @Test
-    public void emptyLog() throws Exception {
-        File temp = File.createTempFile("hdrhistogramtesting", "hist");
-        FileOutputStream writerStream = new FileOutputStream(temp);
-        HistogramLogWriter writer = new HistogramLogWriter(writerStream);
-        writer.outputLogFormatVersion();
-        long startTimeWritten = 1000;
-        writer.outputStartTime(startTimeWritten);
-        writer.outputLogFormatVersion();
-        writer.outputLegend();
-        writerStream.close();
-
-        FileInputStream readerStream = new FileInputStream(temp);
-        HistogramLogReader reader = new HistogramLogReader(readerStream);
-        EncodableHistogram histogram = reader.nextIntervalHistogram();
-        Assert.assertNull(histogram);
-        Assert.assertEquals(1.0, reader.getStartTimeSec());
-    }
-
     @Test
     public void jHiccupV2Log() throws Exception {
         InputStream readerStream = HistogramLogReaderWriterTest.class.getResourceAsStream("jHiccup-2.0.7S.logV2.hlog");
@@ -293,7 +279,7 @@ namespace HdrHistogram.UnitTests
         public void CanDecodeZigZagEncodedLongArray()
         {
             var buffer = ByteBuffer.Allocate(new byte[] { 24, 18, 18, 10, 16, 22, 28, 22, 8, 10, 16, 26, 18, 18, 12, 66, 74, 92, 46, 78, 150, 2, 172, 1, 218, 2, 44, 16, 163, 1, 2, 119, 2 });
-            var expected = new long[170]; 
+            var expected = new long[170];
             expected[0] = 12;
             expected[1] = 9;
             expected[2] = 9;
@@ -331,7 +317,23 @@ namespace HdrHistogram.UnitTests
 
             CollectionAssert.AreEqual(expected, actual);
         }
-
-        
+    }
+    public static class MathEx
+    {
+        public static long Round(this long value, int digits)
+        {
+            if (digits >= 0)
+            {
+                return (long)Math.Round((decimal)value, digits);
+            }
+            else
+            {
+                digits = Math.Abs(digits);
+                decimal temp = value / (decimal)Math.Pow(10, digits);
+                temp = Math.Round(temp, 0);
+                temp = temp * (decimal)Math.Pow(10, digits);
+                return (long)temp;
+            }
+        }
     }
 }
