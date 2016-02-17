@@ -28,10 +28,22 @@ namespace HdrHistogram
             _log = new StreamWriter(outputStream, Encoding.BigEndianUnicode);
         }
 
+        public void Write(DateTime startTime, params HistogramBase[] histograms)
+        {
+            WriteLogFormatVersion();
+            WriteStartTime(startTime);
+            //WriteLogFormatVersion();
+            WriteLegend();
+            foreach (var histogram in histograms)
+            {
+                //WriteHistogram(histogram);
+            }
+        }
+
         /// <summary>
         /// Output a log format version to the log.
         /// </summary>
-        public void OutputLogFormatVersion()
+        private void WriteLogFormatVersion()
         {
             _log.WriteLine($"#[Histogram log format version {HistogramLogFormatVersion}]");
             _log.Flush();
@@ -41,14 +53,14 @@ namespace HdrHistogram
         /// Log a start time in the log.
         /// </summary>
         /// <param name="startTimeWritten">Time the log was started.</param>
-        public void OutputStartTime(DateTime startTimeWritten)
+        private void WriteStartTime(DateTime startTimeWritten)
         {
             var secondsSinceEpoch = startTimeWritten.SecondsSinceUnixEpoch();
             _log.WriteLine($"#[StartTime: {secondsSinceEpoch:F3} (seconds since epoch), {startTimeWritten:o}]");
             _log.Flush();
         }
 
-        public void OutputLegend()
+        private void WriteLegend()
         {
             _log.WriteLine("\"StartTimestamp\",\"Interval_Length\",\"Interval_Max\",\"Interval_Compressed_Histogram\"");
             _log.Flush();

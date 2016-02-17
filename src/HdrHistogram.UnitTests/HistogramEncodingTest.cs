@@ -18,10 +18,62 @@ using NUnit.Framework;
 
 namespace HdrHistogram.UnitTests
 {
+    public class HistogramEncoderV2
+    {
+        public void Encode(IRecordedData data, ByteBuffer buffer)
+        {
+            //TODO: I need to grok what the bucket sub-bucket relationship is. -LC
+            // ->Calculate the required buffer space required.
+
+            var maxValue = histogram.GetMaxValue();
+            var relevantLength = histogram.GetLengthForNumberOfBuckets(histogram.GetBucketsNeededToCoverValue(maxValue));
+            if (buffer.Capacity() < histogram.GetNeededByteBufferCapacity(relevantLength))
+            {
+                throw new ArgumentOutOfRangeException("buffer does not have capacity for" + histogram.GetNeededByteBufferCapacity(relevantLength) + " bytes");
+            }
+            buffer.PutInt(Histogram.GetEncodingCookie(this));
+            buffer.PutInt(histogram.NumberOfSignificantValueDigits);
+            buffer.PutLong(histogram.LowestTrackableValue);
+            buffer.PutLong(histogram.HighestTrackableValue);
+            buffer.PutLong(histogram.TotalCount); // Needed because overflow situations may lead this to differ from counts totals
+
+            //Write buffer with approriate wordsize writer.
+            histogram.FillBufferFromCountsArray(buffer, relevantLength * histogram.WordSizeInBytes);
+            //-->buffer.BlockCopy(src: values, srcOffset: index, dstOffset: byteBuffer.Position/*????*/, count: length);
+            
+
+            return histogram.GetNeededByteBufferCapacity(relevantLength);
+            //Should this be
+            //  return currentPos - initialPos;  //??
+        }
+
+        internal void Write<T>(ByteBuffer byteBuffer, T[] values, int index, int length)
+        {
+            byteBuffer.BlockCopy(src: values, srcOffset: index, dstOffset: byteBuffer.Position/*????*/, count: length);
+        }
+    }
+
+    public interface IRecordedData
+    {
+        int Cookie { get; }
+        int BucketCount { get; }
+        int SubBucketCount { get; }
+        int UnitMeasurement { get; }
+
+        int NormalizingIndexOffset { get; } //Required? What is it?
+        int NumberOfSignificantValueDigits { get; }
+        long LowestTrackableUnitValue { get; }  //Is the Unit word meaningful here, or can it be removed for symmetry
+        long HighestTrackableValue { get; }
+        double IntegerToDoubleValueConversionRatio { get; }
+        long[] Counts { get; }
+    }
+
+
     public class HistogramEncodingTest
     {
         private const long HighestTrackableValue = 3600L * 1000 * 1000; // e.g. for 1 hr in usec units
 
+        //TODO: Break apart into BDD style tests. Shared set up, One assert per test. -LC
         [Test]
         public void TestHistogramEncoding()
         {
@@ -41,6 +93,7 @@ namespace HdrHistogram.UnitTests
             Console.WriteLine("\n\nTesting encoding of a ShortHistogram:");
             var targetBuffer = ByteBuffer.Allocate(shortHistogram.GetNeededByteBufferCapacity());
             shortHistogram.EncodeIntoByteBuffer(targetBuffer);
+            //HistogramLogWriter writer = new HistogramLogWriter();
             //Console.WriteLine("After ENCODING TargetBuffer length = {0} (position {1}), shortHistogram size = {2}",
             //                targetBuffer.capacity(), targetBuffer.position(), shortHistogram.getTotalCount());
             targetBuffer.Position = 0;
@@ -147,28 +200,25 @@ namespace HdrHistogram.UnitTests
         {
             byte[] data;
             var startTimeWritten = DateTime.Now;
-            var expectedStartTimeTicks = startTimeWritten.ToUniversalTime()
-                .Ticks
-                .Round(-4);
-            var expectedStartTime = new DateTime(expectedStartTimeTicks, DateTimeKind.Utc);
+            var expectedStartTime = startTimeWritten.SecondsSinceUnixEpoch()
+                .Round(3)
+                .ToDateFromSecondsSinceEpoch();
 
             using (var writerStream = new MemoryStream())
             {
                 var writer = new HistogramLogWriter(writerStream);
-                writer.OutputLogFormatVersion();
-                writer.OutputStartTime(startTimeWritten);
-                writer.OutputLogFormatVersion();
-                writer.OutputLegend();
-                writerStream.Flush();
+                writer.Write(startTimeWritten);
                 data = writerStream.ToArray();
             }
 
-            var readerStream = new MemoryStream(data);
-            var reader = new HistogramLogReader(readerStream);
-            var histograms = reader.ReadHistograms();
-            CollectionAssert.IsEmpty(histograms.ToList());
-            var actual = reader.GetStartTime();
-            Assert.AreEqual(expectedStartTime, actual);
+            using (var readerStream = new MemoryStream(data))
+            {
+                var reader = new HistogramLogReader(readerStream);
+                var histograms = reader.ReadHistograms();
+                CollectionAssert.IsEmpty(histograms.ToList());
+                var actual = reader.GetStartTime();
+                Assert.AreEqual(expectedStartTime, actual);
+            }
         }
 
         [Test]
@@ -320,19 +370,19 @@ namespace HdrHistogram.UnitTests
     }
     public static class MathEx
     {
-        public static long Round(this long value, int digits)
+        public static double Round(this double value, int digits)
         {
             if (digits >= 0)
             {
-                return (long)Math.Round((decimal)value, digits);
+                return Math.Round(value, digits);
             }
             else
             {
                 digits = Math.Abs(digits);
-                decimal temp = value / (decimal)Math.Pow(10, digits);
+                var temp = value / Math.Pow(10, digits);
                 temp = Math.Round(temp, 0);
-                temp = temp * (decimal)Math.Pow(10, digits);
-                return (long)temp;
+                temp = temp * Math.Pow(10, digits);
+                return temp;
             }
         }
     }

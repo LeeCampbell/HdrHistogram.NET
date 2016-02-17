@@ -488,6 +488,8 @@ namespace HdrHistogram
             return GetNeededByteBufferCapacity(CountsArrayLength);
         }
 
+        //TODO Push Encoding and Decoding out into version specific types
+
         /// <summary>
         /// Encode this histogram into a <see cref="ByteBuffer"/>
         /// </summary>
