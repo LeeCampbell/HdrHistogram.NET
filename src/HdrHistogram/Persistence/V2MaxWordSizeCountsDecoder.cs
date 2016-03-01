@@ -8,11 +8,11 @@ namespace HdrHistogram.Persistence
         // LEB128-64b9B + ZigZag require up to 9 bytes per word
         public int WordSize => 9;
 
-        public int ReadCounts(ByteBuffer sourceBuffer, int lengthInBytes, Action<int, long> setCount)
+        public int ReadCounts(ByteBuffer sourceBuffer, int lengthInBytes, int maxIndex, Action<int, long> setCount)
         {
             var idx = 0;
             int endPosition = sourceBuffer.Position + lengthInBytes;
-            while (sourceBuffer.Position < endPosition)
+            while (sourceBuffer.Position < endPosition && idx < maxIndex)
             {
                 var item = ZigZagEncoding.GetLong(sourceBuffer);
                 if (item < 0)

@@ -25,7 +25,7 @@ namespace HdrHistogram
         public HistogramLogWriter(Stream outputStream)
         {
             //TODO: Validate the Encoding. -LC
-            _log = new StreamWriter(outputStream, Encoding.BigEndianUnicode);
+            _log = new StreamWriter(outputStream, System.Text.Encoding.BigEndianUnicode);
         }
 
         public void Write(DateTime startTime, params HistogramBase[] histograms)
@@ -183,7 +183,7 @@ namespace HdrHistogram
             //}
             //else
             //{
-                return Histogram.DecodeFromCompressedByteBuffer(buffer, minBarForHighestTrackableValue);
+                return Histogram.DecodeFromCompressedByteBuffer<LongHistogram>(buffer, minBarForHighestTrackableValue);
             //}
         }
 

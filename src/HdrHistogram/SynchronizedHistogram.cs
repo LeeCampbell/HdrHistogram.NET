@@ -149,7 +149,7 @@ namespace HdrHistogram
             toHistogram.AddWhileCorrectingForCoordinatedOmission(this, expectedIntervalBetweenValueSamples);
             return toHistogram;
         }
-        
+
 
 
         /// <summary>
@@ -210,6 +210,14 @@ namespace HdrHistogram
             {
                 Array.Clear(_counts, 0, _counts.Length);
                 TotalCount = 0;
+            }
+        }
+
+        protected override void CopyCountsInto(long[] target)
+        {
+            lock (UpdateLock)
+            {
+                Array.Copy(_counts, target, target.Length);
             }
         }
 

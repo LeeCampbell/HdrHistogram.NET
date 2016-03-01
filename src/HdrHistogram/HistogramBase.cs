@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Threading;
+using HdrHistogram.Encoding;
 using HdrHistogram.Iteration;
 using HdrHistogram.Utilities;
 
@@ -525,41 +526,41 @@ namespace HdrHistogram
             }
         }
 
-        /// <summary>
-        /// Encode this histogram in compressed form into a byte array
-        /// </summary>
-        /// <param name="targetBuffer">The buffer to encode into</param>
-        /// <returns>The number of bytes written to the buffer</returns>
-        public long EncodeIntoCompressedByteBuffer(ByteBuffer targetBuffer)
-        {
-            var temp = ByteBuffer.Allocate(GetNeededByteBufferCapacity(CountsArrayLength));
-            lock (UpdateLock)
-            {
-                var uncompressedLength = EncodeIntoByteBuffer(temp);
+        ///// <summary>
+        ///// Encode this histogram in compressed form into a byte array
+        ///// </summary>
+        ///// <param name="targetBuffer">The buffer to encode into</param>
+        ///// <returns>The number of bytes written to the buffer</returns>
+        //public long EncodeIntoCompressedByteBuffer(ByteBuffer targetBuffer)
+        //{
+        //    var temp = ByteBuffer.Allocate(GetNeededByteBufferCapacity(CountsArrayLength));
+        //    lock (UpdateLock)
+        //    {
+        //        var uncompressedLength = EncodeIntoByteBuffer(temp);
 
-                targetBuffer.PutInt(Histogram.GetCompressedEncodingCookie(this));
-                var contentLengthIdx = targetBuffer.Position;
-                targetBuffer.PutInt(0); // Placeholder for compressed contents length *
-                var headerSize = targetBuffer.Position;
-                int compressedDataLength;
-                using (var outputStream = targetBuffer.GetWriter())
-                {
-                    //using (var compressor = new DeflateStream(outputStream, compressionLevel))    //Make usable by Mono -LC
-                    using (var compressor = new DeflateStream(outputStream, CompressionMode.Compress))
-                    {
-                        temp.WriteTo(compressor, 0, uncompressedLength);
-                    }
-                    compressedDataLength = outputStream.BytesWritten;
-                }
+        //        targetBuffer.PutInt(Histogram.GetCompressedEncodingCookie(this));
+        //        var contentLengthIdx = targetBuffer.Position;
+        //        targetBuffer.PutInt(0); // Placeholder for compressed contents length *
+        //        var headerSize = targetBuffer.Position;
+        //        int compressedDataLength;
+        //        using (var outputStream = targetBuffer.GetWriter())
+        //        {
+        //            //using (var compressor = new DeflateStream(outputStream, compressionLevel))    //Make usable by Mono -LC
+        //            using (var compressor = new DeflateStream(outputStream, CompressionMode.Compress))
+        //            {
+        //                temp.WriteTo(compressor, 0, uncompressedLength);
+        //            }
+        //            compressedDataLength = outputStream.BytesWritten;
+        //        }
 
-                // *Go back and write the now known compressed data length
-                targetBuffer.PutInt(contentLengthIdx, compressedDataLength); // Record the compressed length
+        //        // *Go back and write the now known compressed data length
+        //        targetBuffer.PutInt(contentLengthIdx, compressedDataLength); // Record the compressed length
 
-                Debug.WriteLine($"COMPRESSING - Wrote {compressedDataLength + headerSize} bytes (header = {headerSize}), original size {uncompressedLength}");
+        //        Debug.WriteLine($"COMPRESSING - Wrote {compressedDataLength + headerSize} bytes (header = {headerSize}), original size {uncompressedLength}");
 
-                return compressedDataLength + headerSize;
-            }
-        }
+        //        return compressedDataLength + headerSize;
+        //    }
+        //}
 
         /// <summary>
         /// Determine if this histogram had any of it's value counts overflow.
@@ -738,7 +739,10 @@ namespace HdrHistogram
 
             var countsDecoder = Persistence.CountsDecoder.GetDecoderForWordSize(wordSizeInBytes);
 
-            return countsDecoder.ReadCounts(buffer, length, (idx, count) =>
+            return countsDecoder.ReadCounts(buffer, 
+                length, 
+                CountsArrayLength,
+                (idx, count) =>
                                                      {
                                                          if (count > MaxAllowableCount)
                                                          {
@@ -750,7 +754,6 @@ namespace HdrHistogram
 
         internal void EstablishInternalTackingValues(int lengthToCover)
         {
-
             ResetMaxValue(0);
             ResetMinNonZeroValue(long.MaxValue);
             int maxIndex = -1;
@@ -822,6 +825,10 @@ namespace HdrHistogram
         /// Clears the counts of this implementation.
         /// </summary>
         protected abstract void ClearCounts();
+
+
+
+        protected abstract void CopyCountsInto(long[] target);
 
         /**
      * Set internally tracked _maxValue to new value if new value is greater than current one.
@@ -907,7 +914,7 @@ namespace HdrHistogram
             return lengthNeeded;
         }
 
-        private int CountsArrayIndex(int bucketIndex, int subBucketIndex)
+        protected int CountsArrayIndex(int bucketIndex, int subBucketIndex)
         {
             Debug.Assert(subBucketIndex < SubBucketCount);
             Debug.Assert(bucketIndex == 0 || (subBucketIndex >= SubBucketHalfCount));
@@ -921,7 +928,7 @@ namespace HdrHistogram
         }
 
         //Optimization. This simple method should be in-lined by the JIT compiler, allowing hot path `GetBucketIndex(long, long, int)` to become static. -LC
-        private int GetBucketIndex(long value)
+        protected int GetBucketIndex(long value)
         {
             return GetBucketIndex(value, _subBucketMask, _bucketIndexOffset);
         }
@@ -931,7 +938,7 @@ namespace HdrHistogram
             return bucketIndexOffset - leadingZeros;
         }
 
-        private int GetSubBucketIndex(long value, int bucketIndex)
+        protected int GetSubBucketIndex(long value, int bucketIndex)
         {
             return (int)(value >> (bucketIndex + _unitMagnitude));
         }
@@ -967,6 +974,39 @@ namespace HdrHistogram
             if (x >> 30 == 0) { n += 2; x <<= 2; }
             n -= (int)(x >> 31);
             return n;
+        }
+
+
+        public int Encode(ByteBuffer targetBuffer, IEncoder encoder)
+        {
+            var data = GetData();
+            return encoder.Encode(data, targetBuffer);
+        }
+
+        private IRecordedData GetData()
+        {
+            var relevantCounts = GetRelevantCounts();
+            return new RecordedData(
+                this.GetEncodingCookie(),
+                0,
+                this.NumberOfSignificantValueDigits,
+                this.LowestTrackableValue,
+                this.HighestTrackableValue,
+                1.0,
+                relevantCounts
+                );
+        }
+
+        private long[] GetRelevantCounts()
+        {
+            var max = this.GetMaxValue();
+            var bucketIdx = this.GetBucketIndex(max);
+            var subBucketIdx = this.GetSubBucketIndex(max, bucketIdx);
+            var maxIdx = this.CountsArrayIndex(bucketIdx, subBucketIdx);
+            var length = maxIdx + 1;
+            var relevantCounts = new long[length];
+            CopyCountsInto(relevantCounts);
+            return relevantCounts;
         }
 
 

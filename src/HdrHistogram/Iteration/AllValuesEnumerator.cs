@@ -16,7 +16,7 @@ namespace HdrHistogram.Iteration
     /// <summary>
     /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="AllValuesEnumerator"/>
     /// </summary>
-    sealed class AllValueEnumerable : IEnumerable<HistogramIterationValue>
+    internal sealed class AllValueEnumerable : IEnumerable<HistogramIterationValue>
     {
         private readonly HistogramBase _histogram;
 
@@ -40,7 +40,7 @@ namespace HdrHistogram.Iteration
     /// representation.The iteration steps through all possible unit value levels, regardless of whether or not
     /// there were recorded values for that value level, and terminates when all recorded histogram values are exhausted.
     /// </summary>
-    sealed class AllValuesEnumerator : AbstractHistogramEnumerator
+    internal sealed class AllValuesEnumerator : AbstractHistogramEnumerator
     {
         private int _visitedSubBucketIndex;
         private int _visitedBucketIndex;

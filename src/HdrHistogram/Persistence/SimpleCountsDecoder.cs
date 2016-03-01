@@ -7,7 +7,7 @@ namespace HdrHistogram.Persistence
     {
         public abstract int WordSize { get; }
 
-        public int ReadCounts(ByteBuffer sourceBuffer, int lengthInBytes, Action<int, long> setCount)
+        public int ReadCounts(ByteBuffer sourceBuffer, int lengthInBytes, int maxIndex, Action<int, long> setCount)
         {
             var idx = 0;
             int endPosition = sourceBuffer.Position + lengthInBytes;

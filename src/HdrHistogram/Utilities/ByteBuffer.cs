@@ -9,7 +9,6 @@
  */
 
 using System;
-using System.Diagnostics;
 using System.Net;
 
 namespace HdrHistogram.Utilities
@@ -76,6 +75,7 @@ namespace HdrHistogram.Utilities
         {
             return source.Read(_internalBuffer, Position, length);
         }
+
         public void WriteTo(System.IO.Stream target, int offset, int length)
         {
             target.Write(_internalBuffer, offset, length);
@@ -90,7 +90,7 @@ namespace HdrHistogram.Utilities
         public short GetShort()
         {
             var shortValue = IPAddress.HostToNetworkOrder(BitConverter.ToInt16(_internalBuffer, Position));
-            Position += (sizeof (short));
+            Position += (sizeof(short));
             return shortValue;
         }
 
@@ -123,27 +123,30 @@ namespace HdrHistogram.Utilities
             Position += sizeof(double);
             return doubleValue;
         }
+
         /// <summary>
-		/// Converts the specified 64-bit signed integer to a double-precision 
-		/// floating point number. Note: the endianness of this converter does not
-		/// affect the returned value.
-		/// </summary>
-		/// <param name="value">The number to convert. </param>
-		/// <returns>A double-precision floating point number whose value is equivalent to value.</returns>
-		public double Int64BitsToDouble(long value)
+        /// Converts the specified 64-bit signed integer to a double-precision 
+        /// floating point number. Note: the endianness of this converter does not
+        /// affect the returned value.
+        /// </summary>
+        /// <param name="value">The number to convert. </param>
+        /// <returns>A double-precision floating point number whose value is equivalent to value.</returns>
+        private static double Int64BitsToDouble(long value)
         {
             return BitConverter.Int64BitsToDouble(value);
         }
+
         /// <summary>
-		/// Returns a 64-bit signed integer converted from eight bytes at a specified position in a byte array.
-		/// </summary>
-		/// <param name="value">An array of bytes.</param>
-		/// <param name="startIndex">The starting position within value.</param>
-		/// <returns>A 64-bit signed integer formed by eight bytes beginning at startIndex.</returns>
-		public long ToInt64(byte[] value, int startIndex)
+        /// Returns a 64-bit signed integer converted from eight bytes at a specified position in a byte array.
+        /// </summary>
+        /// <param name="value">An array of bytes.</param>
+        /// <param name="startIndex">The starting position within value.</param>
+        /// <returns>A 64-bit signed integer formed by eight bytes beginning at startIndex.</returns>
+        private static long ToInt64(byte[] value, int startIndex)
         {
             return CheckedFromBytes(value, startIndex, 8);
         }
+
         /// <summary>
         /// Checks the arguments for validity before calling FromBytes
         /// (which can therefore assume the arguments are valid).
@@ -152,22 +155,23 @@ namespace HdrHistogram.Utilities
         /// <param name="startIndex">The index of the first byte to convert</param>
         /// <param name="bytesToConvert">The number of bytes to convert</param>
         /// <returns></returns>
-		long CheckedFromBytes(byte[] value, int startIndex, int bytesToConvert)
+        private static long CheckedFromBytes(byte[] value, int startIndex, int bytesToConvert)
         {
             CheckByteArgument(value, startIndex, bytesToConvert);
             return FromBytes(value, startIndex, bytesToConvert);
         }
+
         /// <summary>
-		/// Checks the given argument for validity.
-		/// </summary>
-		/// <param name="value">The byte array passed in</param>
-		/// <param name="startIndex">The start index passed in</param>
-		/// <param name="bytesRequired">The number of bytes required</param>
-		/// <exception cref="ArgumentNullException">value is a null reference</exception>
-		/// <exception cref="ArgumentOutOfRangeException">
-		/// startIndex is less than zero or greater than the length of value minus bytesRequired.
-		/// </exception>
-		static void CheckByteArgument(byte[] value, int startIndex, int bytesRequired)
+        /// Checks the given argument for validity.
+        /// </summary>
+        /// <param name="value">The byte array passed in</param>
+        /// <param name="startIndex">The start index passed in</param>
+        /// <param name="bytesRequired">The number of bytes required</param>
+        /// <exception cref="ArgumentNullException">value is a null reference</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// startIndex is less than zero or greater than the length of value minus bytesRequired.
+        /// </exception>
+        private static void CheckByteArgument(byte[] value, int startIndex, int bytesRequired)
         {
             if (value == null)
             {
@@ -178,15 +182,16 @@ namespace HdrHistogram.Utilities
                 throw new ArgumentOutOfRangeException("startIndex");
             }
         }
+
         /// <summary>
-		/// Returns a value built from the specified number of bytes from the given buffer,
-		/// starting at index.
-		/// </summary>
-		/// <param name="buffer">The data in byte array format</param>
-		/// <param name="startIndex">The first index to use</param>
-		/// <param name="bytesToConvert">The number of bytes to use</param>
-		/// <returns>The value built from the given bytes</returns>
-		static long FromBytes(byte[] buffer, int startIndex, int bytesToConvert)
+        /// Returns a value built from the specified number of bytes from the given buffer,
+        /// starting at index.
+        /// </summary>
+        /// <param name="buffer">The data in byte array format</param>
+        /// <param name="startIndex">The first index to use</param>
+        /// <param name="bytesToConvert">The number of bytes to use</param>
+        /// <returns>The value built from the given bytes</returns>
+        private static long FromBytes(byte[] buffer, int startIndex, int bytesToConvert)
         {
             long ret = 0;
             for (int i = 0; i < bytesToConvert; i++)
@@ -218,11 +223,14 @@ namespace HdrHistogram.Utilities
         /// </summary>
         /// <param name="index">The position to set the value at.</param>
         /// <param name="value">The value to set.</param>
-        internal void PutInt(int index, int value)
+        /// <remarks>
+        /// This can be useful for writing a value into an earlier placeholder e.g. a header property for storing the body length.
+        /// </remarks>
+        public void PutInt(int index, int value)
         {
             var intAsBytes = BitConverter.GetBytes(IPAddress.NetworkToHostOrder(value));
             Array.Copy(intAsBytes, 0, _internalBuffer, index, intAsBytes.Length);
-            // We don't increment the Position here, to match the Java behavior
+            // We don't increment the Position as this is an explicit write.
         }
 
         /// <summary>
@@ -235,6 +243,16 @@ namespace HdrHistogram.Utilities
             Array.Copy(longAsBytes, 0, _internalBuffer, Position, longAsBytes.Length);
             Position += longAsBytes.Length;
         }
+
+        public void PutDouble(double value)
+        {
+            //PutDouble(ix(CheckIndex(i, (1 << 3))), x);
+            var doubleAsBytes = BitConverter.GetBytes(value);
+            Array.Reverse(doubleAsBytes);
+            Array.Copy(doubleAsBytes, 0, _internalBuffer, Position, doubleAsBytes.Length);
+            Position += doubleAsBytes.Length;
+        }
+
 
         /// <summary>
         /// Gets a copy of the internal byte array.

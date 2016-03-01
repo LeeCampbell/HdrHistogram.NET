@@ -173,6 +173,11 @@ namespace HdrHistogram
             Array.Clear(_counts, 0, _counts.Length);
             _totalCount = 0;
         }
+        
+        protected override void CopyCountsInto(long[] target)
+        {
+            Array.Copy(_counts, target, target.Length);
+        }
 
         ///// <summary>
         ///// Copies data from the provided buffer into the internal counts array.

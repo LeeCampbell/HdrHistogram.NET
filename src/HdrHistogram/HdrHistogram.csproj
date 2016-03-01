@@ -44,6 +44,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Encoding\IRecordedData.cs" />
+    <Compile Include="Encoding\HistogramEncoderV2.cs" />
     <Compile Include="Histogram.cs" />
     <Compile Include="HistogramBase.cs" />
     <Compile Include="HistogramExtensions.cs" />
@@ -58,6 +60,7 @@
     <Compile Include="Persistence\ICountsDecoder.cs" />
     <Compile Include="Properties\AssemblyInfo.g.cs" />
     <Compile Include="Utilities\ArrayExtensions.cs" />
+    <Compile Include="Utilities\ByteBufferExtensions.cs" />
     <Compile Include="Utilities\CountingMemoryStream.cs" />
     <Compile Include="IntHistogram.cs" />
     <Compile Include="Iteration\AbstractHistogramEnumerator.cs" />

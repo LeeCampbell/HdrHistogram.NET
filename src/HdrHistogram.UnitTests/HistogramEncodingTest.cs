@@ -8,382 +8,139 @@
  * https://github.com/HdrHistogram/HdrHistogram
  */
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using HdrHistogram.Persistence;
+using HdrHistogram.Encoding;
 using HdrHistogram.Utilities;
 using NUnit.Framework;
 
 namespace HdrHistogram.UnitTests
 {
-    public class HistogramEncoderV2
+    public abstract class HistogramEncodingTestBase<T> where T : HistogramBase
     {
-        public void Encode(IRecordedData data, ByteBuffer buffer)
-        {
-            //TODO: I need to grok what the bucket sub-bucket relationship is. -LC
-            // ->Calculate the required buffer space required.
-
-            var maxValue = histogram.GetMaxValue();
-            var relevantLength = histogram.GetLengthForNumberOfBuckets(histogram.GetBucketsNeededToCoverValue(maxValue));
-            if (buffer.Capacity() < histogram.GetNeededByteBufferCapacity(relevantLength))
-            {
-                throw new ArgumentOutOfRangeException("buffer does not have capacity for" + histogram.GetNeededByteBufferCapacity(relevantLength) + " bytes");
-            }
-            buffer.PutInt(Histogram.GetEncodingCookie(this));
-            buffer.PutInt(histogram.NumberOfSignificantValueDigits);
-            buffer.PutLong(histogram.LowestTrackableValue);
-            buffer.PutLong(histogram.HighestTrackableValue);
-            buffer.PutLong(histogram.TotalCount); // Needed because overflow situations may lead this to differ from counts totals
-
-            //Write buffer with approriate wordsize writer.
-            histogram.FillBufferFromCountsArray(buffer, relevantLength * histogram.WordSizeInBytes);
-            //-->buffer.BlockCopy(src: values, srcOffset: index, dstOffset: byteBuffer.Position/*????*/, count: length);
-            
-
-            return histogram.GetNeededByteBufferCapacity(relevantLength);
-            //Should this be
-            //  return currentPos - initialPos;  //??
-        }
-
-        internal void Write<T>(ByteBuffer byteBuffer, T[] values, int index, int length)
-        {
-            byteBuffer.BlockCopy(src: values, srcOffset: index, dstOffset: byteBuffer.Position/*????*/, count: length);
-        }
-    }
-
-    public interface IRecordedData
-    {
-        int Cookie { get; }
-        int BucketCount { get; }
-        int SubBucketCount { get; }
-        int UnitMeasurement { get; }
-
-        int NormalizingIndexOffset { get; } //Required? What is it?
-        int NumberOfSignificantValueDigits { get; }
-        long LowestTrackableUnitValue { get; }  //Is the Unit word meaningful here, or can it be removed for symmetry
-        long HighestTrackableValue { get; }
-        double IntegerToDoubleValueConversionRatio { get; }
-        long[] Counts { get; }
-    }
-
-
-    public class HistogramEncodingTest
-    {
+        private static readonly HistogramEncoderV2 EncoderV2 = new Encoding.HistogramEncoderV2();
         private const long HighestTrackableValue = 3600L * 1000 * 1000; // e.g. for 1 hr in usec units
 
-        //TODO: Break apart into BDD style tests. Shared set up, One assert per test. -LC
+        protected abstract T Create(long highestTrackableValue, int numberOfSignificantDigits);
+
         [Test]
-        public void TestHistogramEncoding()
+        public void Given_a_populated_Histogram_When_encoded_and_decoded_Then_data_is_preserved()
         {
-            var shortHistogram = new ShortHistogram(HighestTrackableValue, 3);
-            var intHistogram = new IntHistogram(HighestTrackableValue, 3);
-            var longHistogram = new LongHistogram(HighestTrackableValue, 3);
-            var synchronizedHistogram = new SynchronizedHistogram(HighestTrackableValue, 3);
-
-            for (var i = 0; i < 10000; i++)
-            {
-                shortHistogram.RecordValueWithExpectedInterval(1000 /* 1 msec */, 10000 /* 10 msec expected interval */);
-                intHistogram.RecordValueWithExpectedInterval(2000 /* 1 msec */, 10000 /* 10 msec expected interval */);
-                longHistogram.RecordValueWithExpectedInterval(3000 /* 1 msec */, 10000 /* 10 msec expected interval */);
-                synchronizedHistogram.RecordValueWithExpectedInterval(5000 /* 1 msec */, 10000 /* 10 msec expected interval */);
-            }
-
-            Console.WriteLine("\n\nTesting encoding of a ShortHistogram:");
-            var targetBuffer = ByteBuffer.Allocate(shortHistogram.GetNeededByteBufferCapacity());
-            shortHistogram.EncodeIntoByteBuffer(targetBuffer);
-            //HistogramLogWriter writer = new HistogramLogWriter();
-            //Console.WriteLine("After ENCODING TargetBuffer length = {0} (position {1}), shortHistogram size = {2}",
-            //                targetBuffer.capacity(), targetBuffer.position(), shortHistogram.getTotalCount());
-            targetBuffer.Position = 0;
-
-            var shortHistogram2 = Histogram.DecodeFromByteBuffer(targetBuffer, 0);
-            Assert.AreEqual(shortHistogram, shortHistogram2);
-
-            var targetCompressedBuffer = ByteBuffer.Allocate(shortHistogram.GetNeededByteBufferCapacity());
-            shortHistogram.EncodeIntoCompressedByteBuffer(targetCompressedBuffer);
-            targetCompressedBuffer.Position = 0;
-
-            var shortHistogram3 = Histogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
-            Assert.AreEqual(shortHistogram, shortHistogram3);
-
-            Console.WriteLine("\n\nTesting encoding of a IntHistogram:");
-            targetBuffer = ByteBuffer.Allocate(intHistogram.GetNeededByteBufferCapacity());
-            intHistogram.EncodeIntoByteBuffer(targetBuffer);
-            //Console.WriteLine("After ENCODING TargetBuffer length = {0} (position = {1}), intHistogram size = {2}", 
-            //                targetBuffer.capacity(), targetBuffer.position(), intHistogram.getTotalCount());
-            targetBuffer.Position = 0;
-
-            var intHistogram2 = Histogram.DecodeFromByteBuffer(targetBuffer, 0);
-            Assert.AreEqual(intHistogram, intHistogram2);
-
-            targetCompressedBuffer = ByteBuffer.Allocate(intHistogram.GetNeededByteBufferCapacity());
-            intHistogram.EncodeIntoCompressedByteBuffer(targetCompressedBuffer);
-            targetCompressedBuffer.Position = 0;
-
-            var intHistogram3 = Histogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
-            Assert.AreEqual(intHistogram, intHistogram3);
-
-            Console.WriteLine("\n\nTesting encoding of a Histogram (long):");
-            targetBuffer = ByteBuffer.Allocate(longHistogram.GetNeededByteBufferCapacity());
-            longHistogram.EncodeIntoByteBuffer(targetBuffer);
-            //Console.WriteLine("After ENCODING TargetBuffer length = {0} (position = {1}), histogram size = {2}",
-            //                targetBuffer.capacity(), targetBuffer.position(), histogram.getTotalCount());
-            targetBuffer.Position = 0;
-
-            var histogram2 = Histogram.DecodeFromByteBuffer(targetBuffer, 0);
-            Assert.AreEqual(longHistogram, histogram2);
-
-            targetCompressedBuffer = ByteBuffer.Allocate(longHistogram.GetNeededByteBufferCapacity());
-            longHistogram.EncodeIntoCompressedByteBuffer(targetCompressedBuffer);
-            targetCompressedBuffer.Position = 0;
-
-            var histogram3 = Histogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
-            Assert.AreEqual(longHistogram, histogram3);
-
-            targetBuffer.Position = 0;
-
-
-            targetCompressedBuffer.Position = 0;
-
-            Console.WriteLine("\n\nTesting encoding of a SynchronizedHistogram:");
-            targetBuffer = ByteBuffer.Allocate(synchronizedHistogram.GetNeededByteBufferCapacity());
-            synchronizedHistogram.EncodeIntoByteBuffer(targetBuffer);
-            //Console.WriteLine("After ENCODING TargetBuffer length = {0} (position {1}), synchronizedHistogram size = {2}",
-            //                targetBuffer.capacity(), targetBuffer.position(), synchronizedHistogram.getTotalCount());
-            targetBuffer.Position = 0;
-
-            var synchronizedHistogram2 = Histogram.DecodeFromByteBuffer(targetBuffer, 0);
-            Assert.AreEqual(synchronizedHistogram, synchronizedHistogram2);
-
-            targetCompressedBuffer = ByteBuffer.Allocate(synchronizedHistogram.GetNeededByteBufferCapacity());
-            synchronizedHistogram.EncodeIntoCompressedByteBuffer(targetCompressedBuffer);
-            targetCompressedBuffer.Position = 0;
-
-            var synchronizedHistogram3 = Histogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
-            Assert.AreEqual(synchronizedHistogram, synchronizedHistogram3);
+            var source = Create(HighestTrackableValue, 3);
+            Load(source);
+            var result = EncodeDecode(source);
+            AssertAreEqual(source, result);
         }
 
         [Test]
-        public void TestHistogramEncodingFullRangeOfValues()
+        public void Given_a_populated_Histogram_When_encoded_and_decoded_with_compression_Then_data_is_preserved()
         {
-            var longHistogram = new LongHistogram(HighestTrackableValue, 3);
+            var source = Create(HighestTrackableValue, 3);
+            Load(source);
+            var result = CompressedEncodeDecode(source);
+            AssertAreEqual(source, result);
+        }
 
-            for (long i = 0; i < HighestTrackableValue; i += 100)
-            {
-                longHistogram.RecordValue(i);
-            }
-            longHistogram.RecordValue(HighestTrackableValue);
+        [Test]
+        public void Given_a_Histogram_populated_with_full_range_of_values_When_encoded_and_decoded_Then_data_is_preserved()
+        {
+            var source = Create(HighestTrackableValue, 3);
+            LoadFullRange(source);
+            var result = EncodeDecode(source);
+            AssertAreEqual(source, result);
+        }
 
-            Console.WriteLine("\n\nTesting encoding of a Histogram (long):");
-            var targetBuffer = ByteBuffer.Allocate(longHistogram.GetNeededByteBufferCapacity());
-            longHistogram.EncodeIntoByteBuffer(targetBuffer);
+        [Test]
+        public void Given_a_Histogram_populated_with_full_range_of_values_When_encoded_and_decoded_with_compression_Then_data_is_preserved()
+        {
+            var source = Create(HighestTrackableValue, 3);
+            LoadFullRange(source);
+            var result = CompressedEncodeDecode(source);
+            AssertAreEqual(source, result);
+        }
+
+        private static T EncodeDecode(T source)
+        {
+            var targetBuffer = ByteBuffer.Allocate(source.GetNeededByteBufferCapacity());
+            source.Encode(targetBuffer, EncoderV2);
             targetBuffer.Position = 0;
-
-            var histogram2 = Histogram.DecodeFromByteBuffer(targetBuffer, 0);
-            Assert.AreEqual(longHistogram, histogram2);
-
-            var targetCompressedBuffer = ByteBuffer.Allocate(longHistogram.GetNeededByteBufferCapacity());
-            longHistogram.EncodeIntoCompressedByteBuffer(targetCompressedBuffer);
-            targetCompressedBuffer.Position = 0;
-
-            var histogram3 = Histogram.DecodeFromCompressedByteBuffer(targetCompressedBuffer, 0);
-            Assert.AreEqual(longHistogram, histogram3);
-
-            Console.WriteLine();
-            histogram3.OutputPercentileDistribution(Console.Out);
+            return Histogram.DecodeFromByteBuffer<T>(targetBuffer, 0);
         }
 
-        [Test]
-        public void CanReadEmptyLog()
+        private static T CompressedEncodeDecode(T source)
         {
-            byte[] data;
-            var startTimeWritten = DateTime.Now;
-            var expectedStartTime = startTimeWritten.SecondsSinceUnixEpoch()
-                .Round(3)
-                .ToDateFromSecondsSinceEpoch();
-
-            using (var writerStream = new MemoryStream())
-            {
-                var writer = new HistogramLogWriter(writerStream);
-                writer.Write(startTimeWritten);
-                data = writerStream.ToArray();
-            }
-
-            using (var readerStream = new MemoryStream(data))
-            {
-                var reader = new HistogramLogReader(readerStream);
-                var histograms = reader.ReadHistograms();
-                CollectionAssert.IsEmpty(histograms.ToList());
-                var actual = reader.GetStartTime();
-                Assert.AreEqual(expectedStartTime, actual);
-            }
+            var targetBuffer = ByteBuffer.Allocate(source.GetNeededByteBufferCapacity());
+            source.EncodeIntoCompressedByteBuffer(targetBuffer);
+            targetBuffer.Position = 0;
+            return Histogram.DecodeFromCompressedByteBuffer<T>(targetBuffer, 0);
         }
 
-        [Test]
-        public void CanReadv2Logs()
+        private static void Load(T source)
         {
-            var readerStream = File.OpenRead("Resources\\jHiccup-2.0.7S.logV2.hlog");
-            HistogramLogReader reader = new HistogramLogReader(readerStream);
-            int histogramCount = 0;
-            long totalCount = 0;
-            HistogramBase encodeableHistogram = null;
-            var accumulatedHistogram = new LongHistogram(85899345920838, 3);
-            foreach (var histogram in reader.ReadHistograms())
+            for (long i = 0L; i < 10000L; i++)
             {
-                histogramCount++;
-                Assert.IsInstanceOf<HistogramBase>(histogram, "Expected integer value histograms in log file");
-
-                totalCount += histogram.TotalCount;
-                accumulatedHistogram.Add(histogram);
+                source.RecordValue(1000L * i);
             }
-
-            Assert.AreEqual(62, histogramCount);
-            Assert.AreEqual(48761, totalCount);
-            Assert.AreEqual(1745879039, accumulatedHistogram.GetValueAtPercentile(99.9));
-            Assert.AreEqual(1796210687, accumulatedHistogram.GetMaxValue());
-            Assert.AreEqual(1441812279.474, reader.GetStartTime().SecondsSinceUnixEpoch());
         }
-        /*
-    @Test
-    public void jHiccupV2Log() throws Exception {
-        InputStream readerStream = HistogramLogReaderWriterTest.class.getResourceAsStream("jHiccup-2.0.7S.logV2.hlog");
 
-        HistogramLogReader reader = new HistogramLogReader(readerStream);
-        int histogramCount = 0;
-        long totalCount = 0;
-        EncodableHistogram encodeableHistogram = null;
-        Histogram accumulatedHistogram = new Histogram(3);
-        while ((encodeableHistogram = reader.nextIntervalHistogram()) != null) {
-            histogramCount++;
-            Assert.assertTrue("Expected integer value histogramsin log file", encodeableHistogram instanceof Histogram);
-            Histogram histogram = (Histogram) encodeableHistogram;
-            totalCount += histogram.getTotalCount();
-            accumulatedHistogram.add(histogram);
+        private static void LoadFullRange(T source)
+        {
+            for (long i = 0L; i < HighestTrackableValue; i += 100L)
+            {
+                source.RecordValue(i);
+            }
+            source.RecordValue(HighestTrackableValue);
         }
-        Assert.assertEquals(62, histogramCount);
-        Assert.assertEquals(48761, totalCount);
-        Assert.assertEquals(1745879039, accumulatedHistogram.getValueAtPercentile(99.9));
-        Assert.assertEquals(1796210687, accumulatedHistogram.getMaxValue());
-        Assert.assertEquals(1441812279.474, reader.getStartTimeSec());
 
-        readerStream = HistogramLogReaderWriterTest.class.getResourceAsStream("jHiccup-2.0.7S.logV2.hlog");
-        reader = new HistogramLogReader(readerStream);
-        histogramCount = 0;
-        totalCount = 0;
-        accumulatedHistogram.reset();
-        while ((encodeableHistogram = reader.nextIntervalHistogram(5, 20)) != null) {
-            histogramCount++;
-            Histogram histogram = (Histogram) encodeableHistogram;
-            totalCount += histogram.getTotalCount();
-            accumulatedHistogram.add(histogram);
-        }
-        Assert.assertEquals(15, histogramCount);
-        Assert.assertEquals(11664, totalCount);
-        Assert.assertEquals(1536163839, accumulatedHistogram.getValueAtPercentile(99.9));
-        Assert.assertEquals(1544552447, accumulatedHistogram.getMaxValue());
+        private static void AssertAreEqual(HistogramBase expected, HistogramBase actual)
+        {
+            Assert.AreEqual(expected.GetType(), actual.GetType());
+            Assert.AreEqual(expected.TotalCount, actual.TotalCount);
+            Assert.AreEqual(expected.StartTimeStamp, actual.StartTimeStamp);
+            Assert.AreEqual(expected.EndTimeStamp, actual.EndTimeStamp);
+            Assert.AreEqual(expected.LowestTrackableValue, actual.LowestTrackableValue);
+            Assert.AreEqual(expected.HighestTrackableValue, actual.HighestTrackableValue);
+            Assert.AreEqual(expected.NumberOfSignificantValueDigits, actual.NumberOfSignificantValueDigits);
+            var expectedValues = expected.AllValues().ToArray();
+            var actualValues = actual.AllValues().ToArray();
 
-        readerStream = HistogramLogReaderWriterTest.class.getResourceAsStream("jHiccup-2.0.7S.logV2.hlog");
-        reader = new HistogramLogReader(readerStream);
-        histogramCount = 0;
-        totalCount = 0;
-        accumulatedHistogram.reset();
-        while ((encodeableHistogram = reader.nextIntervalHistogram(40, 60)) != null) {
-            histogramCount++;
-            Histogram histogram = (Histogram) encodeableHistogram;
-            totalCount += histogram.getTotalCount();
-            accumulatedHistogram.add(histogram);
+            //TODO: We are 
+            CollectionAssert.AreEqual(expectedValues, actualValues, HistogramIterationValueComparer.Instance);
         }
-        Assert.assertEquals(20, histogramCount);
-        Assert.assertEquals(15830, totalCount);
-        Assert.assertEquals(1779433471, accumulatedHistogram.getValueAtPercentile(99.9));
-        Assert.assertEquals(1796210687, accumulatedHistogram.getMaxValue());
     }
 
-        
-        */
-
-        [Test]
-        public void CanRoundTrip()
-        {
-            var bufferLength = 20;
-            var input = new long[] { 1234, 5678, 9101112, 13141516, 17181920, 21222324 };
-            var buffer = ByteBuffer.Allocate(bufferLength);
-            foreach (var value in input)
-            {
-                ZigZagEncoding.PutLong(buffer, value);
-            }
-
-            buffer.Position = 0;
-            var output = new long[input.Length];
-            for (int i = 0; i < output.Length; i++)
-            {
-                output[i] = ZigZagEncoding.GetLong(buffer);
-            }
-
-            CollectionAssert.AreEqual(input, output);
-        }
-
-        [Test]
-        public void CanDecodeZigZagEncodedLongArray()
-        {
-            var buffer = ByteBuffer.Allocate(new byte[] { 24, 18, 18, 10, 16, 22, 28, 22, 8, 10, 16, 26, 18, 18, 12, 66, 74, 92, 46, 78, 150, 2, 172, 1, 218, 2, 44, 16, 163, 1, 2, 119, 2 });
-            var expected = new long[170];
-            expected[0] = 12;
-            expected[1] = 9;
-            expected[2] = 9;
-            expected[3] = 5;
-            expected[4] = 8;
-            expected[5] = 11;
-            expected[6] = 14;
-            expected[7] = 11;
-            expected[8] = 4;
-            expected[9] = 5;
-            expected[10] = 8;
-            expected[11] = 13;
-            expected[12] = 9;
-            expected[13] = 9;
-            expected[14] = 6;
-            expected[15] = 33;
-            expected[16] = 37;
-            expected[17] = 46;
-            expected[18] = 23;
-            expected[19] = 39;
-            expected[20] = 139;
-            expected[21] = 86;
-            expected[22] = 173;
-            expected[23] = 22;
-            expected[24] = 8;
-            //Zero counts skipped.
-            expected[107] = 1;
-            //Zero counts skipped.
-            expected[168] = 1;
-
-            var sut = CountsDecoder.GetDecoderForWordSize(9);
-
-            var actual = new long[expected.Length];
-            sut.ReadCounts(buffer, buffer.Capacity(), (idx, count) => actual[idx] = count);
-
-            CollectionAssert.AreEqual(expected, actual);
-        }
-    }
-    public static class MathEx
+    [TestFixture]
+    public sealed class ShortHistogramEncodingTests : HistogramEncodingTestBase<ShortHistogram>
     {
-        public static double Round(this double value, int digits)
+        protected override ShortHistogram Create(long highestTrackableValue, int numberOfSignificantDigits)
         {
-            if (digits >= 0)
-            {
-                return Math.Round(value, digits);
-            }
-            else
-            {
-                digits = Math.Abs(digits);
-                var temp = value / Math.Pow(10, digits);
-                temp = Math.Round(temp, 0);
-                temp = temp * Math.Pow(10, digits);
-                return temp;
-            }
+            return new ShortHistogram(highestTrackableValue, numberOfSignificantDigits);
+        }
+    }
+
+    [TestFixture]
+    public sealed class IntHistogramEncodingTests : HistogramEncodingTestBase<IntHistogram>
+    {
+        protected override IntHistogram Create(long highestTrackableValue, int numberOfSignificantDigits)
+        {
+            return new IntHistogram(highestTrackableValue, numberOfSignificantDigits);
+        }
+    }
+
+    [TestFixture]
+    public sealed class LongHistogramEncodingTests : HistogramEncodingTestBase<LongHistogram>
+    {
+        protected override LongHistogram Create(long highestTrackableValue, int numberOfSignificantDigits)
+        {
+            return new LongHistogram(highestTrackableValue, numberOfSignificantDigits);
+        }
+    }
+
+    [TestFixture]
+    public sealed class SynchronizedHistogramEncodingTests : HistogramEncodingTestBase<SynchronizedHistogram>
+    {
+        protected override SynchronizedHistogram Create(long highestTrackableValue, int numberOfSignificantDigits)
+        {
+            return new SynchronizedHistogram(highestTrackableValue, numberOfSignificantDigits);
         }
     }
 }
