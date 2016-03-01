@@ -11,7 +11,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO.Compression;
 using System.Threading;
 using HdrHistogram.Encoding;
 using HdrHistogram.Iteration;
@@ -40,7 +39,6 @@ namespace HdrHistogram
     /// </remarks>
     public abstract class HistogramBase
     {
-
         private static long _nextIdentity = -1L;
 
         /// <summary>
@@ -93,7 +91,7 @@ namespace HdrHistogram
         /// <summary>
         /// Gets the total number of recorded values.
         /// </summary>
-        public abstract long TotalCount { get; internal set; }
+        public abstract long TotalCount { get; protected set; }
 
 
         internal int BucketCount { get; }       //TODO: Candidate for private read-only field. -LC
@@ -108,7 +106,7 @@ namespace HdrHistogram
         /// <summary>
         /// Returns the word size of this implementation
         /// </summary>
-        internal abstract int WordSizeInBytes { get; }
+        protected abstract int WordSizeInBytes { get; }
         protected abstract long MaxAllowableCount { get; }
 
 
@@ -494,73 +492,14 @@ namespace HdrHistogram
         /// <summary>
         /// Encode this histogram into a <see cref="ByteBuffer"/>
         /// </summary>
-        /// <param name="buffer">The buffer to encode into</param>
+        /// <param name="targetBuffer">The buffer to encode into</param>
+        /// <param name="encoder">The encoder to use</param>
         /// <returns>The number of bytes written to the buffer</returns>
-        public int EncodeIntoByteBuffer(ByteBuffer buffer)
+        public int Encode(ByteBuffer targetBuffer, IEncoder encoder)
         {
-            lock (UpdateLock)
-            {
-                var maxValue = this.GetMaxValue();
-                var relevantLength = GetLengthForNumberOfBuckets(GetBucketsNeededToCoverValue(maxValue));
-                Debug.WriteLine("buffer.capacity() < getNeededByteBufferCapacity(relevantLength))");
-                Debug.WriteLine($"  buffer.capacity() = {buffer.Capacity()}");
-                Debug.WriteLine($"  relevantLength = {relevantLength}");
-                Debug.WriteLine($"  getNeededByteBufferCapacity(relevantLength) = {GetNeededByteBufferCapacity(relevantLength)}");
-                if (buffer.Capacity() < GetNeededByteBufferCapacity(relevantLength))
-                {
-                    throw new ArgumentOutOfRangeException("buffer does not have capacity for" + GetNeededByteBufferCapacity(relevantLength) + " bytes");
-                }
-                buffer.PutInt(Histogram.GetEncodingCookie(this));
-                buffer.PutInt(NumberOfSignificantValueDigits);
-                buffer.PutLong(LowestTrackableValue);
-                buffer.PutLong(HighestTrackableValue);
-                buffer.PutLong(TotalCount); // Needed because overflow situations may lead this to differ from counts totals
-
-                Debug.WriteLine("MaxValue = {0}, Buckets needed = {1}, relevantLength = {2}", maxValue, GetBucketsNeededToCoverValue(maxValue), relevantLength);
-                Debug.WriteLine("MaxValue = {0}, Buckets needed = {1}, relevantLength = {2}", maxValue, GetBucketsNeededToCoverValue(maxValue), relevantLength);
-
-                Debug.WriteLine($"fillBufferFromCountsArray({buffer}, {relevantLength} * {WordSizeInBytes});");
-                FillBufferFromCountsArray(buffer, relevantLength * WordSizeInBytes);
-
-                return GetNeededByteBufferCapacity(relevantLength);
-            }
+            var data = GetData();
+            return encoder.Encode(data, targetBuffer);
         }
-
-        ///// <summary>
-        ///// Encode this histogram in compressed form into a byte array
-        ///// </summary>
-        ///// <param name="targetBuffer">The buffer to encode into</param>
-        ///// <returns>The number of bytes written to the buffer</returns>
-        //public long EncodeIntoCompressedByteBuffer(ByteBuffer targetBuffer)
-        //{
-        //    var temp = ByteBuffer.Allocate(GetNeededByteBufferCapacity(CountsArrayLength));
-        //    lock (UpdateLock)
-        //    {
-        //        var uncompressedLength = EncodeIntoByteBuffer(temp);
-
-        //        targetBuffer.PutInt(Histogram.GetCompressedEncodingCookie(this));
-        //        var contentLengthIdx = targetBuffer.Position;
-        //        targetBuffer.PutInt(0); // Placeholder for compressed contents length *
-        //        var headerSize = targetBuffer.Position;
-        //        int compressedDataLength;
-        //        using (var outputStream = targetBuffer.GetWriter())
-        //        {
-        //            //using (var compressor = new DeflateStream(outputStream, compressionLevel))    //Make usable by Mono -LC
-        //            using (var compressor = new DeflateStream(outputStream, CompressionMode.Compress))
-        //            {
-        //                temp.WriteTo(compressor, 0, uncompressedLength);
-        //            }
-        //            compressedDataLength = outputStream.BytesWritten;
-        //        }
-
-        //        // *Go back and write the now known compressed data length
-        //        targetBuffer.PutInt(contentLengthIdx, compressedDataLength); // Record the compressed length
-
-        //        Debug.WriteLine($"COMPRESSING - Wrote {compressedDataLength + headerSize} bytes (header = {headerSize}), original size {uncompressedLength}");
-
-        //        return compressedDataLength + headerSize;
-        //    }
-        //}
 
         /// <summary>
         /// Determine if this histogram had any of it's value counts overflow.
@@ -709,7 +648,6 @@ namespace HdrHistogram
             return (512 + (WordSizeInBytes * CountsArrayLength));
         }
 
-
         internal long GetCountAt(int bucketIndex, int subBucketIndex)
         {
             return GetCountAtIndex(CountsArrayIndex(bucketIndex, subBucketIndex));
@@ -719,8 +657,6 @@ namespace HdrHistogram
         {
             return ((long)subBucketIndex) << (bucketIndex + _unitMagnitude);
         }
-
-        
 
         /// <summary>
         /// Copies data from the provided buffer into the internal counts array.
@@ -739,17 +675,17 @@ namespace HdrHistogram
 
             var countsDecoder = Persistence.CountsDecoder.GetDecoderForWordSize(wordSizeInBytes);
 
-            return countsDecoder.ReadCounts(buffer, 
-                length, 
+            return countsDecoder.ReadCounts(buffer,
+                length,
                 CountsArrayLength,
                 (idx, count) =>
-                                                     {
-                                                         if (count > MaxAllowableCount)
-                                                         {
-                                                             throw new ArgumentException($"An encoded count ({count}) does not fit in the Histogram's ({WordSizeInBytes} bytes) was encountered in the source");
-                                                         }
-                                                         SetCountAtIndex(idx, count);
-                                                     });
+                {
+                    if (count > MaxAllowableCount)
+                    {
+                        throw new ArgumentException($"An encoded count ({count}) does not fit in the Histogram's ({WordSizeInBytes} bytes) was encountered in the source");
+                    }
+                    SetCountAtIndex(idx, count);
+                });
         }
 
         internal void EstablishInternalTackingValues(int lengthToCover)
@@ -783,14 +719,16 @@ namespace HdrHistogram
             TotalCount = observedTotalCount;
         }
 
+        /// <summary>
+        /// Reads a single value from the <paramref name="buffer"/>. 
+        /// </summary>
+        /// <param name="buffer">The <see cref="ByteBuffer"/> to read the single value from</param>
+        /// <returns>The value as a <c>long</c>.</returns>
+        /// <remarks>
+        /// Implementations may have different word sizes i.e. short(2), int(4) or long(8).
+        /// </remarks>
         protected abstract long ReadWord(ByteBuffer buffer);
-        //{
-        //    return ((wordSizeInBytes == 2) ? sourceBuffer.getShort() :
-        //                            ((wordSizeInBytes == 4) ? sourceBuffer.getInt() :
-        //                                    sourceBuffer.getLong()
-        //                            )
-        //                    );
-        //}
+
         /// <summary>
         /// Writes the data from the internal counts array into the buffer.
         /// </summary>
@@ -805,6 +743,11 @@ namespace HdrHistogram
         /// <returns>The number of recorded values at the given index.</returns>
         protected abstract long GetCountAtIndex(int index);
 
+        /// <summary>
+        /// Sets the count at the given index.
+        /// </summary>
+        /// <param name="index">The index to be set</param>
+        /// <param name="value">The value to set</param>
         protected abstract void SetCountAtIndex(int index, long value);
 
         /// <summary>
@@ -820,22 +763,19 @@ namespace HdrHistogram
         /// <param name="addend">The amount to increment by.</param>
         protected abstract void AddToCountAtIndex(int index, long addend);
 
-
         /// <summary>
         /// Clears the counts of this implementation.
         /// </summary>
         protected abstract void ClearCounts();
 
-
-
         protected abstract void CopyCountsInto(long[] target);
 
-        /**
-     * Set internally tracked _maxValue to new value if new value is greater than current one.
-     * May be overridden by subclasses for synchronization or atomicity purposes.
-     * @param value new _maxValue to set
-     */
-        void UpdatedMaxValue(long value)
+        /// <summary>
+        /// Set internally tracked _maxValue to new value if new value is greater than current one.
+        /// May be overridden by subclasses for synchronization or atomicity purposes.
+        /// </summary>
+        /// <param name="value">new _maxValue to set</param>
+        private void UpdatedMaxValue(long value)
         {
             while (value > _maxValue)
             {
@@ -850,7 +790,7 @@ namespace HdrHistogram
         /// May be overridden by subclasses for synchronization or atomicity purposes.
         /// </summary>
         /// <param name="value">new _minNonZeroValue to set</param>
-        void UpdateMinNonZeroValue(long value)
+        private void UpdateMinNonZeroValue(long value)
         {
             while (value < _minNonZeroValue)
             {
@@ -859,14 +799,15 @@ namespace HdrHistogram
                 _minNonZeroValue = value;
             }
         }
+
         private void ResetMinNonZeroValue(long minNonZeroValue)
         {
-            this._minNonZeroValue = minNonZeroValue;
+            _minNonZeroValue = minNonZeroValue;
         }
 
         private void ResetMaxValue(long maxValue)
         {
-            this._maxValue = maxValue;
+            _maxValue = maxValue;
         }
 
         private void RecordSingleValue(long value)
@@ -914,7 +855,7 @@ namespace HdrHistogram
             return lengthNeeded;
         }
 
-        protected int CountsArrayIndex(int bucketIndex, int subBucketIndex)
+        private int CountsArrayIndex(int bucketIndex, int subBucketIndex)
         {
             Debug.Assert(subBucketIndex < SubBucketCount);
             Debug.Assert(bucketIndex == 0 || (subBucketIndex >= SubBucketHalfCount));
@@ -928,7 +869,7 @@ namespace HdrHistogram
         }
 
         //Optimization. This simple method should be in-lined by the JIT compiler, allowing hot path `GetBucketIndex(long, long, int)` to become static. -LC
-        protected int GetBucketIndex(long value)
+        private int GetBucketIndex(long value)
         {
             return GetBucketIndex(value, _subBucketMask, _bucketIndexOffset);
         }
@@ -938,7 +879,7 @@ namespace HdrHistogram
             return bucketIndexOffset - leadingZeros;
         }
 
-        protected int GetSubBucketIndex(long value, int bucketIndex)
+        private int GetSubBucketIndex(long value, int bucketIndex)
         {
             return (int)(value >> (bucketIndex + _unitMagnitude));
         }
@@ -954,8 +895,6 @@ namespace HdrHistogram
             }
             return ValueFromIndex(bucketIndex, subBucketIndex);
         }
-
-
 
         private static int NumberOfLeadingZeros(long value)
         {
@@ -975,14 +914,7 @@ namespace HdrHistogram
             n -= (int)(x >> 31);
             return n;
         }
-
-
-        public int Encode(ByteBuffer targetBuffer, IEncoder encoder)
-        {
-            var data = GetData();
-            return encoder.Encode(data, targetBuffer);
-        }
-
+        
         private IRecordedData GetData()
         {
             var relevantCounts = GetRelevantCounts();
@@ -1008,7 +940,5 @@ namespace HdrHistogram
             CopyCountsInto(relevantCounts);
             return relevantCounts;
         }
-
-
     }
 }

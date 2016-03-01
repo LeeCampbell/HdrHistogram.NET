@@ -85,12 +85,12 @@ namespace HdrHistogram
         /// <summary>
         /// Gets the total number of recorded values.
         /// </summary>
-        public override long TotalCount { get { return _totalCount; } internal set { _totalCount = value; } }
+        public override long TotalCount { get { return _totalCount; } protected set { _totalCount = value; } }
 
         /// <summary>
         /// Returns the word size of this implementation
         /// </summary>
-        internal override int WordSizeInBytes => 8;
+        protected override int WordSizeInBytes => 8;
 
         protected override long MaxAllowableCount => long.MaxValue;
 

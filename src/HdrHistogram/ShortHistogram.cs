@@ -79,12 +79,12 @@ namespace HdrHistogram
         /// <summary>
         /// Gets the total number of recorded values.
         /// </summary>
-        public override long TotalCount { get { return _totalCount; } internal set { _totalCount = value; } }
+        public override long TotalCount { get { return _totalCount; } protected set { _totalCount = value; } }
 
         /// <summary>
         /// Returns the word size of this implementation
         /// </summary>
-        internal override int WordSizeInBytes => 2;
+        protected override int WordSizeInBytes => 2;
 
         protected override long MaxAllowableCount => short.MaxValue;
 
@@ -174,19 +174,11 @@ namespace HdrHistogram
             }
         }
 
-        ///// <summary>
-        ///// Copies data from the provided buffer into the internal counts array.
-        ///// </summary>
-        ///// <param name="buffer">The buffer to read from.</param>
-        ///// <param name="length">The length of the buffer to read.</param>
-        //internal override void FillCountsArrayFromBuffer(ByteBuffer buffer, int length)
-        //{
-        //    lock (UpdateLock)
-        //    {
-        //        buffer.AsShortBuffer().Get(_counts, 0, length);
-        //    }
-        //}
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
         protected override long ReadWord(ByteBuffer buffer)
         {
             return (long) buffer.GetShort();

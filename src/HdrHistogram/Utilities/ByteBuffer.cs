@@ -175,11 +175,11 @@ namespace HdrHistogram.Utilities
         {
             if (value == null)
             {
-                throw new ArgumentNullException("value");
+                throw new ArgumentNullException(nameof(value));
             }
             if (startIndex < 0 || startIndex > value.Length - bytesRequired)
             {
-                throw new ArgumentOutOfRangeException("startIndex");
+                throw new ArgumentOutOfRangeException(nameof(startIndex));
             }
         }
 
@@ -272,14 +272,12 @@ namespace HdrHistogram.Utilities
 
         internal void BlockCopy(Array src, int srcOffset, int dstOffset, int count)
         {
-            //Debug.WriteLine("  Buffer.BlockCopy - Copying {0} bytes INTO internalBuffer, scrOffset = {1}, targetOffset = {2}", count, srcOffset, dstOffset);
             Buffer.BlockCopy(src: src, srcOffset: srcOffset, dst: _internalBuffer, dstOffset: dstOffset, count: count);
             Position += count;
         }
 
         internal void BlockGet(Array target, int targetOffset, int sourceOffset, int count)
         {
-            //Debug.WriteLine("  Buffer.BlockCopy - Copying {0} bytes FROM internalBuffer, scrOffset = {1}, targetOffset = {2}", count, sourceOffset, targetOffset);
             Buffer.BlockCopy(src: _internalBuffer, srcOffset: sourceOffset, dst: target, dstOffset: targetOffset, count: count);
         }
 
@@ -297,7 +295,5 @@ namespace HdrHistogram.Utilities
         {
             return WrappedBuffer<long>.Create(this);
         }
-
-
     }
 }

@@ -76,7 +76,7 @@ namespace HdrHistogram
         public override long TotalCount
         {
             get { return _totalCount; }
-            internal set
+            protected set
             {
                 lock (UpdateLock)
                 {
@@ -155,7 +155,7 @@ namespace HdrHistogram
         /// <summary>
         /// Returns the word size of this implementation
         /// </summary>
-        internal override int WordSizeInBytes => 8;
+        protected override int WordSizeInBytes => 8;
 
         protected override long MaxAllowableCount => long.MaxValue;
 

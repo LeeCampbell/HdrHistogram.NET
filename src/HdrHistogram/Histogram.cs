@@ -38,9 +38,6 @@ namespace HdrHistogram
         {
             var cookie = buffer.GetInt();
             var headerSize = GetHeaderSize(cookie);
-            //I am pretty sure I can read the histogram Type from here, but is it also in the compressed header? -LC
-            //var histogramClass = GetHistogramType(cookie);
-
             var lengthOfCompressedContents = buffer.GetInt();
             T histogram;
             //Skip the first two bytes (from the RFC 1950 specification) and move to the deflate specification (RFC 1951)
@@ -55,36 +52,15 @@ namespace HdrHistogram
             }
             return histogram;
         }
-
-
+        
         /// <summary>
-        /// Construct a new histogram by decoding it from a ByteBuffer.
+        /// Construct a new histogram by decoding it from a <see cref="ByteBuffer"/>.
         /// </summary>
+        /// <typeparam name="T">The type of histogram to decode into</typeparam>
         /// <param name="buffer">The buffer to decode from</param>
         /// <param name="minBarForHighestTrackableValue">Force highestTrackableValue to be set at least this high</param>
         /// <param name="decompressor">The <see cref="DeflateStream"/> that is being used to decompress the payload. Optional.</param>
         /// <returns>The newly constructed histogram</returns>
-        public static HistogramBase DecodeFromByteBuffer(ByteBuffer buffer, long minBarForHighestTrackableValue,
-            DeflateStream decompressor = null)
-        {
-            var header = ReadHeader(buffer);
-            var histogram = Create(header, minBarForHighestTrackableValue);
-
-            int expectedCapacity = Math.Min(histogram.GetNeededByteBufferCapacity(), header.PayloadLengthInBytes);
-            var payLoadSourceBuffer = PayLoadSourceBuffer(buffer, decompressor, expectedCapacity, header);
-
-            var filledLength = histogram.FillCountsFromBuffer(payLoadSourceBuffer, expectedCapacity, GetWordSizeInBytesFromCookie(header.Cookie));
-            histogram.EstablishInternalTackingValues(filledLength);
-
-            //TODO: Rationalise. This seems misplaced (lost in translation) -LC
-            if (header.Cookie != GetEncodingCookie(histogram))
-            {
-                //throw new ArgumentException($"The buffer's encoded value byte size ({GetWordSizeInBytesFromCookie(cookie)}) does not match the Histogram's ({histogram.WordSizeInBytes})");
-                throw new ArgumentException();
-            }
-            return histogram;
-        }
-
         public static T DecodeFromByteBuffer<T>(ByteBuffer buffer, long minBarForHighestTrackableValue,
            DeflateStream decompressor = null) where T : HistogramBase
         {
@@ -106,21 +82,20 @@ namespace HdrHistogram
             return histogram;
         }
 
-
-        /**
-         * Encode this histogram in compressed form into a byte array
-         * @param targetBuffer The buffer to encode into
-         * @param compressionLevel Compression level (for java.util.zip.Deflater).
-         * @return The number of bytes written to the buffer
-         */
-        public static int EncodeIntoCompressedByteBuffer(this HistogramBase histogram, ByteBuffer targetBuffer)
+        /// <summary>
+        /// Encode this histogram in compressed form into a <see cref="ByteBuffer"/>.
+        /// </summary>
+        /// <param name="source">The histogram to encode</param>
+        /// <param name="targetBuffer">The buffer to write to</param>
+        /// <returns>The number of bytes written to the buffer</returns>
+        public static int EncodeIntoCompressedByteBuffer(this HistogramBase source, ByteBuffer targetBuffer)
         {
-            int neededCapacity = histogram.GetNeededByteBufferCapacity();
+            int neededCapacity = source.GetNeededByteBufferCapacity();
             var intermediateUncompressedByteBuffer = ByteBuffer.Allocate(neededCapacity);
-            histogram.Encode(intermediateUncompressedByteBuffer, HistogramEncoderV2.Instance);
+            source.Encode(intermediateUncompressedByteBuffer, HistogramEncoderV2.Instance);
 
             int initialTargetPosition = targetBuffer.Position;
-            targetBuffer.PutInt(histogram.GetCompressedEncodingCookie());
+            targetBuffer.PutInt(source.GetCompressedEncodingCookie());
             int compressedContentsHeaderPosition = targetBuffer.Position;
             targetBuffer.PutInt(0); // Placeholder for compressed contents length
             var compressedDataLength = targetBuffer.CompressedCopy(intermediateUncompressedByteBuffer, targetBuffer.Position);
@@ -131,13 +106,10 @@ namespace HdrHistogram
             return bytesWritten;
         }
 
-        
-
         private static IHeader ReadHeader(ByteBuffer buffer)
         {
             var cookie = buffer.GetInt();
             var cookieBase = GetCookieBase(cookie);
-            var histogramClass = GetHistogramType(cookie);
             var wordsize = GetWordSizeInBytesFromCookie(cookie);
             if ((cookieBase == EncodingCookieBaseV2) || (cookieBase == EncodingCookieBaseV1))
             {
@@ -156,38 +128,7 @@ namespace HdrHistogram
             }
             throw new NotSupportedException("The buffer does not contain a Histogram (no valid cookie found)");
         }
-
-        private static HistogramBase Create(IHeader header, long minBarForHighestTrackableValue)
-        {
-            var histogramClass = GetHistogramType(header.Cookie);
-            var constructor = TypeHelper.GetConstructor(histogramClass, HistogramClassConstructorArgsTypes);
-            if (constructor == null)
-                throw new ArgumentException("The target type does not have a supported constructor", nameof(histogramClass));
-
-            var highestTrackableValue = Math.Max(header.HighestTrackableValue, minBarForHighestTrackableValue);
-            try
-            {
-                var histogram = (HistogramBase)constructor.Invoke(new object[]
-                {
-                    header.LowestTrackableUnitValue,
-                    highestTrackableValue,
-                    header.NumberOfSignificantValueDigits
-                });
-                //histogram.TotalCount = totalCount; // Restore totalCount --Was a V0 way of doing things -LC
-
-
-                //TODO: Java does this now. Need to follow this through -LC
-                //histogram.IntegerToDoubleValueConversionRatio = header.IntegerToDoubleValueConversionRatio;
-                //histogram.NormalizingIndexOffset = header.NormalizingIndexOffset;
-                return histogram;
-            }
-            catch (Exception ex)
-            {
-                //As we are calling an unknown method (the ctor) we cant be sure of what of what type of exceptions we need to catch -LC
-                throw new ArgumentException("Unable to create histogram of Type " + histogramClass.Name + ": " + ex.Message, ex);
-            }
-        }
-
+        
         private static T Create<T>(IHeader header, long minBarForHighestTrackableValue) where T : HistogramBase
         {
             var histogramClass = typeof(T);
@@ -244,8 +185,6 @@ namespace HdrHistogram
             return payLoadSourceBuffer;
         }
 
-
-
         private static int GetHeaderSize(int cookie)
         {
             var cookieBase = GetCookieBase(cookie);
@@ -274,16 +213,12 @@ namespace HdrHistogram
             return EncodingCookieBaseV2 | 0x10; // LSBit of wordsize byte indicates TLZE Encoding            
         }
 
-        public static int GetCompressedEncodingCookie(this HistogramBase histogram)
+        private static int GetCompressedEncodingCookie(this HistogramBase histogram)
         {
             //return CompressedEncodingCookieBaseV2 + (histogram.WordSizeInBytes << 4);
             return CompressedEncodingCookieBaseV2 | 0x10; // LSBit of wordsize byte indicates TLZE Encoding
         }
 
-        //private static int GetWordSizeInBytesFromCookie(int cookie)
-        //{
-        //    return (cookie & 0xf0) >> 4;
-        //}
         private static int GetWordSizeInBytesFromCookie(int cookie)
         {
             var cookieBase = GetCookieBase(cookie);
