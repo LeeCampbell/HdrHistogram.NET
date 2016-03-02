@@ -13,7 +13,7 @@ namespace HdrHistogram.Iteration
     /// <summary>
     /// Represents a value point iterated through in a Histogram, with associated stats.
     /// </summary>
-    public sealed class HistogramIterationValue 
+    public sealed class HistogramIterationValue
     {
         /// <summary>
         /// The actual value level that was iterated to by the iterator

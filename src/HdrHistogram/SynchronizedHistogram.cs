@@ -150,33 +150,14 @@ namespace HdrHistogram
             return toHistogram;
         }
 
-        /// <summary>
-        /// Construct a new histogram by decoding it from a ByteBuffer.
-        /// </summary>
-        /// <param name="buffer">The buffer to decode from</param>
-        /// <param name="minBarForHighestTrackableValue">Force highestTrackableValue to be set at least this high</param>
-        /// <returns>The newly constructed histogram</returns>
-        public static SynchronizedHistogram DecodeFromByteBuffer(ByteBuffer buffer, long minBarForHighestTrackableValue)
-        {
-            return DecodeFromByteBuffer<SynchronizedHistogram>(buffer, minBarForHighestTrackableValue);
-        }
-
-        /// <summary>
-        /// Construct a new histogram by decoding it from a compressed form in a ByteBuffer.
-        /// </summary>
-        /// <param name="buffer">The buffer to encode into</param>
-        /// <param name="minBarForHighestTrackableValue">Force highestTrackableValue to be set at least this high</param>
-        /// <returns>The newly constructed histogram</returns>
-        public static SynchronizedHistogram DecodeFromCompressedByteBuffer(ByteBuffer buffer, long minBarForHighestTrackableValue)
-        {
-            return DecodeFromCompressedByteBuffer<SynchronizedHistogram>(buffer, minBarForHighestTrackableValue);
-        }
 
 
         /// <summary>
         /// Returns the word size of this implementation
         /// </summary>
         protected override int WordSizeInBytes => 8;
+
+        protected override long MaxAllowableCount => long.MaxValue;
 
         /// <summary>
         /// Gets the number of recorded values at a given index.
@@ -186,6 +167,11 @@ namespace HdrHistogram
         protected override long GetCountAtIndex(int index)
         {
             return _counts[index];
+        }
+
+        protected override void SetCountAtIndex(int index, long value)
+        {
+            _counts[index] = value;
         }
 
         /// <summary>
@@ -227,17 +213,30 @@ namespace HdrHistogram
             }
         }
 
-        /// <summary>
-        /// Copies data from the provided buffer into the internal counts array.
-        /// </summary>
-        /// <param name="buffer">The buffer to read from.</param>
-        /// <param name="length">The length of the buffer to read.</param>
-        protected override void FillCountsArrayFromBuffer(ByteBuffer buffer, int length)
+        protected override void CopyCountsInto(long[] target)
         {
             lock (UpdateLock)
             {
-                buffer.AsLongBuffer().Get(_counts, 0, length);
+                Array.Copy(_counts, target, target.Length);
             }
+        }
+
+        ///// <summary>
+        ///// Copies data from the provided buffer into the internal counts array.
+        ///// </summary>
+        ///// <param name="buffer">The buffer to read from.</param>
+        ///// <param name="length">The length of the buffer to read.</param>
+        //internal override void FillCountsArrayFromBuffer(ByteBuffer buffer, int length)
+        //{
+        //    lock (UpdateLock)
+        //    {
+        //        buffer.AsLongBuffer().Get(_counts, 0, length);
+        //    }
+        //}
+
+        protected override long ReadWord(ByteBuffer buffer)
+        {
+            return buffer.GetLong();
         }
 
         /// <summary>

@@ -66,9 +66,9 @@ namespace HdrHistogram.UnitTests
                     ScaledHistogram.LowestEquivalentValue(ScaledHistogram.GetValueAtPercentile(99.0)),
                     "99%'iles should be equivalent");
             Assert.AreEqual(
-                    LongHistogram.GetMaxValue() * 512,
+                    ScaledHistogram.HighestEquivalentValue(LongHistogram.GetMaxValue() * 512),
                     ScaledHistogram.GetMaxValue(),
-                    "Max should be equivalent");
+                    "Max should be equivalent for scaled data");
             // Same for post-corrected:
             Assert.AreEqual(
                     LongHistogram.GetMean() * 512,
@@ -83,9 +83,9 @@ namespace HdrHistogram.UnitTests
                     PostCorrectedScaledHistogram.LowestEquivalentValue(PostCorrectedScaledHistogram.GetValueAtPercentile(99.0)),
                     "99%'iles should be equivalent");
             Assert.AreEqual(
-                    PostCorrectedHistogram.GetMaxValue() * 512,
+                    PostCorrectedScaledHistogram.HighestEquivalentValue(PostCorrectedHistogram.GetMaxValue() * 512),
                     PostCorrectedScaledHistogram.GetMaxValue(),
-                    "Max should be equivalent");
+                    "Max should be equivalent for post-corrected data");
         }
 
         [Test]
