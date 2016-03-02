@@ -44,11 +44,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Encoding\IEncoder.cs" />
+    <Compile Include="Encoding\IHeader.cs" />
     <Compile Include="Encoding\IRecordedData.cs" />
     <Compile Include="Encoding\HistogramEncoderV2.cs" />
+    <Compile Include="Encoding\RecordedData.cs" />
+    <Compile Include="Encoding\V0Header.cs" />
+    <Compile Include="Encoding\V1Header.cs" />
     <Compile Include="Histogram.cs" />
     <Compile Include="HistogramBase.cs" />
     <Compile Include="HistogramExtensions.cs" />
+    <Compile Include="HistogramLogReader.cs" />
     <Compile Include="HistogramLogWriter.cs" />
     <Compile Include="OutputScalingFactor.cs" />
     <Compile Include="Persistence\IntCountsDecoder.cs" />

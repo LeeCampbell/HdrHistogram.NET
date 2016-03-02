@@ -9,33 +9,9 @@ namespace HdrHistogram.Encoding
 
         public int Encode(IRecordedData data, ByteBuffer buffer)
         {
-            //TODO: I need to grok what the bucket sub-bucket relationship is. -LC
-            // ->Calculate the required buffer space required.
-
-            //var maxValue = histogram.GetMaxValue();
-            //var relevantLength = histogram.GetLengthForNumberOfBuckets(histogram.GetBucketsNeededToCoverValue(maxValue));
-            //var requiredLength = GetNeededByteBufferCapacity(-1, data.WordSizeInBytes);
-            //if (buffer.Capacity() < requiredLength)
-            //{
-            //    throw new ArgumentOutOfRangeException("buffer does not have capacity for" + histogram.GetNeededByteBufferCapacity(relevantLength) + " bytes");
-            //}
-            //buffer.PutInt(data.Cookie);
-            //buffer.PutInt(data.NumberOfSignificantValueDigits);
-            //buffer.PutLong(data.LowestTrackableValue);
-            //buffer.PutLong(data.HighestTrackableValue);
-            //buffer.PutLong(data.TotalCount); // Needed because overflow situations may lead this to differ from counts totals
-
-            ////Write buffer with approriate wordsize writer.
-            //histogram.FillBufferFromCountsArray(buffer, relevantLength * histogram.WordSizeInBytes);
-            ////-->buffer.BlockCopy(src: values, srcOffset: index, dstOffset: byteBuffer.Position/*????*/, count: length);
-
-
-            //return requiredLength;
-            ////Should this be
-            ////  return currentPos - initialPos;  //??
             int initialPosition = buffer.Position;
             buffer.PutInt(data.Cookie);
-            //TODO: int payloadLengthPosition = buffer.Position;
+            int payloadLengthPosition = buffer.Position;
             buffer.PutInt(0); // Placeholder for payload length in bytes.
             buffer.PutInt(data.NormalizingIndexOffset);
             buffer.PutInt(data.NumberOfSignificantValueDigits);
@@ -43,34 +19,16 @@ namespace HdrHistogram.Encoding
             buffer.PutLong(data.HighestTrackableValue);
             buffer.PutDouble(data.IntegerToDoubleValueConversionRatio);
 
-
-            int payloadStartPosition = buffer.Position;
-            FillBufferFromCountsArray(buffer, data);
-
-            buffer.PutInt(initialPosition + 4, buffer.Position - payloadStartPosition); // Record the payload length
-            //TODO - Replace with:
-            //var payloadLength = buffer.Position - payloadStartPosition;
-            //buffer.PutInt(payloadLengthPosition, payloadLength);
+            var payloadLength = FillBufferFromCountsArray(buffer, data);
+            buffer.PutInt(payloadLengthPosition, payloadLength);
 
             var bytesWritten = buffer.Position - initialPosition;
             return bytesWritten;
         }
 
-        private int GetNeededByteBufferCapacity(int relevantLength, int wordSizeInBytes)
+        private static int FillBufferFromCountsArray(ByteBuffer buffer, IRecordedData data)
         {
-            return (relevantLength * wordSizeInBytes) + 32;
-        }
-
-        private void Write<T>(ByteBuffer byteBuffer, T[] values, int index, int length)
-        {
-            byteBuffer.BlockCopy(src: values, srcOffset: index, dstOffset: byteBuffer.Position/*????*/, count: length);
-        }
-
-        //synchronized
-        private static void FillBufferFromCountsArray(ByteBuffer buffer, IRecordedData data)
-        {
-            //TODO: Only fill the IRecordedData.Counts array with data to the max value. Thus this is just data.Counts.Length
-            //int countsLimit = countsArrayIndex(maxValue) + 1;
+            int startPosition = buffer.Position;
             int srcIndex = 0;
 
             while (srcIndex < data.Counts.Length)
@@ -81,9 +39,6 @@ namespace HdrHistogram.Encoding
                 if (count < 0)
                 {
                     throw new InvalidOperationException($"Cannot encode histogram containing negative counts ({count}) at index {srcIndex}");
-                    //+ " corresponding the value range [{}" +
-                    //    lowestEquivalentValue(valueFromIndex(srcIndex)) + "," +
-                    //    nextNonEquivalentValue(valueFromIndex(srcIndex)) + ")");
                 }
                 // Count trailing 0s (which follow this count):
                 long zerosCount = 0;
@@ -105,6 +60,7 @@ namespace HdrHistogram.Encoding
                     ZigZagEncoding.PutLong(buffer, count);
                 }
             }
+            return buffer.Position - startPosition;
         }
 
         private static long GetCountAtIndex(int idx, IRecordedData data)
@@ -115,6 +71,7 @@ namespace HdrHistogram.Encoding
 
         }
 
+        //TODO: Add normalization features to Encoding. -LC
         private static int NormalizeIndex(int index, int normalizingIndexOffset, int arrayLength)
         {
             if (normalizingIndexOffset == 0)
@@ -142,10 +99,5 @@ namespace HdrHistogram.Encoding
             }
             return normalizedIndex;
         }
-    }
-
-    public interface IEncoder
-    {
-        int Encode(IRecordedData data, ByteBuffer buffer);
     }
 }

@@ -49,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HistogramAssert.cs" />
     <Compile Include="HistogramDataAccessTest.cs" />
     <Compile Include="HistogramEncodingTest.cs" />
     <Compile Include="HistogramIterationValueComparer.cs" />
