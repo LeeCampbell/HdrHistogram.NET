@@ -66,6 +66,7 @@
     <Compile Include="Persistence\ICountsDecoder.cs" />
     <Compile Include="Properties\AssemblyInfo.g.cs" />
     <Compile Include="Utilities\ArrayExtensions.cs" />
+    <Compile Include="Utilities\Bitwise.cs" />
     <Compile Include="Utilities\ByteBufferExtensions.cs" />
     <Compile Include="Utilities\CountingMemoryStream.cs" />
     <Compile Include="IntHistogram.cs" />

@@ -32,8 +32,7 @@ namespace HdrHistogram
                 WriteHistogram(histogram);
             }
         }
-
-
+        
         /// <summary>
         /// Output a log format version to the log.
         /// </summary>
@@ -59,7 +58,6 @@ namespace HdrHistogram
             _log.WriteLine("\"StartTimestamp\",\"Interval_Length\",\"Interval_Max\",\"Interval_Compressed_Histogram\"");
             _log.Flush();
         }
-
 
         private void WriteHistogram( HistogramBase histogram)
         {
