@@ -33,9 +33,8 @@ namespace HdrHistogram.Utilities
                 using (var compressor = new DeflateStream(compressStream, CompressionMode.Compress))
                 {
                     input.CopyTo(compressor);
-                    compressor.Close();
-                    return compressStream.ToArray();
                 }
+                return compressStream.ToArray();
             }
         }
     }

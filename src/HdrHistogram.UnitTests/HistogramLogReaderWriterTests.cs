@@ -93,7 +93,6 @@ namespace HdrHistogram.UnitTests
             HistogramLogReader reader = new HistogramLogReader(readerStream);
             int histogramCount = 0;
             long totalCount = 0;
-            HistogramBase encodeableHistogram = null;
             var accumulatedHistogram = new LongHistogram(85899345920838, 3);
             foreach (var histogram in reader.ReadHistograms())
             {
