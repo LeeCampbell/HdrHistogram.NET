@@ -6,7 +6,7 @@ using HdrHistogram.Utilities;
 
 namespace HdrHistogram
 {
-    public class HistogramLogReader
+    public class HistogramLogReader : IDisposable
     {
         private readonly TextReader _log;
         private static readonly Regex StartTimeMatcher = new Regex(@"#\[StartTime: (?<seconds>\d*\.\d{1,3}) ", RegexOptions.Compiled);
@@ -198,6 +198,14 @@ namespace HdrHistogram
         {
             var value = match.Groups[group].Value;
             return double.Parse(value);
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            using (_log) { }
         }
     }
 }

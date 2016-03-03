@@ -4,7 +4,7 @@ using HdrHistogram.Utilities;
 
 namespace HdrHistogram
 {
-    public class HistogramLogWriter
+    public class HistogramLogWriter : IDisposable
     {
         private const string HistogramLogFormatVersion = "1.2";
 
@@ -76,6 +76,14 @@ namespace HdrHistogram
             var payload = $"{startTimeStampSec:F3},{intervalLength:F3},{intervalMax:F3},{binary}";
             _log.WriteLine(payload);
             _log.Flush();
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            using (_log) { }
         }
     }
 }

@@ -19,15 +19,16 @@ namespace HdrHistogram.UnitTests
                 .ToDateFromSecondsSinceEpoch();
 
             using (var writerStream = new MemoryStream())
+            using (var writer = new HistogramLogWriter(writerStream))
             {
-                var writer = new HistogramLogWriter(writerStream);
                 writer.Write(startTimeWritten);
                 data = writerStream.ToArray();
             }
 
             using (var readerStream = new MemoryStream(data))
+            using (var reader = new HistogramLogReader(readerStream))
             {
-                var reader = new HistogramLogReader(readerStream);
+
                 var histograms = reader.ReadHistograms();
                 CollectionAssert.IsEmpty(histograms.ToList());
                 var actual = reader.GetStartTime();
@@ -41,9 +42,9 @@ namespace HdrHistogram.UnitTests
             var histogram = CreatePopulatedHistogram(1000);
             var startTimeWritten = DateTime.Now;
             var endTimeWritten = startTimeWritten.AddMinutes(30);
-            
-            histogram.StartTimeStamp = (long)(startTimeWritten.SecondsSinceUnixEpoch()*1000L);
-            histogram.EndTimeStamp = (long)(endTimeWritten.SecondsSinceUnixEpoch()*1000L);
+
+            histogram.StartTimeStamp = (long)(startTimeWritten.SecondsSinceUnixEpoch() * 1000L);
+            histogram.EndTimeStamp = (long)(endTimeWritten.SecondsSinceUnixEpoch() * 1000L);
 
             var data = WriteLog(startTimeWritten, histogram);
             var actualHistograms = ReadHistograms(data);
@@ -56,8 +57,8 @@ namespace HdrHistogram.UnitTests
         {
             HistogramBase[] actualHistograms;
             using (var readerStream = new MemoryStream(data))
+            using (var reader = new HistogramLogReader(readerStream))
             {
-                var reader = new HistogramLogReader(readerStream);
                 actualHistograms = reader.ReadHistograms().ToArray();
             }
             return actualHistograms;
@@ -67,8 +68,8 @@ namespace HdrHistogram.UnitTests
         {
             byte[] data;
             using (var writerStream = new MemoryStream())
+            using (var writer = new HistogramLogWriter(writerStream))
             {
-                var writer = new HistogramLogWriter(writerStream);
                 writer.Write(startTimeWritten, histogram);
                 data = writerStream.ToArray();
             }
