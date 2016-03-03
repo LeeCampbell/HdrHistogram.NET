@@ -30,7 +30,7 @@ namespace HdrHistogram.Utilities
                 //Add the RFC 1950 headers.
                 compressStream.WriteByte(0x58);
                 compressStream.WriteByte(0x85);
-                using (var compressor = new DeflateStream(compressStream, CompressionMode.Compress))
+                using (var compressor = new DeflateStream(compressStream, CompressionMode.Compress, leaveOpen: true))
                 {
                     input.CopyTo(compressor);
                 }

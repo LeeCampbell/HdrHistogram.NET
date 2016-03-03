@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Net;
 using HdrHistogram.Encoding;
 using HdrHistogram.Utilities;
 
@@ -43,16 +42,15 @@ namespace HdrHistogram
             //Skip the first two bytes (from the RFC 1950 specification) and move to the deflate specification (RFC 1951)
             //  http://george.chiramattel.com/blog/2007/09/deflatestream-block-length-does-not-match.html
             using (var inputStream = new MemoryStream(buffer.ToArray(), buffer.Position + Rfc1950HeaderLength, lengthOfCompressedContents - Rfc1950HeaderLength))
-            using (var decompressor = new DeflateStream(inputStream, CompressionMode.Decompress))
+            using (var decompressor = new DeflateStream(inputStream, CompressionMode.Decompress, leaveOpen: true))
             {
                 var headerBuffer = ByteBuffer.Allocate(headerSize);
                 headerBuffer.ReadFrom(decompressor, headerSize);
                 histogram = DecodeFromByteBuffer<T>(headerBuffer, minBarForHighestTrackableValue, decompressor);
-                var countsLength = histogram.GetNeededByteBufferCapacity() - headerSize;
             }
             return histogram;
         }
-        
+
         /// <summary>
         /// Construct a new histogram by decoding it from a <see cref="ByteBuffer"/>.
         /// </summary>
@@ -128,7 +126,7 @@ namespace HdrHistogram
             }
             throw new NotSupportedException("The buffer does not contain a Histogram (no valid cookie found)");
         }
-        
+
         private static T Create<T>(IHeader header, long minBarForHighestTrackableValue) where T : HistogramBase
         {
             var histogramClass = typeof(T);
@@ -230,24 +228,6 @@ namespace HdrHistogram
             //V1 & V0 word size.
             var sizeByte = (cookie & 0xf0) >> 4;
             return sizeByte & 0xe;
-        }
-
-        private static Type GetHistogramType(int cookie)
-        {
-            //TODO: need to validate this stuff. -LC
-            var wordSize = GetWordSizeInBytesFromCookie(cookie);
-            switch (wordSize)
-            {
-                case 2:
-                    return typeof(ShortHistogram);
-                case 4:
-                    return typeof(IntHistogram);
-                case 8:
-                case 9:
-                    return typeof(LongHistogram);
-                default:
-                    throw new NotSupportedException();
-            }
         }
     }
 }

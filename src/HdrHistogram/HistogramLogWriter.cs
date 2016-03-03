@@ -4,7 +4,7 @@ using HdrHistogram.Utilities;
 
 namespace HdrHistogram
 {
-    public class HistogramLogWriter : IDisposable
+    public sealed class HistogramLogWriter : IDisposable
     {
         private const string HistogramLogFormatVersion = "1.2";
 

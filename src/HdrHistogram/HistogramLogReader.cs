@@ -6,7 +6,7 @@ using HdrHistogram.Utilities;
 
 namespace HdrHistogram
 {
-    public class HistogramLogReader : IDisposable
+    public sealed class HistogramLogReader : IDisposable
     {
         private readonly TextReader _log;
         private static readonly Regex StartTimeMatcher = new Regex(@"#\[StartTime: (?<seconds>\d*\.\d{1,3}) ", RegexOptions.Compiled);
