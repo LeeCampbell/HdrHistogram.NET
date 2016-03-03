@@ -120,7 +120,7 @@ namespace HdrHistogram
             toHistogram.AddWhileCorrectingForCoordinatedOmission(this, expectedIntervalBetweenValueSamples);
             return toHistogram;
         }
-        
+
         /// <summary>
         /// Gets the number of recorded values at a given index.
         /// </summary>
@@ -133,7 +133,7 @@ namespace HdrHistogram
 
         protected override void SetCountAtIndex(int index, long value)
         {
-            _counts[index] = (short) value;
+            _counts[index] = (short)value;
         }
 
         /// <summary>
@@ -181,7 +181,7 @@ namespace HdrHistogram
         /// <returns></returns>
         protected override long ReadWord(ByteBuffer buffer)
         {
-            return (long) buffer.GetShort();
+            return (long)buffer.GetShort();
         }
 
         /// <summary>
