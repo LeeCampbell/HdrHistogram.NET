@@ -3,7 +3,7 @@ using System.IO.Compression;
 
 namespace HdrHistogram.Utilities
 {
-    public static class ByteBufferExtensions
+    internal static class ByteBufferExtensions
     {
         /// <summary>
         /// Copies compressed contents from <paramref name="source"/> into the <paramref name="target"/> from the <paramref name="targetOffset"/>

@@ -14,7 +14,10 @@ using System.Collections.Generic;
 
 namespace HdrHistogram.Iteration
 {
-    public abstract class AbstractHistogramEnumerator : IEnumerator<HistogramIterationValue>
+    /// <summary>
+    /// Provide functionality for enumerating over histogram counts.
+    /// </summary>
+    internal abstract class AbstractHistogramEnumerator : IEnumerator<HistogramIterationValue>
     {
         private readonly long _savedHistogramTotalRawCount;
         private readonly HistogramIterationValue _currentIterationValue;

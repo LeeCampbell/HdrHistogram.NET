@@ -6,6 +6,9 @@ using HdrHistogram.Utilities;
 
 namespace HdrHistogram
 {
+    /// <summary>
+    /// Exposes functionality to encode and decode <see cref="HistogramBase"/> types.
+    /// </summary>
     public static class Histogram
     {
         private const int UncompressedDoubleHistogramEncodingCookie = 0x0c72124e;
@@ -102,6 +105,17 @@ namespace HdrHistogram
             int bytesWritten = compressedDataLength + 8;
             targetBuffer.Position = (initialTargetPosition + bytesWritten);
             return bytesWritten;
+        }
+
+        /// <summary>
+        /// Gets the encoding cookie for a Histogram.
+        /// </summary>
+        /// <param name="histogram">The histogram to get the cookie for</param>
+        /// <returns>The integer cookie value for the histogram.</returns>
+        public static int GetEncodingCookie(this HistogramBase histogram)
+        {
+            //return EncodingCookieBase + (histogram.WordSizeInBytes << 4);
+            return EncodingCookieBaseV2 | 0x10; // LSBit of wordsize byte indicates TLZE Encoding            
         }
 
         private static IHeader ReadHeader(ByteBuffer buffer)
@@ -203,12 +217,6 @@ namespace HdrHistogram
         private static int GetCookieBase(int cookie)
         {
             return (cookie & ~0xf0);
-        }
-
-        public static int GetEncodingCookie(this HistogramBase histogram)
-        {
-            //return EncodingCookieBase + (histogram.WordSizeInBytes << 4);
-            return EncodingCookieBaseV2 | 0x10; // LSBit of wordsize byte indicates TLZE Encoding            
         }
 
         private static int GetCompressedEncodingCookie(this HistogramBase histogram)

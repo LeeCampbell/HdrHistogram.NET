@@ -4,6 +4,10 @@ using HdrHistogram.Utilities;
 
 namespace HdrHistogram
 {
+    /// <summary>
+    /// Writes zero, one or many <see cref="HistogramBase"/> instances to a <see cref="Stream"/>.
+    /// </summary>
+    /// <seealso cref="HistogramLogReader"/>
     public sealed class HistogramLogWriter : IDisposable
     {
         private const string HistogramLogFormatVersion = "1.2";
@@ -21,6 +25,13 @@ namespace HdrHistogram
             _log.NewLine = "\n";
         }
 
+        //TODO: Expose as a static only method. Make the ctor and Write method private. -LC
+
+        /// <summary>
+        /// Writes the provided histograms to the underlying <see cref="Stream"/> with a given overall start time.
+        /// </summary>
+        /// <param name="startTime">The start time of the set of histograms.</param>
+        /// <param name="histograms">A params array of histograms.</param>
         public void Write(DateTime startTime, params HistogramBase[] histograms)
         {
             WriteLogFormatVersion();

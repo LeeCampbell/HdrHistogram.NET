@@ -8,45 +8,15 @@
  * https://github.com/HdrHistogram/HdrHistogram
  */
 
-using System.Collections;
-using System.Collections.Generic;
-
 namespace HdrHistogram.Iteration
 {
-    /// <summary>
-    /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="LogarithmicEnumerator"/>
-    /// </summary>
-    sealed class LogarithmicBucketEnumerable : IEnumerable<HistogramIterationValue>
-    {
-        private readonly HistogramBase _histogram;
-        private readonly int _valueUnitsInFirstBucket;
-        private readonly double _logBase;
-
-        public LogarithmicBucketEnumerable(HistogramBase histogram, int valueUnitsInFirstBucket, double logBase)
-        {
-            _histogram = histogram;
-            _valueUnitsInFirstBucket = valueUnitsInFirstBucket;
-            _logBase = logBase;
-        }
-
-        public IEnumerator<HistogramIterationValue> GetEnumerator()
-        {
-            return new LogarithmicEnumerator(_histogram, _valueUnitsInFirstBucket, _logBase);
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-    }
-
     /// <summary>
     /// Used for iterating through histogram values in logarithmically increasing levels. The iteration is
     /// performed in steps that start at<i>valueUnitsInFirstBucket</i> and increase exponentially according to
     /// <i>logBase</i>, terminating when all recorded histogram values are exhausted. Note that each iteration "bucket"
     /// includes values up to and including the next bucket boundary value.
     /// </summary>
-    sealed class LogarithmicEnumerator : AbstractHistogramEnumerator
+    internal sealed class LogarithmicEnumerator : AbstractHistogramEnumerator
     {
         private readonly double _logBase;
         private long _nextValueReportingLevel;

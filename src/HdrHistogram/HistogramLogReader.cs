@@ -6,6 +6,9 @@ using HdrHistogram.Utilities;
 
 namespace HdrHistogram
 {
+    /// <summary>
+    /// Reads a log of Histograms from the provided <see cref="Stream"/>.
+    /// </summary>
     public sealed class HistogramLogReader : IDisposable
     {
         private readonly TextReader _log;
@@ -15,13 +18,20 @@ namespace HdrHistogram
         private static readonly Regex LogLineMatcher = new Regex(@"(?<startTime>\d*\.\d*),(?<interval>\d*\.\d*),(?<max>\d*\.\d*),(?<payload>.*)", RegexOptions.Compiled);
         private double _startTimeInSeconds;
 
-
+        /// <summary>
+        /// Creates a <see cref="HistogramLogReader"/> that reads from the provided <see cref="Stream"/>.
+        /// </summary>
+        /// <param name="inputStream">The <see cref="Stream"/> to read from.</param>
         public HistogramLogReader(Stream inputStream)
         {
             _log = new StreamReader(inputStream);
         }
 
-        public IEnumerable<HistogramBase> ReadHistograms(bool isAbsolute = true)
+        /// <summary>
+        /// Reads each histogram out from the underlying stream.
+        /// </summary>
+        /// <returns>Return a lazily evaluated sequence of histograms.</returns>
+        public IEnumerable<HistogramBase> ReadHistograms()
         {
             _startTimeInSeconds = 0;
             double baseTimeInSeconds = 0;
@@ -83,23 +93,9 @@ namespace HdrHistogram
                     }
 
                     double absoluteStartTimeStampSec = logTimeStampInSec + baseTimeInSeconds;
-                    double offsetStartTimeStampSec = absoluteStartTimeStampSec - _startTimeInSeconds;
                     double absoluteEndTimeStampSec = absoluteStartTimeStampSec + intervalLength;
-                    double startTimeStampToCheckRangeOn = isAbsolute ? absoluteStartTimeStampSec : offsetStartTimeStampSec;
 
-
-                    //TODO: Port what ever this is -LC
-                    //if (startTimeStampToCheckRangeOn < rangeStartTimeSec)
-                    //{
-                    //    scanner.nextLine();
-                    //    continue;
-                    //}
-
-                    //if (startTimeStampToCheckRangeOn > rangeEndTimeSec)
-                    //{
-                    //    return null;
-                    //}
-
+                    
                     byte[] bytes = Convert.FromBase64String(payload);
                     var buffer = ByteBuffer.Allocate(bytes);
                     var histogram = DecodeHistogram(buffer, 0);
@@ -109,7 +105,6 @@ namespace HdrHistogram
                 }
             }
         }
-
 
         private static HistogramBase DecodeHistogram(ByteBuffer buffer, long minBarForHighestTrackableValue)
         {
