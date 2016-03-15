@@ -18,6 +18,13 @@ namespace HdrHistogram.Utilities
         {
             return (source.UtcTicks - EpochInTicks) / (double)TimeSpan.TicksPerSecond;
         }
+
+        /// <summary>
+        /// Gets the seconds elapsed since the Unix Epoch (01-Jan-1970 UTC)
+        /// </summary>
+        /// <param name="source">The source time.</param>
+        /// <returns>Returns the number whole and partial seconds elapsed since the Unix Epoch until the <paramref name="source"/> time.</returns>
+        /// <exception cref="ArgumentException">Thrown if the <paramref name="source"/> Kind is <see cref="DateTimeKind.Unspecified"/>.</exception>
         public static double SecondsSinceUnixEpoch(this DateTime source)
         {
             if(source.Kind==DateTimeKind.Unspecified) throw new ArgumentException("DateTime must have kind specified.");
