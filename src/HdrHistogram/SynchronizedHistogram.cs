@@ -221,6 +221,10 @@ namespace HdrHistogram
             }
         }
 
+        /// <summary>
+        /// Copies the internal counts array into the supplied array.
+        /// </summary>
+        /// <param name="target">The array to write each count value into.</param>
         protected override void CopyCountsInto(long[] target)
         {
             lock (UpdateLock)
@@ -229,19 +233,14 @@ namespace HdrHistogram
             }
         }
 
-        ///// <summary>
-        ///// Copies data from the provided buffer into the internal counts array.
-        ///// </summary>
-        ///// <param name="buffer">The buffer to read from.</param>
-        ///// <param name="length">The length of the buffer to read.</param>
-        //internal override void FillCountsArrayFromBuffer(ByteBuffer buffer, int length)
-        //{
-        //    lock (UpdateLock)
-        //    {
-        //        buffer.AsLongBuffer().Get(_counts, 0, length);
-        //    }
-        //}
-
+        /// <summary>
+        /// Reads a single value from the <paramref name="buffer"/>. 
+        /// </summary>
+        /// <param name="buffer">The <see cref="ByteBuffer"/> to read the single value from</param>
+        /// <returns>The value as a <c>long</c>.</returns>
+        /// <remarks>
+        /// Implementations may have different word sizes i.e. short(2), int(4) or long(8).
+        /// </remarks>
         protected override long ReadWord(ByteBuffer buffer)
         {
             return buffer.GetLong();

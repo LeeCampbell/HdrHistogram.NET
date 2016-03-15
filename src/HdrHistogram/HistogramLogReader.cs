@@ -166,9 +166,18 @@ namespace HdrHistogram
             return ParseDouble(match, "seconds");
         }
 
-        //TODO: It would be good if this could expose a DateTimeOffset, however currently that would be misleading, as that level of fidelity is not captured. -LC
+
+        /// <summary>
+        /// Gets the start time for the set of Histograms.
+        /// </summary>
+        /// <returns>Either the explicit encoded start time, or falls back to the start time of the first histogram.</returns>
+        /// <remarks>
+        /// The current implementation requires the consumer to only use this after enumerating the Histograms from the <see cref="ReadHistograms()"/> method.
+        /// </remarks>
         public DateTime GetStartTime()
         {
+            //NOTE: It would be good if this could expose a DateTimeOffset, however currently that would be misleading, as that level of fidelity is not captured. -LC
+
             //If StartTime was set (#[StartTime:...) use it, else use the first `logTimestampInSec`
             //This method is odd, in that it only works if the file has been read. That is a bit shit. -LC
 

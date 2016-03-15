@@ -185,20 +185,7 @@ namespace HdrHistogram
                 target[i] = _counts[i];
             }
         }
-
-        ///// <summary>
-        ///// Copies data from the provided buffer into the internal counts array.
-        ///// </summary>
-        ///// <param name="buffer">The buffer to read from.</param>
-        ///// <param name="length">The length of the buffer to read.</param>
-        //internal override void FillCountsArrayFromBuffer(ByteBuffer buffer, int length)
-        //{
-        //    lock (UpdateLock)
-        //    {
-        //        buffer.AsIntBuffer().Get(_counts, 0, length);
-        //    }
-        //}
-
+        
         /// <summary>
         /// Reads a single value from the <paramref name="buffer"/>. 
         /// </summary>
