@@ -12,6 +12,7 @@ namespace HdrHistogram
     public sealed class HistogramLogReader : IDisposable
     {
         private readonly TextReader _log;
+        //TODO: I think this should be able to cater for 0dp -LC
         private static readonly Regex StartTimeMatcher = new Regex(@"#\[StartTime: (?<seconds>\d*\.\d{1,3}) ", RegexOptions.Compiled);
         private static readonly Regex BaseTimeMatcher = new Regex(@"#\[BaseTime: (?<seconds>\d*\.\d{1,3}) ", RegexOptions.Compiled);
         //Content lines - format =  startTimestamp, intervalLength, maxTime, histogramPayload
@@ -24,7 +25,7 @@ namespace HdrHistogram
         /// <param name="inputStream">The <see cref="Stream"/> to read from.</param>
         public HistogramLogReader(Stream inputStream)
         {
-            _log = new StreamReader(inputStream);
+            _log = new StreamReader(inputStream, System.Text.Encoding.UTF8, true, 1024, true);
         }
 
         /// <summary>
@@ -119,8 +120,6 @@ namespace HdrHistogram
             return Histogram.DecodeFromCompressedByteBuffer<LongHistogram>(buffer, minBarForHighestTrackableValue);
             //}
         }
-
-
 
 
         private const int UncompressedDoubleHistogramEncodingCookie = 0x0c72124e;

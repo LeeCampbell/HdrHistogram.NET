@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using HdrHistogram.Encoding;
@@ -29,6 +30,33 @@ namespace HdrHistogram
         private const int Rfc1950HeaderLength = 2;
 
         private static readonly Type[] HistogramClassConstructorArgsTypes = { typeof(long), typeof(long), typeof(int) };
+
+        /// <summary>
+        /// Writes the provided histograms to the underlying <see cref="Stream"/> with a given overall start time.
+        /// </summary>
+        /// <param name="outputStream">The <see cref="Stream"/> to write to.</param>
+        /// <param name="startTime">The start time of the set of histograms.</param>
+        /// <param name="histograms">The histograms to include in the output.</param>
+        public static void Write(Stream outputStream, DateTime startTime, params HistogramBase[] histograms)
+        {
+            using (var writer = new HistogramLogWriter(outputStream))
+            {
+                writer.Write(startTime, histograms);
+            }
+        }
+
+        /// <summary>
+        /// Reads each histogram out from the underlying stream.
+        /// </summary>
+        /// <param name="inputStream">The <see cref="Stream"/> to read from.</param>
+        /// <returns>Return a lazily evaluated sequence of histograms.</returns>
+        public static IEnumerable<HistogramBase> Read(Stream inputStream)
+        {
+            using (var reader = new HistogramLogReader(inputStream))
+            {
+                return reader.ReadHistograms();
+            }
+        }
 
         /// <summary>
         /// Construct a new histogram by decoding it from a compressed form in a ByteBuffer.

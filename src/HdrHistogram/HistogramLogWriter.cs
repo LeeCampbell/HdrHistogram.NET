@@ -21,17 +21,15 @@ namespace HdrHistogram
         public HistogramLogWriter(Stream outputStream)
         {
             //TODO: Validate the Encoding. -LC
-            _log = new StreamWriter(outputStream, System.Text.Encoding.BigEndianUnicode);
+            _log = new StreamWriter(outputStream, System.Text.Encoding.BigEndianUnicode, 1024, true);
             _log.NewLine = "\n";
         }
-
-        //TODO: Expose as a static only method. Make the ctor and Write method private. -LC
 
         /// <summary>
         /// Writes the provided histograms to the underlying <see cref="Stream"/> with a given overall start time.
         /// </summary>
         /// <param name="startTime">The start time of the set of histograms.</param>
-        /// <param name="histograms">A params array of histograms.</param>
+        /// <param name="histograms">The histograms to include in the output.</param>
         public void Write(DateTime startTime, params HistogramBase[] histograms)
         {
             WriteLogFormatVersion();

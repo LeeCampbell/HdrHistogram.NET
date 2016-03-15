@@ -19,20 +19,17 @@ namespace HdrHistogram.UnitTests
                 .ToDateFromSecondsSinceEpoch();
 
             using (var writerStream = new MemoryStream())
-            using (var writer = new HistogramLogWriter(writerStream))
             {
-                writer.Write(startTimeWritten);
+                Histogram.Write(writerStream, startTimeWritten);
                 data = writerStream.ToArray();
             }
 
             using (var readerStream = new MemoryStream(data))
-            using (var reader = new HistogramLogReader(readerStream))
             {
-
-                var histograms = reader.ReadHistograms();
-                CollectionAssert.IsEmpty(histograms.ToList());
-                var actual = reader.GetStartTime();
-                Assert.AreEqual(expectedStartTime, actual);
+                var reader = new HistogramLogReader(readerStream);
+                CollectionAssert.IsEmpty(reader.ReadHistograms().ToList());
+                var actualStartTime = reader.GetStartTime();
+                Assert.AreEqual(expectedStartTime, actualStartTime);
             }
         }
 
@@ -57,9 +54,8 @@ namespace HdrHistogram.UnitTests
         {
             HistogramBase[] actualHistograms;
             using (var readerStream = new MemoryStream(data))
-            using (var reader = new HistogramLogReader(readerStream))
             {
-                actualHistograms = reader.ReadHistograms().ToArray();
+                actualHistograms = Histogram.Read(readerStream).ToArray();
             }
             return actualHistograms;
         }
@@ -68,9 +64,8 @@ namespace HdrHistogram.UnitTests
         {
             byte[] data;
             using (var writerStream = new MemoryStream())
-            using (var writer = new HistogramLogWriter(writerStream))
             {
-                writer.Write(startTimeWritten, histogram);
+                Histogram.Write(writerStream,startTimeWritten, histogram);
                 data = writerStream.ToArray();
             }
             return data;
@@ -90,7 +85,7 @@ namespace HdrHistogram.UnitTests
         public void CanReadv2Logs(string logPath)
         {
             var readerStream = File.OpenRead(logPath);
-            HistogramLogReader reader = new HistogramLogReader(readerStream);
+            var reader = new HistogramLogReader(readerStream);
             int histogramCount = 0;
             long totalCount = 0;
             var accumulatedHistogram = new LongHistogram(85899345920838, 3);
