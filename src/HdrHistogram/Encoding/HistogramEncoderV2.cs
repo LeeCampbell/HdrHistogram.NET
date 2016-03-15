@@ -3,10 +3,23 @@ using HdrHistogram.Utilities;
 
 namespace HdrHistogram.Encoding
 {
+    /// <summary>
+    /// An implementation of <see cref="IEncoder"/> for the V2 HdrHistogram log format.
+    /// </summary>
     public class HistogramEncoderV2 : IEncoder
     {
+        /// <summary>
+        /// A singleton instance of the <see cref="HistogramEncoderV2"/>.
+        /// </summary>
         public static readonly HistogramEncoderV2 Instance = new HistogramEncoderV2();
 
+
+        /// <summary>
+        /// Encodes the supplied <see cref="IRecordedData"/> into the supplied <see cref="ByteBuffer"/>.
+        /// </summary>
+        /// <param name="data">The data to encode.</param>
+        /// <param name="buffer">The target <see cref="ByteBuffer"/> to write to.</param>
+        /// <returns>The number of bytes written.</returns>
         public int Encode(IRecordedData data, ByteBuffer buffer)
         {
             int initialPosition = buffer.Position;

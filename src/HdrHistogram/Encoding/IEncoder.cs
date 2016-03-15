@@ -8,7 +8,7 @@ namespace HdrHistogram.Encoding
     public interface IEncoder
     {
         /// <summary>
-        /// Encodes the supplied <see cref="IRecordedData"/> into the supplied <see cref="ByteBuffer"/>
+        /// Encodes the supplied <see cref="IRecordedData"/> into the supplied <see cref="ByteBuffer"/>.
         /// </summary>
         /// <param name="data">The data to encode.</param>
         /// <param name="buffer">The target <see cref="ByteBuffer"/> to write to.</param>
