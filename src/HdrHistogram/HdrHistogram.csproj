@@ -37,6 +37,7 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
     <DocumentationFile>bin\Release\HdrHistogram.XML</DocumentationFile>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -56,6 +57,10 @@
     <Compile Include="HistogramExtensions.cs" />
     <Compile Include="HistogramLogReader.cs" />
     <Compile Include="HistogramLogWriter.cs" />
+    <Compile Include="Iteration\AllValueEnumerable.cs" />
+    <Compile Include="Iteration\LinearBucketEnumerable.cs" />
+    <Compile Include="Iteration\LogarithmicBucketEnumerable.cs" />
+    <Compile Include="Iteration\PercentileEnumerable.cs" />
     <Compile Include="OutputScalingFactor.cs" />
     <Compile Include="Persistence\IntCountsDecoder.cs" />
     <Compile Include="Persistence\LongCountsDecoder.cs" />

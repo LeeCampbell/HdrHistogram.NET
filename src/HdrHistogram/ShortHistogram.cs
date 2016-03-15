@@ -86,6 +86,9 @@ namespace HdrHistogram
         /// </summary>
         protected override int WordSizeInBytes => 2;
 
+        /// <summary>
+        /// The maximum value a count can be for any given bucket.
+        /// </summary>
         protected override long MaxAllowableCount => short.MaxValue;
 
         /// <summary>
@@ -131,6 +134,11 @@ namespace HdrHistogram
             return _counts[index];
         }
 
+        /// <summary>
+        /// Sets the count at the given index.
+        /// </summary>
+        /// <param name="index">The index to be set</param>
+        /// <param name="value">The value to set</param>
         protected override void SetCountAtIndex(int index, long value)
         {
             _counts[index] = (short)value;
@@ -166,6 +174,10 @@ namespace HdrHistogram
             _totalCount = 0;
         }
 
+        /// <summary>
+        /// Copies the internal counts array into the supplied array.
+        /// </summary>
+        /// <param name="target">The array to write each count value into.</param>
         protected override void CopyCountsInto(long[] target)
         {
             for (int i = 0; i < target.Length; i++)

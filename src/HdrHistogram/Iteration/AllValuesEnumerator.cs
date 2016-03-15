@@ -8,33 +8,8 @@
  * https://github.com/HdrHistogram/HdrHistogram
  */
 
-using System.Collections;
-using System.Collections.Generic;
-
 namespace HdrHistogram.Iteration
 {
-    /// <summary>
-    /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="AllValuesEnumerator"/>
-    /// </summary>
-    internal sealed class AllValueEnumerable : IEnumerable<HistogramIterationValue>
-    {
-        private readonly HistogramBase _histogram;
-
-        public AllValueEnumerable(HistogramBase histogram)
-        {
-            _histogram = histogram;
-        }
-
-        public IEnumerator<HistogramIterationValue> GetEnumerator()
-        {
-            return new AllValuesEnumerator(_histogram);
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-    }
     /// <summary>
     /// Used for iterating through histogram values using the finest granularity steps supported by the underlying
     /// representation.The iteration steps through all possible unit value levels, regardless of whether or not

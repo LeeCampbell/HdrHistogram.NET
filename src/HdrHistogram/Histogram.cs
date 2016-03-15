@@ -1,12 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Net;
 using HdrHistogram.Encoding;
 using HdrHistogram.Utilities;
 
 namespace HdrHistogram
 {
+    /// <summary>
+    /// Exposes functionality to encode and decode <see cref="HistogramBase"/> types.
+    /// </summary>
     public static class Histogram
     {
         private const int UncompressedDoubleHistogramEncodingCookie = 0x0c72124e;
@@ -29,6 +32,33 @@ namespace HdrHistogram
         private static readonly Type[] HistogramClassConstructorArgsTypes = { typeof(long), typeof(long), typeof(int) };
 
         /// <summary>
+        /// Writes the provided histograms to the underlying <see cref="Stream"/> with a given overall start time.
+        /// </summary>
+        /// <param name="outputStream">The <see cref="Stream"/> to write to.</param>
+        /// <param name="startTime">The start time of the set of histograms.</param>
+        /// <param name="histograms">The histograms to include in the output.</param>
+        public static void Write(Stream outputStream, DateTime startTime, params HistogramBase[] histograms)
+        {
+            using (var writer = new HistogramLogWriter(outputStream))
+            {
+                writer.Write(startTime, histograms);
+            }
+        }
+
+        /// <summary>
+        /// Reads each histogram out from the underlying stream.
+        /// </summary>
+        /// <param name="inputStream">The <see cref="Stream"/> to read from.</param>
+        /// <returns>Return a lazily evaluated sequence of histograms.</returns>
+        public static IEnumerable<HistogramBase> Read(Stream inputStream)
+        {
+            using (var reader = new HistogramLogReader(inputStream))
+            {
+                return reader.ReadHistograms();
+            }
+        }
+
+        /// <summary>
         /// Construct a new histogram by decoding it from a compressed form in a ByteBuffer.
         /// </summary>
         /// <param name="buffer">The buffer to decode from</param>
@@ -43,16 +73,15 @@ namespace HdrHistogram
             //Skip the first two bytes (from the RFC 1950 specification) and move to the deflate specification (RFC 1951)
             //  http://george.chiramattel.com/blog/2007/09/deflatestream-block-length-does-not-match.html
             using (var inputStream = new MemoryStream(buffer.ToArray(), buffer.Position + Rfc1950HeaderLength, lengthOfCompressedContents - Rfc1950HeaderLength))
-            using (var decompressor = new DeflateStream(inputStream, CompressionMode.Decompress))
+            using (var decompressor = new DeflateStream(inputStream, CompressionMode.Decompress, leaveOpen: true))
             {
                 var headerBuffer = ByteBuffer.Allocate(headerSize);
                 headerBuffer.ReadFrom(decompressor, headerSize);
                 histogram = DecodeFromByteBuffer<T>(headerBuffer, minBarForHighestTrackableValue, decompressor);
-                var countsLength = histogram.GetNeededByteBufferCapacity() - headerSize;
             }
             return histogram;
         }
-        
+
         /// <summary>
         /// Construct a new histogram by decoding it from a <see cref="ByteBuffer"/>.
         /// </summary>
@@ -106,6 +135,17 @@ namespace HdrHistogram
             return bytesWritten;
         }
 
+        /// <summary>
+        /// Gets the encoding cookie for a Histogram.
+        /// </summary>
+        /// <param name="histogram">The histogram to get the cookie for</param>
+        /// <returns>The integer cookie value for the histogram.</returns>
+        public static int GetEncodingCookie(this HistogramBase histogram)
+        {
+            //return EncodingCookieBase + (histogram.WordSizeInBytes << 4);
+            return EncodingCookieBaseV2 | 0x10; // LSBit of wordsize byte indicates TLZE Encoding            
+        }
+
         private static IHeader ReadHeader(ByteBuffer buffer)
         {
             var cookie = buffer.GetInt();
@@ -128,7 +168,7 @@ namespace HdrHistogram
             }
             throw new NotSupportedException("The buffer does not contain a Histogram (no valid cookie found)");
         }
-        
+
         private static T Create<T>(IHeader header, long minBarForHighestTrackableValue) where T : HistogramBase
         {
             var histogramClass = typeof(T);
@@ -207,12 +247,6 @@ namespace HdrHistogram
             return (cookie & ~0xf0);
         }
 
-        public static int GetEncodingCookie(this HistogramBase histogram)
-        {
-            //return EncodingCookieBase + (histogram.WordSizeInBytes << 4);
-            return EncodingCookieBaseV2 | 0x10; // LSBit of wordsize byte indicates TLZE Encoding            
-        }
-
         private static int GetCompressedEncodingCookie(this HistogramBase histogram)
         {
             //return CompressedEncodingCookieBaseV2 + (histogram.WordSizeInBytes << 4);
@@ -230,24 +264,6 @@ namespace HdrHistogram
             //V1 & V0 word size.
             var sizeByte = (cookie & 0xf0) >> 4;
             return sizeByte & 0xe;
-        }
-
-        private static Type GetHistogramType(int cookie)
-        {
-            //TODO: need to validate this stuff. -LC
-            var wordSize = GetWordSizeInBytesFromCookie(cookie);
-            switch (wordSize)
-            {
-                case 2:
-                    return typeof(ShortHistogram);
-                case 4:
-                    return typeof(IntHistogram);
-                case 8:
-                case 9:
-                    return typeof(LongHistogram);
-                default:
-                    throw new NotSupportedException();
-            }
         }
     }
 }

@@ -6,22 +6,33 @@ using HdrHistogram.Utilities;
 
 namespace HdrHistogram
 {
-    public class HistogramLogReader
+    /// <summary>
+    /// Reads a log of Histograms from the provided <see cref="Stream"/>.
+    /// </summary>
+    public sealed class HistogramLogReader : IDisposable
     {
         private readonly TextReader _log;
+        //TODO: I think this should be able to cater for 0dp -LC
         private static readonly Regex StartTimeMatcher = new Regex(@"#\[StartTime: (?<seconds>\d*\.\d{1,3}) ", RegexOptions.Compiled);
         private static readonly Regex BaseTimeMatcher = new Regex(@"#\[BaseTime: (?<seconds>\d*\.\d{1,3}) ", RegexOptions.Compiled);
         //Content lines - format =  startTimestamp, intervalLength, maxTime, histogramPayload
         private static readonly Regex LogLineMatcher = new Regex(@"(?<startTime>\d*\.\d*),(?<interval>\d*\.\d*),(?<max>\d*\.\d*),(?<payload>.*)", RegexOptions.Compiled);
         private double _startTimeInSeconds;
 
-
+        /// <summary>
+        /// Creates a <see cref="HistogramLogReader"/> that reads from the provided <see cref="Stream"/>.
+        /// </summary>
+        /// <param name="inputStream">The <see cref="Stream"/> to read from.</param>
         public HistogramLogReader(Stream inputStream)
         {
-            _log = new StreamReader(inputStream);
+            _log = new StreamReader(inputStream, System.Text.Encoding.UTF8, true, 1024, true);
         }
 
-        public IEnumerable<HistogramBase> ReadHistograms(bool isAbsolute = true)
+        /// <summary>
+        /// Reads each histogram out from the underlying stream.
+        /// </summary>
+        /// <returns>Return a lazily evaluated sequence of histograms.</returns>
+        public IEnumerable<HistogramBase> ReadHistograms()
         {
             _startTimeInSeconds = 0;
             double baseTimeInSeconds = 0;
@@ -83,23 +94,9 @@ namespace HdrHistogram
                     }
 
                     double absoluteStartTimeStampSec = logTimeStampInSec + baseTimeInSeconds;
-                    double offsetStartTimeStampSec = absoluteStartTimeStampSec - _startTimeInSeconds;
                     double absoluteEndTimeStampSec = absoluteStartTimeStampSec + intervalLength;
-                    double startTimeStampToCheckRangeOn = isAbsolute ? absoluteStartTimeStampSec : offsetStartTimeStampSec;
 
-
-                    //TODO: Port what ever this is -LC
-                    //if (startTimeStampToCheckRangeOn < rangeStartTimeSec)
-                    //{
-                    //    scanner.nextLine();
-                    //    continue;
-                    //}
-
-                    //if (startTimeStampToCheckRangeOn > rangeEndTimeSec)
-                    //{
-                    //    return null;
-                    //}
-
+                    
                     byte[] bytes = Convert.FromBase64String(payload);
                     var buffer = ByteBuffer.Allocate(bytes);
                     var histogram = DecodeHistogram(buffer, 0);
@@ -109,7 +106,6 @@ namespace HdrHistogram
                 }
             }
         }
-
 
         private static HistogramBase DecodeHistogram(ByteBuffer buffer, long minBarForHighestTrackableValue)
         {
@@ -124,8 +120,6 @@ namespace HdrHistogram
             return Histogram.DecodeFromCompressedByteBuffer<LongHistogram>(buffer, minBarForHighestTrackableValue);
             //}
         }
-
-
 
 
         private const int UncompressedDoubleHistogramEncodingCookie = 0x0c72124e;
@@ -172,9 +166,18 @@ namespace HdrHistogram
             return ParseDouble(match, "seconds");
         }
 
-        //TODO: It would be good if this could expose a DateTimeOffset, however currently that would be misleading, as that level of fidelity is not captured. -LC
+
+        /// <summary>
+        /// Gets the start time for the set of Histograms.
+        /// </summary>
+        /// <returns>Either the explicit encoded start time, or falls back to the start time of the first histogram.</returns>
+        /// <remarks>
+        /// The current implementation requires the consumer to only use this after enumerating the Histograms from the <see cref="ReadHistograms()"/> method.
+        /// </remarks>
         public DateTime GetStartTime()
         {
+            //NOTE: It would be good if this could expose a DateTimeOffset, however currently that would be misleading, as that level of fidelity is not captured. -LC
+
             //If StartTime was set (#[StartTime:...) use it, else use the first `logTimestampInSec`
             //This method is odd, in that it only works if the file has been read. That is a bit shit. -LC
 
@@ -198,6 +201,14 @@ namespace HdrHistogram
         {
             var value = match.Groups[group].Value;
             return double.Parse(value);
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            using (_log) { }
         }
     }
 }

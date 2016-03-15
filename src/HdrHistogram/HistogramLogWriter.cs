@@ -4,7 +4,11 @@ using HdrHistogram.Utilities;
 
 namespace HdrHistogram
 {
-    public class HistogramLogWriter
+    /// <summary>
+    /// Writes zero, one or many <see cref="HistogramBase"/> instances to a <see cref="Stream"/>.
+    /// </summary>
+    /// <seealso cref="HistogramLogReader"/>
+    public sealed class HistogramLogWriter : IDisposable
     {
         private const string HistogramLogFormatVersion = "1.2";
 
@@ -17,10 +21,15 @@ namespace HdrHistogram
         public HistogramLogWriter(Stream outputStream)
         {
             //TODO: Validate the Encoding. -LC
-            _log = new StreamWriter(outputStream, System.Text.Encoding.BigEndianUnicode);
+            _log = new StreamWriter(outputStream, System.Text.Encoding.BigEndianUnicode, 1024, true);
             _log.NewLine = "\n";
         }
 
+        /// <summary>
+        /// Writes the provided histograms to the underlying <see cref="Stream"/> with a given overall start time.
+        /// </summary>
+        /// <param name="startTime">The start time of the set of histograms.</param>
+        /// <param name="histograms">The histograms to include in the output.</param>
         public void Write(DateTime startTime, params HistogramBase[] histograms)
         {
             WriteLogFormatVersion();
@@ -76,6 +85,14 @@ namespace HdrHistogram
             var payload = $"{startTimeStampSec:F3},{intervalLength:F3},{intervalMax:F3},{binary}";
             _log.WriteLine(payload);
             _log.Flush();
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            using (_log) { }
         }
     }
 }

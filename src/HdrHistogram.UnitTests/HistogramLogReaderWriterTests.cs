@@ -20,18 +20,16 @@ namespace HdrHistogram.UnitTests
 
             using (var writerStream = new MemoryStream())
             {
-                var writer = new HistogramLogWriter(writerStream);
-                writer.Write(startTimeWritten);
+                Histogram.Write(writerStream, startTimeWritten);
                 data = writerStream.ToArray();
             }
 
             using (var readerStream = new MemoryStream(data))
             {
                 var reader = new HistogramLogReader(readerStream);
-                var histograms = reader.ReadHistograms();
-                CollectionAssert.IsEmpty(histograms.ToList());
-                var actual = reader.GetStartTime();
-                Assert.AreEqual(expectedStartTime, actual);
+                CollectionAssert.IsEmpty(reader.ReadHistograms().ToList());
+                var actualStartTime = reader.GetStartTime();
+                Assert.AreEqual(expectedStartTime, actualStartTime);
             }
         }
 
@@ -41,9 +39,9 @@ namespace HdrHistogram.UnitTests
             var histogram = CreatePopulatedHistogram(1000);
             var startTimeWritten = DateTime.Now;
             var endTimeWritten = startTimeWritten.AddMinutes(30);
-            
-            histogram.StartTimeStamp = (long)(startTimeWritten.SecondsSinceUnixEpoch()*1000L);
-            histogram.EndTimeStamp = (long)(endTimeWritten.SecondsSinceUnixEpoch()*1000L);
+
+            histogram.StartTimeStamp = (long)(startTimeWritten.SecondsSinceUnixEpoch() * 1000L);
+            histogram.EndTimeStamp = (long)(endTimeWritten.SecondsSinceUnixEpoch() * 1000L);
 
             var data = WriteLog(startTimeWritten, histogram);
             var actualHistograms = ReadHistograms(data);
@@ -57,8 +55,7 @@ namespace HdrHistogram.UnitTests
             HistogramBase[] actualHistograms;
             using (var readerStream = new MemoryStream(data))
             {
-                var reader = new HistogramLogReader(readerStream);
-                actualHistograms = reader.ReadHistograms().ToArray();
+                actualHistograms = Histogram.Read(readerStream).ToArray();
             }
             return actualHistograms;
         }
@@ -68,8 +65,7 @@ namespace HdrHistogram.UnitTests
             byte[] data;
             using (var writerStream = new MemoryStream())
             {
-                var writer = new HistogramLogWriter(writerStream);
-                writer.Write(startTimeWritten, histogram);
+                Histogram.Write(writerStream,startTimeWritten, histogram);
                 data = writerStream.ToArray();
             }
             return data;
@@ -89,10 +85,9 @@ namespace HdrHistogram.UnitTests
         public void CanReadv2Logs(string logPath)
         {
             var readerStream = File.OpenRead(logPath);
-            HistogramLogReader reader = new HistogramLogReader(readerStream);
+            var reader = new HistogramLogReader(readerStream);
             int histogramCount = 0;
             long totalCount = 0;
-            HistogramBase encodeableHistogram = null;
             var accumulatedHistogram = new LongHistogram(85899345920838, 3);
             foreach (var histogram in reader.ReadHistograms())
             {

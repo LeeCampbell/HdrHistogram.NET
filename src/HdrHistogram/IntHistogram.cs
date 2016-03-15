@@ -86,6 +86,9 @@ namespace HdrHistogram
         /// </summary>
         protected override int WordSizeInBytes => 4;
 
+        /// <summary>
+        /// The maximum value a count can be for any given bucket.
+        /// </summary>
         protected override long MaxAllowableCount => int.MaxValue;
 
         /// <summary>
@@ -131,6 +134,11 @@ namespace HdrHistogram
             return _counts[index];
         }
 
+        /// <summary>
+        /// Sets the count at the given index.
+        /// </summary>
+        /// <param name="index">The index to be set</param>
+        /// <param name="value">The value to set</param>
         protected override void SetCountAtIndex(int index, long value)
         {
             _counts[index] = (int)value;
@@ -166,6 +174,10 @@ namespace HdrHistogram
             _totalCount = 0;
         }
 
+        /// <summary>
+        /// Copies the internal counts array into the supplied array.
+        /// </summary>
+        /// <param name="target">The array to write each count value into.</param>
         protected override void CopyCountsInto(long[] target)
         {
             for (int i = 0; i < target.Length; i++)
@@ -173,20 +185,15 @@ namespace HdrHistogram
                 target[i] = _counts[i];
             }
         }
-
-        ///// <summary>
-        ///// Copies data from the provided buffer into the internal counts array.
-        ///// </summary>
-        ///// <param name="buffer">The buffer to read from.</param>
-        ///// <param name="length">The length of the buffer to read.</param>
-        //internal override void FillCountsArrayFromBuffer(ByteBuffer buffer, int length)
-        //{
-        //    lock (UpdateLock)
-        //    {
-        //        buffer.AsIntBuffer().Get(_counts, 0, length);
-        //    }
-        //}
-
+        
+        /// <summary>
+        /// Reads a single value from the <paramref name="buffer"/>. 
+        /// </summary>
+        /// <param name="buffer">The <see cref="ByteBuffer"/> to read the single value from</param>
+        /// <returns>The value as a <c>long</c>.</returns>
+        /// <remarks>
+        /// Implementations may have different word sizes i.e. short(2), int(4) or long(8).
+        /// </remarks>
         protected override long ReadWord(ByteBuffer buffer)
         {
             return buffer.GetInt();

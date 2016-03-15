@@ -9,50 +9,23 @@
  */
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace HdrHistogram.Iteration
 {
-    /// <summary>
-    /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="PercentileEnumerator"/>
-    /// </summary>
-    sealed class PercentileEnumerable : IEnumerable<HistogramIterationValue>
-    {
-        private readonly HistogramBase _histogram;
-        private readonly int _percentileTicksPerHalfDistance;
-
-        public PercentileEnumerable(HistogramBase histogram, int percentileTicksPerHalfDistance)
-        {
-            _histogram = histogram;
-            _percentileTicksPerHalfDistance = percentileTicksPerHalfDistance;
-        }
-
-        public IEnumerator<HistogramIterationValue> GetEnumerator()
-        {
-            return new PercentileEnumerator(_histogram, _percentileTicksPerHalfDistance);
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-    }
-
     /// <summary>
     /// Used for iterating through histogram values according to percentile levels.The iteration is
     /// performed in steps that start at 0% and reduce their distance to 100% according to the
     /// <i>percentileTicksPerHalfDistance</i> parameter, ultimately reaching 100% when all recorded histogram
     /// values are exhausted.
     /// </summary>
-    sealed class PercentileEnumerator : AbstractHistogramEnumerator
+    internal sealed class PercentileEnumerator : AbstractHistogramEnumerator
     {
         private readonly int _percentileTicksPerHalfDistance;
         private double _percentileLevelToIterateTo;
         private bool _reachedLastRecordedValue;
         
         /// <summary>
-        /// The constuctor for the <see cref="PercentileEnumerator"/>
+        /// The constructor for the <see cref="PercentileEnumerator"/>
         /// </summary>
         /// <param name="histogram">The histogram this iterator will operate on</param>
         /// <param name="percentileTicksPerHalfDistance">The number of iteration steps per half-distance to 100%.</param>

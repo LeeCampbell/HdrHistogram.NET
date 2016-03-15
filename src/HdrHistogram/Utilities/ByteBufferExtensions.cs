@@ -3,7 +3,7 @@ using System.IO.Compression;
 
 namespace HdrHistogram.Utilities
 {
-    public static class ByteBufferExtensions
+    internal static class ByteBufferExtensions
     {
         /// <summary>
         /// Copies compressed contents from <paramref name="source"/> into the <paramref name="target"/> from the <paramref name="targetOffset"/>
@@ -30,12 +30,11 @@ namespace HdrHistogram.Utilities
                 //Add the RFC 1950 headers.
                 compressStream.WriteByte(0x58);
                 compressStream.WriteByte(0x85);
-                using (var compressor = new DeflateStream(compressStream, CompressionMode.Compress))
+                using (var compressor = new DeflateStream(compressStream, CompressionMode.Compress, leaveOpen: true))
                 {
                     input.CopyTo(compressor);
-                    compressor.Close();
-                    return compressStream.ToArray();
                 }
+                return compressStream.ToArray();
             }
         }
     }
