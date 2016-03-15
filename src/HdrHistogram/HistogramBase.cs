@@ -107,6 +107,10 @@ namespace HdrHistogram
         /// Returns the word size of this implementation
         /// </summary>
         protected abstract int WordSizeInBytes { get; }
+
+        /// <summary>
+        /// The maximum value a count can be for any given bucket.
+        /// </summary>
         protected abstract long MaxAllowableCount { get; }
 
 
@@ -768,6 +772,10 @@ namespace HdrHistogram
         /// </summary>
         protected abstract void ClearCounts();
 
+        /// <summary>
+        /// Copies the internal counts array into the supplied array.
+        /// </summary>
+        /// <param name="target">The array to write each count value into.</param>
         protected abstract void CopyCountsInto(long[] target);
 
         /// <summary>
