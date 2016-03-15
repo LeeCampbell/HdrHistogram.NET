@@ -66,27 +66,39 @@ namespace HdrHistogram.Utilities
             return _internalBuffer.Length;
         }
 
+        /// <summary>
+        /// The remaining capacity.
+        /// </summary>
+        /// <returns>The number of bytes between the current position and the underlying byte array length.</returns>
         public int Remaining()
         {
             return Capacity() - Position;
         }
 
+        /// <summary>
+        /// Reads from the provided <see cref="System.IO.Stream"/>, into the buffer.
+        /// </summary>
+        /// <param name="source">The source stream to read from.</param>
+        /// <param name="length">The number of bytes to read.</param>
+        /// <returns>The number of bytes read.</returns>
         public int ReadFrom(System.IO.Stream source, int length)
         {
             return source.Read(_internalBuffer, Position, length);
         }
 
-        public void WriteTo(System.IO.Stream target, int offset, int length)
-        {
-            target.Write(_internalBuffer, offset, length);
-            target.Flush();
-        }
-
+        /// <summary>
+        /// Gets the current byte and advances the position by one.
+        /// </summary>
+        /// <returns>The byte at the current position.</returns>
         public byte Get()
         {
             return _internalBuffer[Position++];
         }
 
+        /// <summary>
+        /// Gets the 16 bit integer (<seealso cref="short"/>) at the current position, and then advances by two.
+        /// </summary>
+        /// <returns>The value of the <see cref="short"/> at the current position.</returns>
         public short GetShort()
         {
             var shortValue = IPAddress.HostToNetworkOrder(BitConverter.ToInt16(_internalBuffer, Position));
@@ -95,7 +107,7 @@ namespace HdrHistogram.Utilities
         }
 
         /// <summary>
-        /// Gets the value of the current position as an <see cref="int"/> value, and advances the position to the next int.
+        /// Gets the 32 bit integer (<seealso cref="int"/>) at the current position, and then advances by four.
         /// </summary>
         /// <returns>The value of the <see cref="int"/> at the current position.</returns>
         public int GetInt()
@@ -106,9 +118,9 @@ namespace HdrHistogram.Utilities
         }
 
         /// <summary>
-        /// Gets the value of the current position as an <see cref="long"/> value, and advances the position to the next long.
+        /// Gets the 64 bit integer (<seealso cref="long"/>) at the current position, and then advances by eight.
         /// </summary>
-        /// <returns>The value of the long at the current position.</returns>
+        /// <returns>The value of the <see cref="long"/> at the current position.</returns>
         public long GetLong()
         {
             var longValue = IPAddress.HostToNetworkOrder(BitConverter.ToInt64(_internalBuffer, Position));
@@ -116,7 +128,10 @@ namespace HdrHistogram.Utilities
             return longValue;
         }
 
-
+        /// <summary>
+        /// Gets the double floating point number (<seealso cref="double"/>) at the current position, and then advances by eight.
+        /// </summary>
+        /// <returns>The value of the <see cref="double"/> at the current position.</returns>
         public double GetDouble()
         {
             var doubleValue = Int64BitsToDouble(ToInt64(_internalBuffer, Position));
@@ -201,7 +216,10 @@ namespace HdrHistogram.Utilities
             return ret;
         }
 
-
+        /// <summary>
+        /// Writes a byte value to the current position, and advances the position by one.
+        /// </summary>
+        /// <param name="value">The byte value to write.</param>
         public void Put(byte value)
         {
             _internalBuffer[Position++] = value;
@@ -244,6 +262,10 @@ namespace HdrHistogram.Utilities
             Position += longAsBytes.Length;
         }
 
+        /// <summary>
+        /// Sets the bytes at the current position to the value of the passed value, and advances the position.
+        /// </summary>
+        /// <param name="value">The value to set the current position to.</param>
         public void PutDouble(double value)
         {
             //PutDouble(ix(CheckIndex(i, (1 << 3))), x);
@@ -252,7 +274,6 @@ namespace HdrHistogram.Utilities
             Array.Copy(doubleAsBytes, 0, _internalBuffer, Position, doubleAsBytes.Length);
             Position += doubleAsBytes.Length;
         }
-
 
         /// <summary>
         /// Gets a copy of the internal byte array.
@@ -263,11 +284,6 @@ namespace HdrHistogram.Utilities
             var copy = new byte[_internalBuffer.Length];
             Array.Copy(_internalBuffer, copy, _internalBuffer.Length);
             return copy;
-        }
-
-        internal CountingMemoryStream GetWriter()
-        {
-            return new CountingMemoryStream(_internalBuffer, Position, _internalBuffer.Length - Position);
         }
 
         internal void BlockCopy(Array src, int srcOffset, int dstOffset, int count)
