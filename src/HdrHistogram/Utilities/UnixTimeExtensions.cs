@@ -27,8 +27,20 @@ namespace HdrHistogram.Utilities
         /// <exception cref="ArgumentException">Thrown if the <paramref name="source"/> Kind is <see cref="DateTimeKind.Unspecified"/>.</exception>
         public static double SecondsSinceUnixEpoch(this DateTime source)
         {
-            if(source.Kind==DateTimeKind.Unspecified) throw new ArgumentException("DateTime must have kind specified.");
+            if (source.Kind == DateTimeKind.Unspecified) throw new ArgumentException("DateTime must have kind specified.");
             return (source.ToUniversalTime().Ticks - EpochInTicks) / (double)TimeSpan.TicksPerSecond;
+        }
+
+        /// <summary>
+        /// Gets the milliseconds elapsed since the Unix Epoch (01-Jan-1970 UTC)
+        /// </summary>
+        /// <param name="source">The source time.</param>
+        /// <returns>Returns the number whole milliseconds elapsed since the Unix Epoch until the <paramref name="source"/> time.</returns>
+        /// <exception cref="ArgumentException">Thrown if the <paramref name="source"/> Kind is <see cref="DateTimeKind.Unspecified"/>.</exception>
+        public static long MillisecondsSinceUnixEpoch(this DateTime source)
+        {
+            if (source.Kind == DateTimeKind.Unspecified) throw new ArgumentException("DateTime must have kind specified.");
+            return (source.ToUniversalTime().Ticks - EpochInTicks) / TimeSpan.TicksPerMillisecond;
         }
 
         /// <summary>
