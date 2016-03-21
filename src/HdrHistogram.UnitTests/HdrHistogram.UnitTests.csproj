@@ -76,6 +76,9 @@
     <None Include="Resources\jHiccup-2.0.1.logV0.hlog">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Resources\jHiccup-2.0.6.logV1.hlog">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Resources\jHiccup-2.0.7S.logV2.hlog">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
