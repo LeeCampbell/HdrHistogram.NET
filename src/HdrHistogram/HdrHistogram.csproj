@@ -57,6 +57,7 @@
     <Compile Include="HistogramExtensions.cs" />
     <Compile Include="HistogramLogReader.cs" />
     <Compile Include="HistogramLogWriter.cs" />
+    <Compile Include="IHistogramLogV1Reader.cs" />
     <Compile Include="Iteration\AllValueEnumerable.cs" />
     <Compile Include="Iteration\LinearBucketEnumerable.cs" />
     <Compile Include="Iteration\LogarithmicBucketEnumerable.cs" />

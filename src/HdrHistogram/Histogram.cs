@@ -96,18 +96,12 @@ namespace HdrHistogram
             var header = ReadHeader(buffer);
             var histogram = Create<T>(header, minBarForHighestTrackableValue);
 
-            int expectedCapacity = Math.Min(histogram.GetNeededByteBufferCapacity(), header.PayloadLengthInBytes);
+            int expectedCapacity = Math.Min(histogram.GetNeededByteBufferCapacity() - header.CapacityEstimateExcess, header.PayloadLengthInBytes);
             var payLoadSourceBuffer = PayLoadSourceBuffer(buffer, decompressor, expectedCapacity, header);
 
             var filledLength = histogram.FillCountsFromBuffer(payLoadSourceBuffer, expectedCapacity, GetWordSizeInBytesFromCookie(header.Cookie));
             histogram.EstablishInternalTackingValues(filledLength);
-
-            //TODO: Rationalise. This seems misplaced (lost in translation) -LC
-            if (header.Cookie != GetEncodingCookie(histogram))
-            {
-                //throw new ArgumentException($"The buffer's encoded value byte size ({GetWordSizeInBytesFromCookie(cookie)}) does not match the Histogram's ({histogram.WordSizeInBytes})");
-                throw new ArgumentException();
-            }
+            
             return histogram;
         }
 
@@ -185,8 +179,6 @@ namespace HdrHistogram
                     highestTrackableValue,
                     header.NumberOfSignificantValueDigits
                 });
-                //histogram.TotalCount = totalCount; // Restore totalCount --Was a V0 way of doing things -LC
-
 
                 //TODO: Java does this now. Need to follow this through -LC
                 //histogram.IntegerToDoubleValueConversionRatio = header.IntegerToDoubleValueConversionRatio;

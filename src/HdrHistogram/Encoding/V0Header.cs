@@ -10,7 +10,6 @@ namespace HdrHistogram.Encoding
             NumberOfSignificantValueDigits = buffer.GetInt();
             LowestTrackableUnitValue = buffer.GetLong();
             HighestTrackableValue = buffer.GetLong();
-            buffer.GetLong(); // Discard totalCount field in V0 header.
             PayloadLengthInBytes = int.MaxValue;
             IntegerToDoubleValueConversionRatio = 1.0;
             NormalizingIndexOffset = 0;
@@ -22,5 +21,6 @@ namespace HdrHistogram.Encoding
         public long LowestTrackableUnitValue { get; }
         public long HighestTrackableValue { get; }
         public double IntegerToDoubleValueConversionRatio { get; }
+        public int CapacityEstimateExcess => 32;
     }
 }

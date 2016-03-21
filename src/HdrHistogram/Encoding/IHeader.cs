@@ -33,5 +33,9 @@ namespace HdrHistogram.Encoding
         /// Integer to double conversion ratio.
         /// </summary>
         double IntegerToDoubleValueConversionRatio { get; } //Not currently implemented/used.
+        /// <summary>
+        /// The amount of excess capacity that will not be needed.
+        /// </summary>
+        int CapacityEstimateExcess { get; }
     }
 }

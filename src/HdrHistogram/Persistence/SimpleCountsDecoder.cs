@@ -13,7 +13,7 @@ namespace HdrHistogram.Persistence
             int endPosition = sourceBuffer.Position + lengthInBytes;
             while (sourceBuffer.Position < endPosition)
             {
-                var item = sourceBuffer.GetShort();
+                var item = ReadValue(sourceBuffer);
                 setCount(idx++, item);
             }
             return idx;
