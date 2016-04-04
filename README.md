@@ -7,7 +7,7 @@ HdrHistogram.NET is the unofficial port of the Java HdrHistogram library.
 The official Java, C, and C# implementations of HdrHistogram can be found at https://github.com/HdrHistogram/HdrHistogram
 
 ##Why would I use it?
-You would use it to record response time for large number of measurements.
+You would use it to efficiently capture large number of response times measurements.
 
 Often when measuring response times, one could make the common mistake of reporting on the mean value or the 90th percentile. 
 Gil Tene (the original author of the Java HdrHistogram) illustrates in numerous presentations (such as [here](http://www.infoq.com/presentations/latency-pitfalls) and [here](https://www.youtube.com/watch?v=9MKY4KypBzg)) on why this is a mistake. 
@@ -417,4 +417,6 @@ A conservative (high) estimate of a Histogram's footprint in bytes is available 
   * **Service Time** : The time taken to actually service a request.
   * **Response time** : The sum of the latency and the service time. e.g. the time your request was queued, plus the time it took to process.
 
-Reference - [Designing for Performance • Martin Thompson](https://youtu.be/fDGWWpHlzvw?t=4m56s)
+Reference 
+ - [Designing for Performance - Martin Thompson](https://youtu.be/fDGWWpHlzvw?t=4m56s)
+ - https://en.wikipedia.org/wiki/Response_time_(technology)
