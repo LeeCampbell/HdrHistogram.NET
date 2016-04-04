@@ -19,7 +19,7 @@ To do this code might look something like this
 
 ### Declare the Histogram
 
-```
+``` csharp
 //A single tick represents one hundred nanoseconds or one ten-millionth of a second. 
 //There are 10,000 ticks in a millisecond, or 10 million ticks in a second.
 // https://msdn.microsoft.com/en-us/library/system.datetime.ticks(v=vs.110).aspx
@@ -27,13 +27,13 @@ To do this code might look something like this
 // A Histogram covering the range from 100 nano-seconds to 1 hour (3,600,000,000,000 ns) with 3 decimal point resolution:
 var histogram = new LongHistogram(TimeSpan.TicksPerHour, 3);
 
-```
+``` 
 
 ### Record your measurements
 Next you would record your measurements.
 The `System.Diagnostics.Stopwatch.GetTimestamp()` method provides the most accurate way to record the elapsed time an action took to run.
 
-```
+```  csharp
 long startTimestamp = Stopwatch.GetTimestamp();
 //Execute some action to be measured
 long ticks = Stopwatch.GetTimestamp() - startTimestamp;
@@ -48,7 +48,7 @@ To do this we want to generate a percentile distribution, with exponentially inc
 
 Here we show an example of writing to the `Console`.
 
-```
+```  csharp
 var writer = new StringWriter();
 histogram.outputPercentileDistribution(writer);
 Console.WriteLine(writer.ToString());
@@ -149,7 +149,7 @@ This is especially useful when comparing measurements.
 
 First you will need to create the file to be used as an input for the chart.
 
-```
+```  csharp
 using (var writer = new StreamWriter("HistogramResults.hgrm"))
 {
 	histogram.OutputPercentileDistribution(writer);
@@ -177,7 +177,7 @@ The tool also allows you to export to png.
 This code sample show a recording of the time taken to execute a ping request.
 We execute and record this in a loop.
 
-```
+```  csharp
 //Create a Histogram that records in ticks, values up to an hour, with accuracy to 3 significant digits. 
 var histogram = new LongHistogram(TimeSpan.TicksPerHour, 3);
 using (var ping = new System.Net.NetworkInformation.Ping())
@@ -344,7 +344,7 @@ Iteration is typically done with a for-each loop statement. E.g.:
  or
 
 ``` csharp
- for (var v histogram.LinearBucketValues(unitsPerBucket)) 
+ for (var v in histogram.LinearBucketValues(unitsPerBucket)) 
  {
      ...
  }
@@ -393,7 +393,7 @@ Still, it is useful to be able to estimate the memory footprint involved for a g
 Beyond a relatively small fixed-size footprint used for internal fields and stats (which can be estimated as "fixed at well less than 1KB"), the bulk of a Histogram's storage is taken up by it's data value recording counts array. 
 The total footprint can be conservatively estimated by:
 
-``` java
+```  csharp
  largestValueWithSingleUnitResolution = 2 * (10 ^ numberOfSignificantValueDigits);
  subBucketSize = RoundedUpToNearestPowerOf2(largestValueWithSingleUnitResolution);
 
