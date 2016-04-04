@@ -8,35 +8,9 @@
  * https://github.com/HdrHistogram/HdrHistogram
  */
 
-using System.Collections;
-using System.Collections.Generic;
-
 namespace HdrHistogram.Iteration
 {
-    /// <summary>
-    /// An enumerator of <see cref="HistogramIterationValue"/> through the histogram using a <see cref="RecordedValuesEnumerator"/>
-    /// </summary>
-    sealed class RecordedValuesEnumerable : IEnumerable<HistogramIterationValue>
-    {
-        readonly HistogramBase _histogram;
-
-        public RecordedValuesEnumerable(HistogramBase histogram)
-        {
-            _histogram = histogram;
-        }
-
-        public IEnumerator<HistogramIterationValue> GetEnumerator()
-        {
-            return new RecordedValuesEnumerator(_histogram);
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-    }
-
-    sealed class RecordedValuesEnumerator : AbstractHistogramEnumerator
+    internal sealed class RecordedValuesEnumerator : AbstractHistogramEnumerator
     {
         private int _visitedSubBucketIndex;
         private int _visitedBucketIndex;
