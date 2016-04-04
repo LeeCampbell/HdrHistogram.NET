@@ -7,14 +7,14 @@ HdrHistogram.NET is the unofficial port of the Java HdrHistogram library.
 The official Java, C, and C# implementations of HdrHistogram can be found at https://github.com/HdrHistogram/HdrHistogram
 
 ##Why would I use it?
-You would use it to record latency for large number of measurements.
+You would use it to record response time for large number of measurements.
 
-Often when measuring latency recordings, one could make the common mistake of reporting on the mean value or the 90th percentile. 
+Often when measuring response times, one could make the common mistake of reporting on the mean value or the 90th percentile. 
 Gil Tene (the original author of the Java HdrHistogram) illustrates in numerous presentations (such as [here](http://www.infoq.com/presentations/latency-pitfalls) and [here](https://www.youtube.com/watch?v=9MKY4KypBzg)) on why this is a mistake. 
 Instead you want to collect all of the data and then be able to report your measurements across the range of measurements. 
 
 ##How would I use it?
-Generally you want to be able to record at the finest accuracy the latency of a given function of your software. 
+Generally you want to be able to record at the finest accuracy the response-time of a given function of your software. 
 To do this code might look something like this
 
 ### Declare the Histogram
@@ -167,7 +167,7 @@ You can use either
 If you use the local tool, there are example result files in the _.\GoogleChartsExample_ directory.
 The tool also allows you to export to png.
 
-##So what is so special about this way of recording latency?
+##So what is so special about this way of recording response times?
  
 * itself is low latency
 * tiny foot print due to just storing a dynamic range of buckets and counts
@@ -409,3 +409,12 @@ The total footprint can be conservatively estimated by:
 ```
 
 A conservative (high) estimate of a Histogram's footprint in bytes is available via the `GetEstimatedFootprintInBytes()` method.
+
+##Terminology
+
+  * **Latency** : The time that something is latent i.e. not being processed. 
+ This maybe due to being in a queue.
+  * **Service Time** : The time taken to actually service a request.
+  * **Response time** : The sum of the latency and the service time. e.g. the time your request was queued, plus the time it took to process.
+
+Reference - [Designing for Performance • Martin Thompson](https://youtu.be/fDGWWpHlzvw?t=4m56s)
