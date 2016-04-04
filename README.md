@@ -257,6 +257,9 @@ At the time of forking away from the the Official HdrHistogram C# code base, I h
 9. A simple Pull Request to update the project (to Visual Studio 2015 sln type) had not been actioned in 3 weeks.
 10. Documentation is weak, and in places that it existed it was mainly in `JavaDoc` format.
 
+This is not intended to be a slight on the previous contributors or maintainers.
+People have busy lives and priorities change.
+You will note that this code base has intentionally been created from the original Java-with-.NET repository to keep the commit history intact.
 
 HdrHistogram Details
 ----------------------------------------------
