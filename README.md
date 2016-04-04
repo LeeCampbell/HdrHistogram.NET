@@ -261,6 +261,8 @@ This is not intended to be a slight on the previous contributors or maintainers.
 People have busy lives and priorities change.
 You will note that this code base has intentionally been created from the original Java-with-.NET repository to keep the commit history intact.
 
+The long term goal is to have this code base moved into the new (but already abandoned) official HdrHistorgram.NET repository - https://github.com/HdrHistogram/HdrHistogram.NET.
+
 HdrHistogram Details
 ----------------------------------------------
 
