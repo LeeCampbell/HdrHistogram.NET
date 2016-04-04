@@ -16,7 +16,10 @@
     <SetAssemblyVersion FileName=".\src\HdrHistogram\Properties\AssemblyInfo.g.cs"
 	                      VersionNumber="$(BUILD_NUMBER)"
 	                      Flavour="$(ReleaseType)"
-	                      BuildNumber="0"/>
+	                      BuildNumber=""/>
+	<!--If BuildNumber is provided, creates AssemblyInformationalVersion($"{VersionNumber}-{Flavour}{BuildNumber:00}")] -->
+	<!--If no BuildNumber is provided, creates AssemblyInformationalVersion($"{VersionNumber}-{Flavour}")] -->
+	<!-- If Flavour==release, then creates AssemblyInformationalVersion($"{VersionNumber}")] -->
   </Target>
 
   <!-- Projects to Build -->
