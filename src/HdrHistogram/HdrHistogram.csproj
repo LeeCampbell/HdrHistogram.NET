@@ -62,6 +62,7 @@
     <Compile Include="Iteration\LinearBucketEnumerable.cs" />
     <Compile Include="Iteration\LogarithmicBucketEnumerable.cs" />
     <Compile Include="Iteration\PercentileEnumerable.cs" />
+    <Compile Include="Iteration\RecordedValuesEnumerable.cs" />
     <Compile Include="OutputScalingFactor.cs" />
     <Compile Include="Persistence\IntCountsDecoder.cs" />
     <Compile Include="Persistence\LongCountsDecoder.cs" />
