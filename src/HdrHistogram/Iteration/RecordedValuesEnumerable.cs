@@ -8,7 +8,7 @@ namespace HdrHistogram.Iteration
     /// </summary>
     internal sealed class RecordedValuesEnumerable : IEnumerable<HistogramIterationValue>
     {
-        readonly HistogramBase _histogram;
+        private readonly HistogramBase _histogram;
 
         public RecordedValuesEnumerable(HistogramBase histogram)
         {

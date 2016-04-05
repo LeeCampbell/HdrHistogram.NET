@@ -10,6 +10,9 @@
 
 namespace HdrHistogram.Iteration
 {
+    /// <summary>
+    /// An enumerator that enumerate over all non-zero values.
+    /// </summary>
     internal sealed class RecordedValuesEnumerator : AbstractHistogramEnumerator
     {
         private int _visitedSubBucketIndex;
@@ -33,9 +36,12 @@ namespace HdrHistogram.Iteration
 
         protected override bool ReachedIterationLevel()
         {
-            long currentIJCount = SourceHistogram.GetCountAt(CurrentBucketIndex, CurrentSubBucketIndex);
-            return (currentIJCount != 0) &&
-                    ((_visitedSubBucketIndex != CurrentSubBucketIndex) || (_visitedBucketIndex != CurrentBucketIndex));
+            long currentIndexCount = SourceHistogram.GetCountAt(CurrentBucketIndex, CurrentSubBucketIndex);
+            return (currentIndexCount != 0) 
+                && (
+                        (_visitedSubBucketIndex != CurrentSubBucketIndex) 
+                        || (_visitedBucketIndex != CurrentBucketIndex
+                ));
         }
     }
 }
