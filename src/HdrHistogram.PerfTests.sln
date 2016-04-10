@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HdrHistogram", "src\HdrHistogram\HdrHistogram.csproj", "{655D9C4C-5BBD-4494-9828-AE427A1DDD01}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HdrHistogram", "HdrHistogram\HdrHistogram.csproj", "{655D9C4C-5BBD-4494-9828-AE427A1DDD01}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HdrHistogram.PerfTests", "src\HdrHistogram.PerfTests\HdrHistogram.PerfTests.csproj", "{FF7983E4-B76A-4AAB-B2AD-AC3355D4C7F7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HdrHistogram.PerfTests", "HdrHistogram.PerfTests\HdrHistogram.PerfTests.csproj", "{FF7983E4-B76A-4AAB-B2AD-AC3355D4C7F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HdrHistogram.PerfTestOrg", "src\HdrHistogram.PerfTestOrg\HdrHistogram.PerfTestOrg.csproj", "{237E69D6-F662-45F3-8BA0-73ABAD73C6DA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HdrHistogram.PerfTestOrg", "HdrHistogram.PerfTestOrg\HdrHistogram.PerfTestOrg.csproj", "{237E69D6-F662-45F3-8BA0-73ABAD73C6DA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
