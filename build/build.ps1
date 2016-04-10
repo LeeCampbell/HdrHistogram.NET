@@ -20,7 +20,7 @@ properties {
   $zipFileName = "HdrHistogram.NET$semver.zip"
   $packageId = "HdrHistogram"
   $signAssemblies = $false
-  $signKeyPath = "C:\Development\Releases\HdrHistogram.snk"
+  $signKeyPath = "C:\Development\Releases\HdrHistogram.snk.pfx"
   $buildNuGet = $true
   $treatWarningsAsErrors = $false
   $baseDir  = resolve-path ..
