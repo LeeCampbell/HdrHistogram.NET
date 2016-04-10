@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using HdrHistogram.Utilities;
@@ -81,10 +82,10 @@ namespace HdrHistogram.UnitTests
             return histogram;
         }
 
-        [TestCase("Resources\\jHiccup-2.0.7S.logV2.hlog")]
+        [TestCase("jHiccup-2.0.7S.logV2.hlog")]
         public void CanReadv2Logs(string logPath)
         {
-            var readerStream = File.OpenRead(logPath);
+            var readerStream = GetEmbeddedFileStream(logPath);
             var reader = new HistogramLogReader(readerStream);
             int histogramCount = 0;
             long totalCount = 0;
@@ -105,15 +106,25 @@ namespace HdrHistogram.UnitTests
             Assert.AreEqual(1441812279.474, reader.GetStartTime().SecondsSinceUnixEpoch());
         }
 
-        [TestCase("Resources\\jHiccup-2.0.1.logV0.hlog", 0, int.MaxValue, 81, 61256, 1510998015, 1569718271, 1438869961.225)]
-        [TestCase("Resources\\jHiccup-2.0.1.logV0.hlog", 19, 25, 25, 18492, 459007, 623103, 1438869961.225)]
-        [TestCase("Resources\\jHiccup-2.0.1.logV0.hlog", 45, 34, 34, 25439, 1209008127, 1234173951, 1438869961.225)]
+        private Stream GetEmbeddedFileStream(string filename)
+        {
+            var fileName = string.Format(CultureInfo.InvariantCulture, "HdrHistogram.UnitTests.Resources.{0}", filename);
+            return GetType()
+                .Assembly
+                .GetManifestResourceStream(fileName);
+        }
+
+
+
+        [TestCase("jHiccup-2.0.1.logV0.hlog", 0, int.MaxValue, 81, 61256, 1510998015, 1569718271, 1438869961.225)]
+        [TestCase("jHiccup-2.0.1.logV0.hlog", 19, 25, 25, 18492, 459007, 623103, 1438869961.225)]
+        [TestCase("jHiccup-2.0.1.logV0.hlog", 45, 34, 34, 25439, 1209008127, 1234173951, 1438869961.225)]
         public void CanReadv0Logs(string logPath, int skip, int take,
             int expectedHistogramCount, int expectedCombinedValueCount,
             int expectedCombined999, long expectedCombinedMaxLength,
             double expectedStartTime)
         {
-            var readerStream = File.OpenRead(logPath);
+            var readerStream = GetEmbeddedFileStream(logPath);
             var reader = new HistogramLogReader(readerStream);
 
             int histogramCount = 0;
@@ -135,18 +146,18 @@ namespace HdrHistogram.UnitTests
             Assert.AreEqual(expectedStartTime, reader.GetStartTime().SecondsSinceUnixEpoch());
         }
 
-        [TestCase("Resources\\jHiccup-2.0.6.logV1.hlog", 0, int.MaxValue, 88, 65964, 1829765119, 1888485375, 1438867590.285)]
-        [TestCase("Resources\\jHiccup-2.0.6.logV1.hlog", 5, 15, 15, 11213, 1019740159, 1032323071, 1438867590.285)]
-        [TestCase("Resources\\jHiccup-2.0.6.logV1.hlog", 50, 29, 29, 22630, 1871708159, 1888485375, 1438867590.285)]
-        [TestCase("Resources\\ycsb.logV1.hlog", 0, int.MaxValue, 602, 300056, 1214463, 1546239, 1438613579.295)]
-        [TestCase("Resources\\ycsb.logV1.hlog", 0, 180, 180, 89893, 1375231, 1546239, 1438613579.295)]
-        [TestCase("Resources\\ycsb.logV1.hlog", 180, 520, 422, 210163, 530, 17775, 1438613579.295)]
+        [TestCase("jHiccup-2.0.6.logV1.hlog", 0, int.MaxValue, 88, 65964, 1829765119, 1888485375, 1438867590.285)]
+        [TestCase("jHiccup-2.0.6.logV1.hlog", 5, 15, 15, 11213, 1019740159, 1032323071, 1438867590.285)]
+        [TestCase("jHiccup-2.0.6.logV1.hlog", 50, 29, 29, 22630, 1871708159, 1888485375, 1438867590.285)]
+        [TestCase("ycsb.logV1.hlog", 0, int.MaxValue, 602, 300056, 1214463, 1546239, 1438613579.295)]
+        [TestCase("ycsb.logV1.hlog", 0, 180, 180, 89893, 1375231, 1546239, 1438613579.295)]
+        [TestCase("ycsb.logV1.hlog", 180, 520, 422, 210163, 530, 17775, 1438613579.295)]
         public void CanReadv1Logs(string logPath, int skip, int take,
             int expectedHistogramCount, int expectedCombinedValueCount,
             int expectedCombined999, long expectedCombinedMaxLength,
             double expectedStartTime)
         {
-            var readerStream = File.OpenRead(logPath);
+            var readerStream = GetEmbeddedFileStream(logPath);
             var reader = new HistogramLogReader(readerStream);
             int histogramCount = 0;
             long totalCount = 0;
@@ -161,7 +172,7 @@ namespace HdrHistogram.UnitTests
                 totalCount += histogram.TotalCount;
                 accumulatedHistogram.Add(histogram);
             }
-            
+
             Assert.AreEqual(expectedHistogramCount, histogramCount);
             Assert.AreEqual(expectedCombinedValueCount, totalCount);
             Assert.AreEqual(expectedCombined999, accumulatedHistogram.GetValueAtPercentile(99.9));
@@ -169,21 +180,21 @@ namespace HdrHistogram.UnitTests
             Assert.AreEqual(expectedStartTime, reader.GetStartTime().SecondsSinceUnixEpoch());
         }
 
-        [TestCase("Resources\\ycsb.logV1.hlog", 0, 180, 180, 90033, 1375231, 1546239, 1438613579.295)]
-        [TestCase("Resources\\ycsb.logV1.hlog", 180, 520, 421, 209686, 530, 17775, 1438613579.295)]
+        [TestCase("ycsb.logV1.hlog", 0, 180, 180, 90033, 1375231, 1546239, 1438613579.295)]
+        [TestCase("ycsb.logV1.hlog", 180, 520, 421, 209686, 530, 17775, 1438613579.295)]
         public void CanReadv1Logs_Skip_PreStart(string logPath, int skip, int take,
             int expectedHistogramCount, int expectedCombinedValueCount,
             int expectedCombined999, long expectedCombinedMaxLength,
             double expectedStartTime)
         {
-            var readerStream = File.OpenRead(logPath);
+            var readerStream = GetEmbeddedFileStream(logPath);
             var reader = new HistogramLogReader(readerStream);
             int histogramCount = 0;
             long totalCount = 0;
 
             HistogramBase accumulatedHistogram = new LongHistogram(3600L * 1000 * 1000 * 1000, 3);
             var histograms = reader.ReadHistograms()
-                .Where(h=>h.StartTimeStamp>=reader.GetStartTime().MillisecondsSinceUnixEpoch())
+                .Where(h => h.StartTimeStamp >= reader.GetStartTime().MillisecondsSinceUnixEpoch())
                 .Skip(skip)
                 .Take(take);
             foreach (var histogram in histograms)

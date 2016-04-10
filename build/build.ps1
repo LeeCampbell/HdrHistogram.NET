@@ -231,7 +231,9 @@ function NUnitTests($build)
   Write-Host -ForegroundColor Green "Running NUnit tests " $name
   Write-Host
   $nUnitPath = "$workingSourceDir\packages\NUnit.ConsoleRunner.3.2.0\tools\nunit3-console.exe"
-  exec { "$nUnitPath $workingDir\Deployed\Bin\$finalDir\HdrHistogram.UnitTests.dll /framework=$framework /xml:$workingDir\$name.xml | Out-Default" } "Error running $name tests"
+  #exec { "$nUnitPath $workingDir\Deployed\Bin\$finalDir\HdrHistogram.UnitTests.dll --framework=$framework --teamcity | Out-Default" } "Error running $name tests"
+  #HACK To get the NUnit output to actually render. The above line has the output swallowed (or perhaps doesn't even run). 
+  exec { .\working\src\packages\NUnit.ConsoleRunner.3.2.0\tools\nunit3-console.exe $workingDir\Deployed\Bin\$finalDir\HdrHistogram.UnitTests.dll --framework=$framework --teamcity | Out-Default } "Error running $name tests"
 }
 
 function GetConstants($constants, $includeSigned)
