@@ -13,6 +13,4 @@ using System.Runtime.InteropServices;
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
 
-[assembly: InternalsVisibleTo("HdrHistogram.Test")]
-
 // Versioning attributes in the generated file AssemblyInfo.g.cs

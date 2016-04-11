@@ -66,11 +66,10 @@ namespace HdrHistogram.UnitTests
         }
 
         [Test]
-        [ExpectedException(typeof(IndexOutOfRangeException))]
         public void testRecordValue_Overflow_ShouldThrowException()
         {
             var longHistogram = new LongHistogram(HighestTrackableValue, NumberOfSignificantValueDigits);
-            longHistogram.RecordValue(HighestTrackableValue * 3);
+            Assert.Catch<IndexOutOfRangeException>(()=>longHistogram.RecordValue(HighestTrackableValue * 3));
         }
 
         [Test]
