@@ -57,6 +57,12 @@
     <Compile Include="Throughput\ShortHistogramThoughputTest.cs" />
     <Compile Include="Throughput\SynchronizedHistogramThoughputTest.cs" />
     <Compile Include="Throughput\ThroughputTestResult.cs" />
+    <Compile Include="TimerThroughput\HistogramActionStopwatchCachedIncrementerDelegateThoughputTest.cs" />
+    <Compile Include="TimerThroughput\HistogramActionStopwatchIncrementerThoughputTest.cs" />
+    <Compile Include="TimerThroughput\HistogramActionStopwatchMd5ThoughputTest.cs" />
+    <Compile Include="TimerThroughput\HistogramManualStopwatchIncrementerThoughputTest.cs" />
+    <Compile Include="TimerThroughput\HistogramManualStopwatchMd5ThoughputTest.cs" />
+    <Compile Include="TimerThroughput\HistogramTimerThoughputTestBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
