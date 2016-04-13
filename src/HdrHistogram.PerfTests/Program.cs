@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using HdrHistogram.PerfTests.Throughput;
+using HdrHistogram.PerfTests.TimerThroughput;
 
 namespace HdrHistogram.PerfTests
 {
@@ -11,14 +12,15 @@ namespace HdrHistogram.PerfTests
     {
         private static readonly int[] RunSizes =
         {
-            //10000000,
-            //100000000,
+          //10000000,
+          //100000000,
             1000000000,
         };
 
         public static void Main()
         {
             var testTypes = GetHistorgramThroughputTests();
+            //var testTypes = GetHistorgramTimerThroughputTests();
 
             var testResultRunner = from testType in testTypes
                                    from messageCount in RunSizes
@@ -46,6 +48,17 @@ namespace HdrHistogram.PerfTests
                             where !type.IsAbstract
                             where type.IsSubclassOf(typeof(Throughput.HistogramThoughputTestBase))
                             select (HistogramThoughputTestBase)Activator.CreateInstance(type, true);
+
+            return testTypes.ToArray();
+        }
+
+        private static IEnumerable<HistogramTimerThoughputTestBase> GetHistorgramTimerThroughputTests()
+        {
+            var testTypes = from module in typeof(Program).Assembly.GetModules()
+                            from type in module.GetTypes()
+                            where !type.IsAbstract
+                            where type.IsSubclassOf(typeof(HistogramTimerThoughputTestBase))
+                            select (HistogramTimerThoughputTestBase)Activator.CreateInstance(type, true);
 
             return testTypes.ToArray();
         }

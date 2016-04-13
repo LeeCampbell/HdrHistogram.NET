@@ -1,17 +1,21 @@
 using System;
+using System.Security.Cryptography;
+using HdrHistogram.PerfTests.Throughput;
 using NUnit.Framework;
 
-namespace HdrHistogram.PerfTests.Throughput
+namespace HdrHistogram.PerfTests.TimerThroughput
 {
-    public abstract class HistogramThoughputTestBase
+    public abstract class HistogramTimerThoughputTestBase
     {
-        protected static long HighestTrackableValue => TimeSpan.TicksPerHour;
-        protected static int NumberOfSignificantValueDigits => 3;
-        private const long TestValueLevel = 12340;
         private const long WarmupLoopLength = 50 * 1000;
 
+        private readonly MD5 _md5 = MD5.Create();
+
+        protected static long HighestTrackableValue => TimeSpan.TicksPerHour;
+        protected static int NumberOfSignificantValueDigits => 3;
         protected abstract string Label { get; }
         protected abstract HistogramBase CreateHistogram();
+
 
         [OneTimeSetUp]
         public void WarmUp()
@@ -22,7 +26,7 @@ namespace HdrHistogram.PerfTests.Throughput
                 WarmupLoopLength,
                 () => RecordLoop(histogram, WarmupLoopLength));
         }
-        
+
         [TestCase(10000000)]
         [TestCase(1000000000)]
         public void TestRawRecordingSpeed(int messages)
@@ -42,10 +46,18 @@ namespace HdrHistogram.PerfTests.Throughput
             return result;
         }
 
-        private static void RecordLoop(HistogramBase histogram, long loopCount)
+        private long _idx = 0;
+
+        protected byte[] Md5HashIncrementingNumber()
         {
-            for (long i = 0; i < loopCount; i++)
-                histogram.RecordValue(TestValueLevel + (i & 0x8000));
+            var bytes = BitConverter.GetBytes(_idx++);
+            return _md5.ComputeHash(bytes);
         }
+        protected void IncrementNumber()
+        {
+            _idx++;
+        }
+
+        protected abstract void RecordLoop(HistogramBase histogram, long loopCount);
     }
 }
